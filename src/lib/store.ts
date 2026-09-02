@@ -153,7 +153,7 @@ export function openProject(id: string | null) {
 
 /* ----------------------------------------------------------------- skills */
 export function createSkill(sk: Omit<CustomSkill, "id">) {
-  const s: CustomSkill = { id: uid("s"), ...sk };
+  const s: CustomSkill = { id: uid("s"), createdAt: new Date().toISOString(), ...sk };
   setState((st) => ({ skills: [...st.skills, s] }));
   track("skill_created", s.name);
   return s;

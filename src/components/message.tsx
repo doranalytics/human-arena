@@ -3,9 +3,10 @@ import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getToolName, isToolUIPart, type UIMessage } from "ai";
-import { FileText, Globe, Mail, HardDrive, Database, Calendar, Loader2 } from "lucide-react";
+import { FileText, Globe, Loader2 } from "lucide-react";
 import { Spark } from "./icons";
 import { TOOL_CONNECTOR } from "@/lib/tool-connector";
+import { ConnectorLogo } from "./connector-logos";
 
 const Markdown = memo(function Markdown({ text }: { text: string }) {
   return (
@@ -33,10 +34,7 @@ function ToolIcon({ name }: { name: string }) {
   const c = TOOL_CONNECTOR[name];
   const cls = "shrink-0";
   if (name === "web_search") return <Globe size={13} className={cls} />;
-  if (c === "gmail") return <Mail size={13} className={cls} />;
-  if (c === "drive") return <HardDrive size={13} className={cls} />;
-  if (c === "warehouse") return <Database size={13} className={cls} />;
-  if (c === "calendar") return <Calendar size={13} className={cls} />;
+  if (c) return <ConnectorLogo id={c} size={14} />;
   return <FileText size={13} className={cls} />;
 }
 

@@ -7,11 +7,10 @@ export type DialogKind =
   | { kind: "brief"; slug: string }
   | { kind: "result"; slug: string }
   | { kind: "leaderboard" }
-  | { kind: "settings" }
-  | { kind: "connectors" }
-  | { kind: "skills" }
-  | { kind: "new-project" }
-  | { kind: "customize" };
+  | { kind: "settings"; section?: SettingsSection }
+  | { kind: "new-project" };
+
+export type SettingsSection = "general" | "account" | "progress" | "skills" | "connectors" | "memory";
 
 export interface Toast {
   id: number;
@@ -20,23 +19,31 @@ export interface Toast {
   tone?: "ok" | "info" | "bad";
 }
 
+export type Page = "projects" | null;
+
 interface UIState {
   dialog: DialogKind | null;
   toasts: Toast[];
   sidebarOpen: boolean;
+  /** full-screen pages that replace the chat area */
+  page: Page;
 }
 
-let ui: UIState = { dialog: null, toasts: [], sidebarOpen: true };
+let ui: UIState = { dialog: null, toasts: [], sidebarOpen: true, page: null };
 const ls = new Set<() => void>();
 const emit = () => ls.forEach((l) => l());
 const sub = (l: () => void) => (ls.add(l), () => void ls.delete(l));
-const server: UIState = { dialog: null, toasts: [], sidebarOpen: true };
+const server: UIState = { dialog: null, toasts: [], sidebarOpen: true, page: null };
 
 export function useUI<T>(sel: (s: UIState) => T): T {
   return useSyncExternalStore(sub, () => sel(ui), () => sel(server));
 }
 export function openDialog(d: DialogKind) {
   ui = { ...ui, dialog: d };
+  emit();
+}
+export function setPage(page: Page) {
+  ui = { ...ui, page };
   emit();
 }
 export function closeDialog() {

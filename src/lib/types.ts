@@ -34,6 +34,7 @@ export interface CustomSkill {
   name: string;
   description: string;
   prompt: string;
+  createdAt?: string;
 }
 
 export interface Settings {

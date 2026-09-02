@@ -7,13 +7,12 @@ import { Sidebar } from "./sidebar";
 import { TopBar } from "./topbar";
 import { ChatView } from "./chat-view";
 import { ProjectView } from "./project-view";
+import { ProjectsPage } from "./projects-page";
 import { Toasts } from "./toasts";
 import { ChallengesDialog, BriefDialog } from "./dialogs/challenges";
 import { ResultDialog } from "./dialogs/result";
 import { LeaderboardDialog } from "./dialogs/leaderboard";
 import { SettingsDialog } from "./dialogs/settings";
-import { ConnectorsDialog } from "./dialogs/connectors";
-import { SkillsDialog } from "./dialogs/skills";
 import { NewProjectDialog } from "./dialogs/new-project";
 import type { ArenaResult } from "@/lib/types";
 
@@ -25,6 +24,7 @@ export function Arena() {
   const project = useStore((s) => s.projects.find((p) => p.id === s.activeProjectId) ?? null);
   const dialog = useUI((s) => s.dialog);
   const sidebarOpen = useUI((s) => s.sidebarOpen);
+  const page = useUI((s) => s.page);
 
   useEffect(() => {
     hydrate();
@@ -46,7 +46,7 @@ export function Arena() {
     if (hydrated && !activeChatId && !activeProjectId) newChat(null);
   }, [hydrated, activeChatId, activeProjectId]);
 
-  const title = chat ? (chat.projectId ? `${project?.name ?? "Project"} / ${chat.title}` : chat.title) : project ? project.name : "";
+  const title = page === "projects" ? "Projects" : chat ? (chat.projectId ? `${project?.name ?? "Project"} / ${chat.title}` : chat.title) : project ? project.name : "";
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-bg">
@@ -54,7 +54,7 @@ export function Arena() {
       <main className="flex min-w-0 flex-1 flex-col">
         <TopBar title={title} />
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {!hydrated ? null : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}
+          {!hydrated ? null : page === "projects" ? <ProjectsPage /> : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}
         </div>
       </main>
       <Toasts />
@@ -62,11 +62,8 @@ export function Arena() {
       {dialog?.kind === "brief" && <BriefDialog open slug={dialog.slug} />}
       {dialog?.kind === "result" && <ResultDialog open slug={dialog.slug} />}
       <LeaderboardDialog open={dialog?.kind === "leaderboard"} />
-      <SettingsDialog open={dialog?.kind === "settings"} />
-      <ConnectorsDialog open={dialog?.kind === "connectors"} />
-      <SkillsDialog open={dialog?.kind === "skills"} />
+      {dialog?.kind === "settings" && <SettingsDialog key={dialog.section ?? "general"} section={dialog.section ?? "general"} />}
       <NewProjectDialog open={dialog?.kind === "new-project"} />
-      {dialog?.kind === "customize" && <SettingsDialog open />}
       <span hidden onClick={closeDialog} />
     </div>
   );

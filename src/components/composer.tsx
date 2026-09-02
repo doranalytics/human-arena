@@ -169,7 +169,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
                 <MenuItem icon={<Telescope size={15} />} label="Research" hint="Longer, sourced report" checked={research} onClick={() => setResearch(!research)} />
                 <div className="my-1 border-t border-line" />
                 <MenuItem icon={<Zap size={15} />} label="Use a skill" hint="or type /" onClick={() => { setText("/"); ta.current?.focus(); }} />
-                <MenuItem icon={<Cable size={15} />} label={connectors.length ? `Connectors (${connectors.length} on)` : "Connectors"} onClick={() => openDialog({ kind: "connectors" })} />
+                <MenuItem icon={<Cable size={15} />} label={connectors.length ? `Connectors (${connectors.length} on)` : "Connectors"} onClick={() => openDialog({ kind: "settings", section: "connectors" })} />
               </div>
             )}
           </div>
