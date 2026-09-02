@@ -83,16 +83,11 @@ export const CHALLENGES: ChallengeDef[] = [
     badges: ["interviewing"],
     minutes: 5,
     points: 40,
-    brief: `Ask for help planning a **team offsite**.
-
-Before it answers, tell it to **ask you three questions** first. Answer them, and the plan follows.`,
-    deliverable: "Three questions from the assistant, then a plan built on your answers.",
-    behaviors: [{ id: "sent", label: "Sent at least two messages", event: "message_sent" }],
-    checks: [
-      { id: "asked", label: "The assistant asked three or more questions before giving any plan" },
-      { id: "used", label: "The final plan uses details you gave in your answers" },
-    ],
-    hints: [{ text: "Say: 'Before you plan anything, ask me the questions you need answered.'" }, { text: "Answer briefly, then say 'Now write the plan.'" }],
+    brief: `Ask for help planning a **team offsite**, but tell it to **ask you three questions first** before it answers.`,
+    deliverable: "Three questions from the assistant before any plan.",
+    behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
+    checks: [{ id: "asked", label: "The assistant asked three or more questions before giving any plan" }],
+    hints: [{ text: "Say: 'Help me plan a team offsite. Before you plan anything, ask me three questions.'" }],
   },
   {
     slug: "grade-yourself",
