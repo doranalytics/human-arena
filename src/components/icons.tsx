@@ -62,3 +62,15 @@ export function IconX({ size = 14 }: { size?: number }) {
     </svg>
   );
 }
+
+/** The Human Arena mark: an H whose crossbar is the arena ring. Same drawing as public/icon.svg. */
+export function Logo({ size = 18, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" className={`shrink-0 ${className}`} aria-hidden>
+      <rect width="64" height="64" rx="14" fill="#d97757" />
+      <rect x="12" y="12" width="10" height="40" rx="3" fill="#faf9f5" />
+      <rect x="42" y="12" width="10" height="40" rx="3" fill="#faf9f5" />
+      <ellipse cx="32" cy="32" rx="14.5" ry="8" fill="none" stroke="#faf9f5" strokeWidth="5.5" />
+    </svg>
+  );
+}

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: { default: "Human Arena", template: "%s · Human Arena" },
   description: DESCRIPTION,
-  icons: { icon: "/icon.svg" },
+  icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/favicon-32.png", sizes: "32x32", type: "image/png" }], apple: "/apple-touch-icon.png" },
   openGraph: { title: "Human Arena", description: DESCRIPTION, siteName: "Human Arena", type: "website", url: SITE },
   twitter: { card: "summary_large_image", title: "Human Arena", description: DESCRIPTION },
 };

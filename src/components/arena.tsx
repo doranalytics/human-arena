@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useStore, hydrate, importResults, newChat, updateSettings } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { Logo } from "./icons";
 import { useUI, closeDialog, toast } from "@/lib/ui";
 import { setSession } from "@/lib/session";
 import { Sidebar } from "./sidebar";
@@ -54,6 +55,7 @@ export function Arena() {
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg">
       <div className="relative flex h-8 shrink-0 items-center justify-center gap-2 bg-[#2c2b28] px-3 text-[12px] text-bg">
+        <Logo size={16} className="rounded-[4px]" />
         <span className="font-serif text-[13px] font-semibold tracking-tight">Human Arena</span>
         <span className="text-bg/40">·</span>
         <span className="text-bg/80">Safe training environment</span>
