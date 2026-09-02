@@ -20,6 +20,7 @@ const s = (emoji: string, name: string, group: SkillGroup, status: SkillStatus =
 
 export const SKILLS: Record<string, SkillDef> = {
   // prompting moves
+  chat: s("💬", "Chat", "Prompting moves"),
   constraints: s("📏", "Constraints", "Prompting moves"),
   interviewing: s("❓", "Make it ask first", "Prompting moves"),
   iteration: s("🔁", "Iteration", "Prompting moves"),

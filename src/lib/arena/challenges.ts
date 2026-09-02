@@ -63,18 +63,18 @@ export const CHALLENGES: ChallengeDef[] = [
     slug: "ten-words",
     order: 1,
     title: "Ten words",
-    hook: "Tell it exactly how long, and it obeys to the word.",
-    teaches: "Constraints: tell it exactly how long, and it obeys",
-    badges: ["constraints"],
+    hook: "Ask it anything, and tell it exactly how long. It obeys to the word.",
+    teaches: "Chat and constraints: ask a question, set the length",
+    badges: ["chat", "constraints"],
     minutes: 3,
     points: 25,
-    brief: `Ask the assistant: **why do tents get wet inside on a cold night?**
+    brief: `Pick a complex subject. **Quantum physics** works if nothing comes to mind.
 
-Get the answer in **exactly ten words**. Not nine, not eleven.`,
-    deliverable: "A ten-word answer.",
+Ask the assistant to **explain it in exactly ten words**. Not nine, not eleven.`,
+    deliverable: "A ten-word explanation.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
-    checks: [{ id: "ten", label: "The final answer is exactly ten words" }],
-    hints: [{ text: "Put the length rule in the same message as the question: 'Answer in exactly ten words.'" }, { text: "If it misses, say 'Count the words and try again.' The arena grades the final reply." }],
+    checks: [{ id: "ten", label: "The final answer is exactly ten words and explains the subject" }],
+    hints: [{ text: "Put the length rule in the same message as the subject: 'Explain quantum physics in exactly ten words.'" }, { text: "If it misses, say 'Count the words and try again.' The arena grades the final reply." }],
   },
   {
     slug: "make-it-ask-first",
