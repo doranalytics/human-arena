@@ -121,6 +121,9 @@ export function deleteChat(id: string) {
 export function renameChat(id: string, title: string) {
   setState((s) => ({ chats: s.chats.map((c) => (c.id === id ? { ...c, title } : c)) }));
 }
+export function togglePin(id: string) {
+  setState((s) => ({ chats: s.chats.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)) }));
+}
 export function openChat(id: string | null) {
   const c = id ? state.chats.find((x) => x.id === id) : null;
   setState({ activeChatId: id, activeProjectId: c?.projectId ?? (id ? null : state.activeProjectId) });

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Plus, FolderOpen, Cable, Zap, SlidersHorizontal, Search, MessageSquare, ChevronDown, PanelLeft, Trash2 } from "lucide-react";
-import { useStore, newChat, openChat, openProject, deleteChat } from "@/lib/store";
+import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, PanelLeft, Trash2, Pin, PinOff } from "lucide-react";
+import { useStore, newChat, openChat, openProject, deleteChat, togglePin } from "@/lib/store";
 import { openDialog, toggleSidebar, setPage, useUI } from "@/lib/ui";
 import { useSession } from "@/lib/session";
 import { tierFor } from "@/lib/tiers";
@@ -9,14 +9,31 @@ import { Avatar } from "./avatar";
 import { TierBadge } from "./icons";
 import { totalPoints } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import type { Chat } from "@/lib/types";
 
-function NavItem({ icon, label, onClick, active, badge }: { icon: React.ReactNode; label: string; onClick: () => void; active?: boolean; badge?: string }) {
+function NavItem({ icon, label, onClick, active }: { icon: React.ReactNode; label: string; onClick: () => void; active?: boolean }) {
   return (
     <button onClick={onClick} className={cn("flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] text-ink hover:bg-bg-3", active && "bg-bg-3")}>
       <span className="text-ink-2">{icon}</span>
       <span className="truncate">{label}</span>
-      {badge && <span className="ml-1 rounded bg-[#e8e3d6] px-1.5 py-px text-[10.5px] font-medium text-ink-2">{badge}</span>}
     </button>
+  );
+}
+
+function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () => void }) {
+  return (
+    <div className={cn("group flex h-8 items-center rounded-lg pr-1 hover:bg-bg-3", active && "bg-bg-3")}>
+      <button onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-2.5 px-2 text-left text-[13.5px]">
+        <MessageSquare size={14} className="shrink-0 text-ink-3" />
+        <span className="truncate">{c.title}</span>
+      </button>
+      <button onClick={() => togglePin(c.id)} className="hidden rounded p-1 text-ink-3 hover:text-ink group-hover:block" title={c.pinned ? "Unpin" : "Pin"}>
+        {c.pinned ? <PinOff size={13} /> : <Pin size={13} />}
+      </button>
+      <button onClick={() => deleteChat(c.id)} className="hidden rounded p-1 text-ink-3 hover:text-bad group-hover:block" title="Delete chat">
+        <Trash2 size={13} />
+      </button>
+    </div>
   );
 }
 
@@ -36,21 +53,24 @@ export function Sidebar() {
   const name = session.me?.name || settings.name || "You";
   const avatar = session.me?.avatar || settings.avatar;
   const pts = totalPoints(results);
+  const tier = tierFor(pts);
   const list = chats.filter((c) => !q || c.title.toLowerCase().includes(q.toLowerCase()));
+  const pinned = list.filter((c) => c.pinned);
+  const rest = list.filter((c) => !c.pinned);
+  const open = (id: string) => {
+    setPage(null);
+    openChat(id);
+  };
 
   return (
     <aside className="flex h-full w-[272px] shrink-0 flex-col border-r border-line bg-side">
-      <div className="flex h-12 items-center px-3">
-        <button onClick={toggleSidebar} className="rounded-lg p-1.5 text-ink-2 hover:bg-bg-3" title="Collapse sidebar">
-          <PanelLeft size={17} />
-        </button>
+      <div className="flex h-12 items-center px-4">
+        <span className="font-serif text-[22px] font-medium tracking-tight">{settings.product === "chatgpt" ? "ChatGPT" : "Claude"}</span>
       </div>
 
       <div className="px-2.5 pt-1">
         <NavItem icon={<Plus size={16} />} label="New" onClick={() => { setPage(null); newChat(activeProjectId); }} active={!page && !activeChatId && !activeProjectId && !attempt} />
         <NavItem icon={<FolderOpen size={16} />} label="Projects" onClick={() => setPage("projects")} active={page === "projects"} />
-        <NavItem icon={<Cable size={16} />} label="Connectors" onClick={() => openDialog({ kind: "settings", section: "connectors" })} />
-        <NavItem icon={<Zap size={16} />} label="Skills" onClick={() => openDialog({ kind: "settings", section: "skills" })} />
         <NavItem icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings", section: "skills" })} />
       </div>
 
@@ -69,38 +89,42 @@ export function Sidebar() {
           </button>
         ))}
 
+        {pinned.length > 0 && (
+          <>
+            <div className="mb-1 mt-5 px-2 text-[12px] font-medium text-ink-3">Pinned</div>
+            {pinned.map((c) => (
+              <ChatRow key={c.id} c={c} active={!page && activeChatId === c.id} onOpen={() => open(c.id)} />
+            ))}
+          </>
+        )}
+
         <div className="mb-1 mt-5 flex items-center justify-between px-2">
-          <span className="text-[12px] font-medium text-ink-3">Chats</span>
+          <span className="text-[12px] font-medium text-ink-3">Chats and tasks</span>
           <button onClick={() => setSearching((v) => !v)} className="rounded p-0.5 text-ink-3 hover:bg-bg-3 hover:text-ink" title="Search chats">
             <Search size={14} />
           </button>
         </div>
         {searching && <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search chats" className="mb-1 h-8 w-full rounded-lg border border-line bg-bg px-2 text-[13px] outline-none" />}
-        {list.length === 0 && <div className="px-2 py-1 text-[12.5px] text-ink-3">{q ? "No matches" : "Your chats will show up here"}</div>}
-        {list.map((c) => (
-          <div key={c.id} className={cn("group flex h-8 items-center rounded-lg pr-1 hover:bg-bg-3", !page && activeChatId === c.id && "bg-bg-3")}>
-            <button onClick={() => { setPage(null); openChat(c.id); }} className="flex min-w-0 flex-1 items-center gap-2.5 px-2 text-left text-[13.5px]">
-              <MessageSquare size={14} className="shrink-0 text-ink-3" />
-              <span className="truncate">{c.title}</span>
-            </button>
-            <button onClick={() => deleteChat(c.id)} className="hidden rounded p-1 text-ink-3 hover:text-bad group-hover:block" title="Delete chat">
-              <Trash2 size={13} />
-            </button>
-          </div>
+        {rest.length === 0 && <div className="px-2 py-1 text-[12.5px] text-ink-3">{q ? "No matches" : "Your chats will show up here"}</div>}
+        {rest.map((c) => (
+          <ChatRow key={c.id} c={c} active={!page && activeChatId === c.id} onOpen={() => open(c.id)} />
         ))}
       </div>
 
-      <div className="border-t border-line px-2.5 py-2">
-        <button onClick={() => openDialog({ kind: "settings", section: "account" })} className="flex h-10 w-full items-center gap-2.5 rounded-lg px-2 hover:bg-bg-3">
+      <div className="flex items-center gap-1 border-t border-line px-2.5 py-2">
+        <button onClick={() => openDialog({ kind: "settings", section: "account" })} className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 hover:bg-bg-3" title="Settings">
           <Avatar name={name} src={avatar} size={28} />
           <span className="min-w-0 flex-1 truncate text-left text-[13.5px]">
             {name}{" "}
             <span className="inline-flex items-center gap-1 text-ink-3">
-              · {tierFor(pts) !== "Analog" && <TierBadge tier={tierFor(pts) as Exclude<ReturnType<typeof tierFor>, "Analog">} size={12} />}
-              {tierFor(pts)}
+              · {tier !== "Analog" && <TierBadge tier={tier as Exclude<ReturnType<typeof tierFor>, "Analog">} size={12} />}
+              {tier}
             </span>
           </span>
           <ChevronDown size={14} className="text-ink-3" />
+        </button>
+        <button onClick={toggleSidebar} className="rounded-lg border border-line-2 p-1.5 text-ink-2 hover:bg-bg-3" title="Collapse sidebar">
+          <PanelLeft size={16} />
         </button>
       </div>
     </aside>

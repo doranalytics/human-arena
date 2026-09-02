@@ -27,6 +27,7 @@ export interface Chat {
   updatedAt: string;
   /** set while a challenge attempt is running so its chats can be collected at submit */
   attemptId?: string;
+  pinned?: boolean;
 }
 
 export interface CustomSkill {

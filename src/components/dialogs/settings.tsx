@@ -16,13 +16,13 @@ import { TIERS, tierFor } from "@/lib/tiers";
 import { xHandle, linkedinSlug, xUrl, linkedinUrl } from "@/lib/social";
 import { cn } from "@/lib/utils";
 
+/** Three windows share one component: Settings (personal), Customize (what the assistant can do), Progress (standalone). */
 const NAV: { group: string; items: { id: SettingsSection; label: string; icon: React.ReactNode }[] }[] = [
   {
     group: "Settings",
     items: [
-      { id: "general", label: "General", icon: <Gear size={16} /> },
       { id: "account", label: "Account", icon: <CircleUser size={16} /> },
-      { id: "progress", label: "Progress", icon: <Trophy size={16} /> },
+      { id: "general", label: "General", icon: <Gear size={16} /> },
     ],
   },
   {
@@ -33,7 +33,9 @@ const NAV: { group: string; items: { id: SettingsSection; label: string; icon: R
       { id: "memory", label: "Memory", icon: <Brain size={16} /> },
     ],
   },
+  { group: "Progress", items: [{ id: "progress", label: "Progress", icon: <Trophy size={16} /> }] },
 ];
+const groupOf = (section: SettingsSection) => NAV.find((g) => g.items.some((i) => i.id === section)) ?? NAV[0];
 const TITLE: Record<SettingsSection, string> = { general: "General", account: "Account", progress: "Progress", skills: "Skills", connectors: "Connectors", memory: "Memory" };
 
 /** Two-pane settings window in the desktop-app style: Settings on top, Customize below. */
@@ -45,29 +47,26 @@ export function SettingsDialog({ section }: { section: SettingsSection }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   const s = q.trim().toLowerCase();
+  const group = groupOf(section);
+  const items = group.items.filter((i) => !s || i.label.toLowerCase().includes(s));
+  const single = group.items.length === 1;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]" onMouseDown={(e) => e.target === e.currentTarget && closeDialog()}>
-      <div role="dialog" aria-modal className="fade-up flex h-[86vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl shadow-black/10">
-        <aside className="flex w-[220px] shrink-0 flex-col border-r border-line bg-side p-3">
-          <label className="relative mb-3 block">
-            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="h-9 w-full rounded-lg border border-line bg-bg pl-8 pr-2 text-[13px] outline-none placeholder:text-ink-3 focus:border-line-2" />
-          </label>
-          {NAV.map((g) => {
-            const items = g.items.filter((i) => !s || i.label.toLowerCase().includes(s));
-            if (!items.length) return null;
-            return (
-              <div key={g.group} className="mb-4">
-                <div className="mb-1 px-2 text-[11.5px] font-medium text-ink-3">{g.group}</div>
-                {items.map((i) => (
-                  <button key={i.id} onClick={() => openDialog({ kind: "settings", section: i.id })} className={cn("flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] hover:bg-bg-3", section === i.id && "bg-bg-3 font-medium")}>
-                    <span className="text-ink-2">{i.icon}</span> {i.label}
-                  </button>
-                ))}
-              </div>
-            );
-          })}
-        </aside>
+      <div role="dialog" aria-modal className={cn("fade-up flex h-[86vh] w-full overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl shadow-black/10", single ? "max-w-2xl" : "max-w-4xl")}>
+        {!single && (
+          <aside className="flex w-[220px] shrink-0 flex-col border-r border-line bg-side p-3">
+            <label className="relative mb-3 block">
+              <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="h-9 w-full rounded-lg border border-line bg-bg pl-8 pr-2 text-[13px] outline-none placeholder:text-ink-3 focus:border-line-2" />
+            </label>
+            <div className="mb-1 px-2 text-[11.5px] font-medium text-ink-3">{group.group}</div>
+            {items.map((i) => (
+              <button key={i.id} onClick={() => openDialog({ kind: "settings", section: i.id })} className={cn("flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] hover:bg-bg-3", section === i.id && "bg-bg-3 font-medium")}>
+                <span className="text-ink-2">{i.icon}</span> {i.label}
+              </button>
+            ))}
+          </aside>
+        )}
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-center justify-between gap-3 px-6 py-4">
             <div className="text-[16px] font-medium">{TITLE[section]}</div>
@@ -111,17 +110,6 @@ function General() {
         <div className="mt-2 flex items-center justify-between">
           <div className="text-[12px] text-ink-3">Applied to every chat, on top of any project instructions.</div>
           <Button onClick={save} disabled={!dirty}><Check size={14} /> Save</Button>
-        </div>
-      </section>
-      <section>
-        <Label>Which assistant do you normally use?</Label>
-        <div className="flex gap-2">
-          {(["claude", "chatgpt"] as const).map((p) => (
-            <button key={p} disabled={p === "chatgpt"} onClick={() => updateSettings({ product: p })} className={cn("flex-1 rounded-lg border px-3 py-2 text-left text-[13.5px] disabled:opacity-50", settings.product === p ? "border-ink" : "border-line")}>
-              <div className="font-medium">{p === "claude" ? "Claude" : "ChatGPT"}</div>
-              <div className="text-[12px] text-ink-3">{p === "claude" ? "The arena looks like Claude" : "Skin coming next"}</div>
-            </button>
-          ))}
         </div>
       </section>
       <section>
