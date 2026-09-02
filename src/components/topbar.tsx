@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useElapsed } from "@/lib/use-elapsed";
 import { PanelLeft, Swords, Trophy, Settings, Lightbulb, Flag, X, Medal } from "lucide-react";
 import { useStore, useHint, endAttempt, attemptChats, getState } from "@/lib/store";
 import { openDialog, toggleSidebar, useUI, toast } from "@/lib/ui";
@@ -7,16 +8,6 @@ import { getChallenge } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
 import { fmtClock, cn } from "@/lib/utils";
 import type { ArenaResult } from "@/lib/types";
-
-function useElapsed(startedAt: string | undefined) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!startedAt) return;
-    const t = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(t);
-  }, [startedAt]);
-  return startedAt ? (now - new Date(startedAt).getTime()) / 1000 : 0;
-}
 
 export function TopBar({ title }: { title: string }) {
   const attempt = useStore((s) => s.attempt);

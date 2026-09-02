@@ -18,12 +18,7 @@ export default function OG() {
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#faf9f5", padding: 72, fontFamily: "Georgia, 'Times New Roman', serif", color: "#141413" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <svg width="48" height="48" viewBox="0 0 64 64">
-            <rect width="64" height="64" rx="14" fill="#d97757" />
-            <rect x="12" y="12" width="10" height="40" rx="3" fill="#faf9f5" />
-            <rect x="42" y="12" width="10" height="40" rx="3" fill="#faf9f5" />
-            <ellipse cx="32" cy="32" rx="14.5" ry="8" fill="none" stroke="#faf9f5" strokeWidth="5.5" />
-          </svg>
+          <svg width="52" height="52" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#d97757" /><g transform="translate(10 10) scale(1.8333)" fill="none" stroke="#faf9f5" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="m13 19 6-6" /><path d="M14.5 17.5 3.586 6.586A2 2 0 0 1 3 5.172V3h2.172a2 2 0 0 1 1.414.586L17.5 14.5" /><path d="m14.828 6.172 2.586-2.586A2 2 0 0 1 18.828 3H21v2.172a2 2 0 0 1-.586 1.414l-2.586 2.586" /><path d="m16 16 4 4" /><path d="m19 21 2-2" /><path d="m5 14 4 4" /><path d="m5 21-2-2" /><path d="M7.5 16.5 4 20" /></g></svg>
           <div style={{ fontSize: 34, fontWeight: 600, letterSpacing: -0.5 }}>Human Arena</div>
           <div style={{ marginLeft: 14, fontSize: 22, color: "#8f8e88", fontFamily: "Helvetica, Arial, sans-serif" }}>Safe training environment</div>
         </div>

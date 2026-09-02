@@ -198,7 +198,7 @@ Then give it **one rule** of your choosing and have it pick the **best three**.`
     badges: ["comparisons"],
     minutes: 5,
     points: 40,
-    brief: `Ask the assistant to compare **courier, post and freight** for shipping a parcel, **as a table**, and to **pick one**.`,
+    brief: `Drop the quotes in. Ask for them **as a table**, and for the assistant to **pick one**.`,
     deliverable: "A comparison table and a pick.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
     checks: [
@@ -206,6 +206,7 @@ Then give it **one rule** of your choosing and have it pick the **best three**.`
       { id: "pick", label: "One option recommended, with a reason" },
     ],
     hints: [{ text: "Say 'as a table' and 'then pick one'." }],
+    materials: [{ kind: "table", id: "quotes", title: "Three quotes for a 12 kg parcel", columns: ["Option", "Price", "Days", "Tracking", "Insurance"], rows: [["Courier", "$48", "1", "Live", "Included to $500"], ["Post", "$19", "4", "Scan at depots", "Extra $6"], ["Freight", "$62", "7", "Pickup and delivery only", "Included to $2,000"]] }],
   },
   {
     slug: "tutor-mode",
@@ -234,11 +235,7 @@ Then give it **one rule** of your choosing and have it pick the **best three**.`
     badges: ["constraints", "style-training"],
     minutes: 4,
     points: 40,
-    brief: `Paste this paragraph and make it **sound like a person wrote it**, in one instruction:
-
-> ${SLOP_PARAGRAPH}
-
-Same meaning, no filler phrases, no "let's dive in", no "in today's fast-paced world".`,
+    brief: `Drop the paragraph into the chat and make it **sound like a person wrote it**, in one instruction.`,
     deliverable: "A plain rewrite with the AI tells removed.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
     checks: [
@@ -246,6 +243,7 @@ Same meaning, no filler phrases, no "let's dive in", no "in today's fast-paced w
       { id: "meaning", label: "The point of the paragraph survived" },
     ],
     hints: [{ text: "Tell it what to remove and what to keep: 'Rewrite plainly. Cut every cliché. Keep the meaning.'" }],
+    materials: [{ kind: "text", id: "slop", title: "The paragraph", body: SLOP_PARAGRAPH }],
   },
   {
     slug: "sound-like-you",
@@ -256,13 +254,7 @@ Same meaning, no filler phrases, no "let's dive in", no "in today's fast-paced w
     badges: ["style-training"],
     minutes: 6,
     points: 45,
-    brief: `Here are two notes written in your voice. Paste both, then ask for a **new note in the same voice** about a **delayed delivery**.
-
-Sample 1:
-> ${WRITING_SAMPLE_1}
-
-Sample 2:
-> ${WRITING_SAMPLE_2}`,
+    brief: `Drop both samples into the chat and ask for a **new note in the same voice** about a **delayed delivery**.`,
     deliverable: "A new note that reads like the samples.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
     checks: [
@@ -270,6 +262,7 @@ Sample 2:
       { id: "voice", label: "The new note matches the samples: short sentences, direct, no corporate filler, ends with a next step" },
     ],
     hints: [{ text: "Paste both samples in one message and say 'Write like this.'" }],
+    materials: [{ kind: "text", id: "s1", title: "Sample 1, your voice", body: WRITING_SAMPLE_1 }, { kind: "text", id: "s2", title: "Sample 2, your voice", body: WRITING_SAMPLE_2 }],
   },
   {
     slug: "reply-to-this",
@@ -280,11 +273,7 @@ Sample 2:
     badges: ["drafting"],
     minutes: 4,
     points: 40,
-    brief: `A colleague sent this:
-
-> ${FAVOUR_REQUEST}
-
-Draft a **short reply that says no**.`,
+    brief: `Drop the message into the chat and ask for a **short reply that says no**.`,
     deliverable: "A short reply that declines.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
     checks: [
@@ -292,6 +281,7 @@ Draft a **short reply that says no**.`,
       { id: "length", label: "It is short" },
     ],
     hints: [{ text: "Paste the message, then say what you want: 'Reply and say no, keep it short.'" }],
+    materials: [{ kind: "text", id: "favour", title: "Message from a colleague", body: FAVOUR_REQUEST }],
   },
   {
     slug: "there-and-back",
@@ -302,9 +292,7 @@ Draft a **short reply that says no**.`,
     badges: ["translation", "verification"],
     minutes: 4,
     points: 35,
-    brief: `Translate this into **French**, then have the assistant translate its French **back into English** and list **what changed** between the original and the round trip:
-
-> ${BACK_TRANSLATE}`,
+    brief: `Drop the paragraph in. Ask for it in **French**, then **back into English**, then **what changed**.`,
     deliverable: "French version, English round trip, and a list of differences.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
     checks: [
@@ -312,6 +300,7 @@ Draft a **short reply that says no**.`,
       { id: "back", label: "It was translated back to English and the differences were listed" },
     ],
     hints: [{ text: "Ask for all three steps in one message: translate, translate back, compare." }],
+    materials: [{ kind: "text", id: "para", title: "The paragraph", body: BACK_TRANSLATE }],
   },
 
   /* ------------------------------------------------------------ files and images */
@@ -324,14 +313,12 @@ Draft a **short reply that says no**.`,
     badges: ["file-upload", "summarizing"],
     minutes: 5,
     points: 45,
-    brief: `Download the expense policy from this brief and **attach it** to the chat.
-
-Ask for the **five things a new starter must know**.`,
+    brief: `**Attach the expense policy** and ask for the **five things a new starter must know**.`,
     deliverable: "Five bullets drawn from the document.",
     behaviors: [{ id: "file", label: "Attached the file", event: "file_attached" }],
     checks: [{ id: "five", label: "Five bullets drawn from the document" }],
-    fixtures: [{ filename: "expense-policy.txt", title: "Expense policy", body: LONG_DOC }],
-    hints: [{ text: "Use the + button or drag the file onto the chat. Then ask." }],
+    materials: [{ kind: "file", id: "policy", filename: "expense-policy.txt", title: "Expense policy", body: LONG_DOC, mediaType: "text/plain" }],
+    hints: [{ text: "Drag the file from above into the message box, or use the + button." }],
   },
   {
     slug: "pull-the-table",
@@ -342,16 +329,14 @@ Ask for the **five things a new starter must know**.`,
     badges: ["extraction", "file-upload"],
     minutes: 6,
     points: 55,
-    brief: `Download the trade show expense notes and **attach** them.
-
-Ask for a **clean table with a total**.`,
+    brief: `**Attach the expense notes** and ask for a **clean table with a total**.`,
     deliverable: "A table and a correct total.",
     behaviors: [{ id: "file", label: "Attached the file", event: "file_attached" }],
     checks: [
       { id: "table", label: "A table with one row per line item" },
       { id: "total", label: "The total is correct" },
     ],
-    fixtures: [{ filename: "trade-show-expenses.txt", title: "Trade show expense notes", body: MESSY_LINES }],
+    materials: [{ kind: "file", id: "expenses", filename: "trade-show-expenses.txt", title: "Trade show expense notes", body: MESSY_LINES, mediaType: "text/plain" }],
     hints: [{ text: "Say 'one row per line item, with a total at the bottom'." }],
   },
   {
@@ -363,16 +348,14 @@ Ask for a **clean table with a total**.`,
     badges: ["pdf", "extraction"],
     minutes: 6,
     points: 55,
-    brief: `Download the supply agreement PDF and **attach it**.
-
-Ask for the **price per metre** and the **minimum order**.`,
+    brief: `**Attach the PDF** and ask for the **price per metre** and the **minimum order**.`,
     deliverable: "Two correct figures from the PDF.",
     behaviors: [{ id: "file", label: "Attached the PDF", event: "file_attached" }],
     checks: [
       { id: "price", label: "Price per metre is correct" },
       { id: "minimum", label: "Minimum order per colour is correct" },
     ],
-    fixtures: [{ filename: "supply-agreement.pdf", title: "Supply agreement (PDF)", url: "/fixtures/supply-agreement.pdf", mediaType: "application/pdf" }],
+    materials: [{ kind: "file", id: "agreement", filename: "supply-agreement.pdf", title: "Supply agreement (PDF)", url: "/fixtures/supply-agreement.pdf", mediaType: "application/pdf" }],
     hints: [{ text: "Attach the PDF with + and ask both questions in one message." }],
   },
   {
@@ -384,13 +367,11 @@ Ask for the **price per metre** and the **minimum order**.`,
     badges: ["camera"],
     minutes: 4,
     points: 35,
-    brief: `Download the photo of the care label and **attach it**.
-
-Ask **what you must never do** with this jacket.`,
+    brief: `**Attach the photo** and ask **what you must never do** with this jacket.`,
     deliverable: "The prohibited step, read from the photo.",
     behaviors: [{ id: "image", label: "Attached an image", event: "image_attached" }],
     checks: [{ id: "never", label: "A prohibited action from the label is named" }],
-    fixtures: [{ filename: "care-label.png", title: "Photo of the care label", url: "/fixtures/care-label.png", mediaType: "image/png" }],
+    materials: [{ kind: "file", id: "label", filename: "care-label.png", title: "Photo of the care label", url: "/fixtures/care-label.png", mediaType: "image/png" }],
     hints: [{ text: "Use the image button in the composer, or drag the picture in." }],
   },
   {
@@ -402,13 +383,11 @@ Ask **what you must never do** with this jacket.`,
     badges: ["ocr"],
     minutes: 4,
     points: 40,
-    brief: `Download the handwritten note and **attach it**.
-
-Ask the assistant to **type out what it says**.`,
+    brief: `**Attach the note** and ask the assistant to **type out what it says**.`,
     deliverable: "The note, as text.",
     behaviors: [{ id: "image", label: "Attached an image", event: "image_attached" }],
     checks: [{ id: "transcribed", label: "The note's lines are transcribed accurately" }],
-    fixtures: [{ filename: "handwritten-note.png", title: "Handwritten note", url: "/fixtures/handwritten-note.png", mediaType: "image/png" }],
+    materials: [{ kind: "file", id: "note", filename: "handwritten-note.png", title: "Handwritten note", url: "/fixtures/handwritten-note.png", mediaType: "image/png" }],
     hints: [{ text: "Attach the image and ask for 'the exact text'." }],
   },
   {
@@ -420,13 +399,11 @@ Ask the assistant to **type out what it says**.`,
     badges: ["screenshot", "extraction"],
     minutes: 5,
     points: 50,
-    brief: `Download the screenshot of the sales table and **attach it**.
-
-Ask for the **total of the June column**.`,
+    brief: `**Attach the screenshot** and ask for the **total of the June column**.`,
     deliverable: "The June total.",
     behaviors: [{ id: "image", label: "Attached an image", event: "image_attached" }],
     checks: [{ id: "june", label: "The June total is correct" }],
-    fixtures: [{ filename: "regional-sales-q2.png", title: "Screenshot of the sales table", url: "/fixtures/regional-sales-q2.png", mediaType: "image/png" }],
+    materials: [{ kind: "file", id: "sales", filename: "regional-sales-q2.png", title: "Screenshot of the sales table", url: "/fixtures/regional-sales-q2.png", mediaType: "image/png" }],
     hints: [{ text: "Ask it to read the table out first, then do the sums. Errors show up in the read-out." }],
   },
 
@@ -517,9 +494,7 @@ https://en.wikipedia.org/wiki/Ultralight_backpacking`,
     badges: ["model-choice"],
     minutes: 6,
     points: 55,
-    brief: `A jacket sells for **$249**. It costs **$92** to make. Retail partners buy it at **45 percent off** the price. Wholesale orders cost **$11** per unit to fulfil, direct online orders cost **$19**.
-
-Switch to the **Smart** model and **High** effort, then ask for the **profit per unit on wholesale versus direct**.`,
+    brief: `Drop the numbers in. Switch to the **Smart** model and **High** effort, then ask for the **profit per unit on wholesale versus direct**.`,
     deliverable: "Two correct numbers, asked with Smart and High.",
     behaviors: [
       { id: "smart", label: "Selected the Smart model", event: "model_selected", detail: "smart" },
@@ -530,6 +505,7 @@ Switch to the **Smart** model and **High** effort, then ask for the **profit per
       { id: "direct", label: "Direct profit per unit is correct" },
     ],
     hints: [{ text: "The model picker is at the bottom right of the composer. Change both the model and the effort." }],
+    materials: [{ kind: "table", id: "unit", title: "One jacket", columns: ["Item", "Value"], rows: [["Sale price", "$249"], ["Cost to make", "$92"], ["Retail partner discount", "45% off"], ["Fulfilment per unit, wholesale", "$11"], ["Fulfilment per unit, direct", "$19"]] }],
   },
   {
     slug: "connect-and-ask",
@@ -597,11 +573,9 @@ Type **/meeting-notes** and ask for notes on that transcript. The skill sets the
     badges: ["skills"],
     minutes: 7,
     points: 60,
-    brief: `Create a skill called **/three-lines** (Customize, then Skills). Its instruction: *turn any text into three short lines*.
+    brief: `Create a skill called **/three-lines** whose instruction is *turn any text into three short lines*.
 
-Then run it on this:
-
-> ${BACK_TRANSLATE}`,
+Then run it on the paragraph.`,
     deliverable: "A saved skill, invoked once, producing three short lines.",
     behaviors: [
       { id: "created", label: "Created a skill", event: "skill_created" },
@@ -609,6 +583,7 @@ Then run it on this:
     ],
     checks: [{ id: "three", label: "The output is three short lines" }],
     hints: [{ text: "Customize, then Skills, then Add. Name it three-lines and paste the instruction." }, { text: "In the chat, type /three-lines, then paste the paragraph." }],
+    materials: [{ kind: "text", id: "para", title: "The paragraph", body: BACK_TRANSLATE }],
   },
   {
     slug: "set-up-shop",

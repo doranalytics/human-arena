@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { useDictation } from "@/lib/dictation";
+import { MATERIAL_MIME, materialFile, materialText } from "@/lib/materials";
+import type { Material } from "@/lib/arena/types";
 import { Plus, Paperclip, Image as ImageIcon, Globe, Telescope, Zap, Cable, ChevronDown, X, FileText, Check, Mic, Loader2 } from "lucide-react";
 import { useStore, updateSettings } from "@/lib/store";
 import { openDialog } from "@/lib/ui";
@@ -58,11 +60,36 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
     if (!list) return;
     setFiles((f) => [...f, ...Array.from(list)].slice(0, 6));
   }
+  async function takeMaterial(m: Material) {
+    if (m.kind === "file") {
+      const f = await materialFile(m);
+      if (f) addFiles([f]);
+    } else {
+      const t = materialText(m);
+      setText((cur) => (cur.trim() ? cur.replace(/\s*$/, "\n\n") : "") + t + "\n\n");
+      ta.current?.focus();
+    }
+  }
   function onDrop(e: DragEvent) {
     e.preventDefault();
     setDragging(false);
+    const raw = e.dataTransfer.getData(MATERIAL_MIME);
+    if (raw) {
+      try {
+        void takeMaterial(JSON.parse(raw) as Material);
+      } catch {
+        /* not ours */
+      }
+      return;
+    }
     addFiles(e.dataTransfer.files);
   }
+  useEffect(() => {
+    const on = (e: Event) => void takeMaterial((e as CustomEvent<Material>).detail);
+    window.addEventListener("arena:material", on);
+    return () => window.removeEventListener("arena:material", on);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const canSend = !busy && (text.trim().length > 0 || files.length > 0);
 
   async function submit() {

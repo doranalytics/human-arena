@@ -16,15 +16,11 @@ export interface Check {
   label: string;
 }
 
-export interface Fixture {
-  filename: string;
-  title: string;
-  /** inline text content (text fixtures) */
-  body?: string;
-  /** served file for binary fixtures (PDF, images), under /public */
-  url?: string;
-  mediaType?: string;
-}
+/** Material the challenge puts on the stage above the composer. The learner drags it into the chat. */
+export type Material =
+  | { kind: "file"; id: string; filename: string; title: string; body?: string; url?: string; mediaType: string }
+  | { kind: "text"; id: string; title: string; body: string }
+  | { kind: "table"; id: string; title: string; columns: string[]; rows: (string | number)[][] };
 
 export interface Hint {
   text: string;
@@ -47,8 +43,8 @@ export interface ChallengeDef {
   deliverable: string;
   behaviors: Behavior[];
   checks: Check[];
-  /** files the learner downloads from the brief and must bring into the chat */
-  fixtures?: Fixture[];
+  /** what the stage shows once the clock starts: files, text, data */
+  materials?: Material[];
   hints: Hint[];
   /** order in the list */
   order: number;

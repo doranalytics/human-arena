@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Check, Clock, Download, Lock, Swords, Trophy } from "lucide-react";
+import { Check, Clock, Lock, Swords, Trophy, FileText, Quote, Table2 } from "lucide-react";
 import { Dialog, Button } from "../dialog";
 import { CHALLENGES, getChallenge, TOTAL_POINTS } from "@/lib/arena/challenges";
-import { HINT_COST, type Fixture } from "@/lib/arena/types";
+import { HINT_COST } from "@/lib/arena/types";
 import { SkillPill } from "../skill-pill";
+import { LearnCard } from "../learn-card";
 import { useStore, startAttempt, newChat, totalPoints } from "@/lib/store";
 import { openDialog, closeDialog, toast } from "@/lib/ui";
 import { cn } from "@/lib/utils";
@@ -85,18 +86,6 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
     setStarting(false);
   }
 
-  function download(f: Fixture) {
-    const a = document.createElement("a");
-    if (f.url) {
-      a.href = f.url;
-    } else {
-      a.href = URL.createObjectURL(new Blob([f.body ?? ""], { type: "text/plain" }));
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    }
-    a.download = f.filename;
-    a.click();
-  }
-
   return (
     <Dialog
       open={open}
@@ -116,16 +105,19 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
         </>
       }
     >
-      <div className="mb-4 flex items-start gap-3 rounded-lg border border-clay/30 bg-clay/[0.07] px-3.5 py-2.5">
-        <span className="mt-0.5 shrink-0 text-[10.5px] font-semibold uppercase tracking-wide text-clay-dark">You&rsquo;ll learn</span>
-        <span className="font-serif text-[16px] leading-snug text-ink">{c.hook}</span>
-      </div>
+      <LearnCard text={c.hook} />
       <BriefBody brief={c.brief} />
-      {c.fixtures?.map((f) => (
-        <button key={f.filename} onClick={() => download(f)} className="mt-3 flex items-center gap-2 rounded-lg border border-line-2 px-3 py-2 text-[13px] hover:bg-bg-2">
-          <Download size={14} /> {f.title} <span className="text-ink-3">({f.filename})</span>
-        </button>
-      ))}
+      {c.materials && c.materials.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12px] text-ink-3">
+          <span>You get</span>
+          {c.materials.map((m) => (
+            <span key={m.id} className="inline-flex items-center gap-1 rounded-md border border-line bg-bg-2 px-2 py-0.5 text-[12px] text-ink-2">
+              {m.kind === "table" ? <Table2 size={12} /> : m.kind === "text" ? <Quote size={12} /> : <FileText size={12} />} {m.title}
+            </span>
+          ))}
+          <span>once the clock starts</span>
+        </div>
+      )}
       <div className="mt-4 grid grid-cols-3 gap-2 text-[12.5px]">
         <Stat label="Time box" value={`${c.minutes} min`} />
         <Stat label="Points" value={String(c.points)} />

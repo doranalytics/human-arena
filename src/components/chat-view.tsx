@@ -10,6 +10,8 @@ import { Composer, type ComposerSubmit } from "./composer";
 import { Spark } from "./icons";
 import { TOOL_CONNECTOR } from "@/lib/tool-connector";
 import { BUILTIN_SKILLS } from "@/lib/skills";
+import { getChallenge } from "@/lib/arena/challenges";
+import { ChallengeStage, ChallengeStrip } from "./challenge-stage";
 import { useSession } from "@/lib/session";
 
 function greeting(name: string) {
@@ -40,6 +42,8 @@ export function ChatView({ chat }: { chat: Chat }) {
   const project = useStore((s) => (chat.projectId ? s.projects.find((p) => p.id === chat.projectId) ?? null : null));
   const customSkills = useStore((s) => s.skills);
   const session = useSession();
+  const attempt = useStore((s) => s.attempt);
+  const challenge = attempt ? getChallenge(attempt.slug) : null;
   const name = session.me?.name || settings.name;
 
   const transport = useMemo(() => new DefaultChatTransport<UIMessage>({ api: "/api/chat" }), []);
@@ -117,6 +121,15 @@ export function ChatView({ chat }: { chat: Chat }) {
     <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} projectName={project?.name ?? null} />
   );
 
+  if (empty && attempt && challenge)
+    return (
+      <div className="flex h-full flex-col items-center justify-center px-6 py-8">
+        <ChallengeStage c={challenge} attempt={attempt} />
+        <div className="mt-5 w-full max-w-[760px]">{composer}</div>
+        <div className="mt-3 text-[12.5px] text-ink-3">Drag anything above into the message box. The clock is running.</div>
+      </div>
+    );
+
   if (empty)
     return (
       <div className="flex h-full flex-col items-center justify-center px-6 pb-24">
@@ -134,6 +147,7 @@ export function ChatView({ chat }: { chat: Chat }) {
 
   return (
     <div className="flex h-full flex-col">
+      {attempt && challenge && <ChallengeStrip c={challenge} attempt={attempt} />}
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-[760px] space-y-7 px-6 pb-8 pt-8">
           {messages.map((m, i) => (
