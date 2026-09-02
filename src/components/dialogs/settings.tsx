@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Camera, Check, Trash2, X, Search, Settings as Gear, CircleUser, Trophy, Zap, Cable, Brain, Plus } from "lucide-react";
+import { Camera, Check, Trash2, X, Search, Settings as Gear, CircleUser, Trophy, Zap, Cable, Brain, Plus, SlidersHorizontal } from "lucide-react";
 import { Button, inputCls } from "../dialog";
 import { Avatar } from "../avatar";
 import { ConnectorLogo } from "../connector-logos";
@@ -28,6 +28,7 @@ const NAV: { group: string; items: { id: SettingsSection; label: string; icon: R
   {
     group: "Customize",
     items: [
+      { id: "instructions", label: "Instructions", icon: <SlidersHorizontal size={16} /> },
       { id: "skills", label: "Skills", icon: <Zap size={16} /> },
       { id: "connectors", label: "Connectors", icon: <Cable size={16} /> },
       { id: "memory", label: "Memory", icon: <Brain size={16} /> },
@@ -36,7 +37,7 @@ const NAV: { group: string; items: { id: SettingsSection; label: string; icon: R
   { group: "Progress", items: [{ id: "progress", label: "Progress", icon: <Trophy size={16} /> }] },
 ];
 const groupOf = (section: SettingsSection) => NAV.find((g) => g.items.some((i) => i.id === section)) ?? NAV[0];
-const TITLE: Record<SettingsSection, string> = { general: "General", account: "Account", progress: "Progress", skills: "Skills", connectors: "Connectors", memory: "Memory" };
+const TITLE: Record<SettingsSection, string> = { general: "General", account: "Account", progress: "Progress", instructions: "Instructions", skills: "Skills", connectors: "Connectors", memory: "Memory" };
 
 /** Two-pane settings window in the desktop-app style: Settings on top, Customize below. */
 export function SettingsDialog({ section }: { section: SettingsSection }) {
@@ -74,6 +75,7 @@ export function SettingsDialog({ section }: { section: SettingsSection }) {
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
             {section === "general" && <General />}
+            {section === "instructions" && <Instructions />}
             {section === "account" && <Account />}
             {section === "progress" && <Progress />}
             {section === "skills" && <Skills />}
@@ -92,28 +94,11 @@ function Label({ children }: { children: React.ReactNode }) {
 
 /* ------------------------------------------------------------------ general */
 function General() {
-  const settings = useStore((s) => s.settings);
-  const saved = settings.instructions || "";
-  const [instructions, setInstructions] = useState(saved);
-  const dirty = instructions.trim() !== saved.trim();
-  function save() {
-    const ins = instructions.trim().slice(0, 2000);
-    updateSettings({ instructions: ins });
-    if (ins) track("instructions_set");
-    toast({ title: "Saved", tone: "info" });
-  }
   return (
     <div className="space-y-7">
       <section>
-        <Label>Custom instructions</Label>
-        <textarea className={cn(inputCls, "min-h-[96px] resize-y leading-relaxed")} value={instructions} maxLength={2000} placeholder={"How should the assistant behave in every chat? For example: call me Captain. Keep answers short. End each reply with a question."} onChange={(e) => setInstructions(e.target.value)} />
-        <div className="mt-2 flex items-center justify-between">
-          <div className="text-[12px] text-ink-3">Applied to every chat, on top of any project instructions.</div>
-          <Button onClick={save} disabled={!dirty}><Check size={14} /> Save</Button>
-        </div>
-      </section>
-      <section>
         <Label>Local data</Label>
+        <div className="mb-2 text-[13px] text-ink-2">Chats, projects, skills, memories and results live in this browser until you sign in.</div>
         <Button
           variant="danger"
           onClick={() => {
@@ -125,6 +110,30 @@ function General() {
           Clear everything in this browser
         </Button>
       </section>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ instructions */
+function Instructions() {
+  const settings = useStore((s) => s.settings);
+  const saved = settings.instructions || "";
+  const [instructions, setInstructions] = useState(saved);
+  const dirty = instructions.trim() !== saved.trim();
+  function save() {
+    const ins = instructions.trim().slice(0, 2000);
+    updateSettings({ instructions: ins });
+    if (ins) track("instructions_set");
+    toast({ title: "Saved", tone: "info" });
+  }
+  return (
+    <div className="space-y-4">
+      <div className="text-[13px] text-ink-2">Standing rules the assistant follows in every chat: what to call you, how long to be, what to always or never do.</div>
+      <textarea className={cn(inputCls, "min-h-[120px] resize-y leading-relaxed")} value={instructions} maxLength={2000} placeholder={"For example: call me Captain. Keep answers short. End each reply with a question."} onChange={(e) => setInstructions(e.target.value)} />
+      <div className="flex items-center justify-between">
+        <div className="text-[12px] text-ink-3">Applied on top of any project instructions.</div>
+        <Button onClick={save} disabled={!dirty}><Check size={14} /> Save</Button>
+      </div>
     </div>
   );
 }

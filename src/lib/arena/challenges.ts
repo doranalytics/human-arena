@@ -617,13 +617,13 @@ Start a chat **inside the project** and ask it anything. Do not mention the rule
     badges: ["personalization"],
     minutes: 4,
     points: 40,
-    brief: `Open **Settings** (the gear, top right), then **General**, and add one custom instruction: **call me Captain**.
+    brief: `Open **Customize**, then **Instructions**, and add one rule: **call me Captain**.
 
 Start a **new chat** and ask anything.`,
     deliverable: "A reply that calls you Captain without being asked in the chat.",
     behaviors: [{ id: "set", label: "Saved custom instructions", event: "instructions_set" }],
     checks: [{ id: "honoured", label: "The reply addresses the user as Captain, with the name never mentioned in the chat" }],
-    hints: [{ text: "Gear top right, General, type the instruction, Save. Then New." }],
+    hints: [{ text: "Customize is in the left panel. Instructions is the first item. Type the rule, Save, then New." }],
   },
   {
     slug: "remember-this",
