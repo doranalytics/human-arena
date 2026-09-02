@@ -15,8 +15,8 @@ export const MODELS: Record<ModelChoice, { label: string; blurb: string; provide
 /** If the Fast provider has no key, this Claude model stands in. */
 export const FAST_FALLBACK = "claude-haiku-4-5";
 
-export const EFFORTS: Record<Effort, { label: string; blurb: string; thinkingBudget: number | null; openaiEffort: "minimal" | "low" | "high" }> = {
-  low: { label: "Low", blurb: "Answers straight away", thinkingBudget: null, openaiEffort: "minimal" },
+export const EFFORTS: Record<Effort, { label: string; blurb: string; thinkingBudget: number | null; openaiEffort: "none" | "low" | "high" }> = {
+  low: { label: "Low", blurb: "Answers straight away", thinkingBudget: null, openaiEffort: "none" },
   medium: { label: "Medium", blurb: "Thinks a little first", thinkingBudget: 2048, openaiEffort: "low" },
   high: { label: "High", blurb: "Thinks hard before answering", thinkingBudget: 8000, openaiEffort: "high" },
 };
