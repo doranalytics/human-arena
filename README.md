@@ -44,20 +44,13 @@ Without Supabase env the app runs in **guest mode**: chats, projects, skills and
 
 ## Deploy on Vercel
 
-1. Push this folder to its own repo (see below) and import it in Vercel. Framework preset: Next.js. No build settings to change.
+1. Import this repo in Vercel. Framework preset: Next.js. No build settings to change.
 2. Environment variables: `ANTHROPIC_API_KEY` (required for real replies). Optional: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SITE_URL`.
 3. For the board: create a Supabase project, run `supabase/migrations/20260902000000_arena.sql` in the SQL editor, set Auth > URL configuration > Site URL to the Vercel URL and add `https://<your-domain>/auth/callback` to the redirect list.
 
-## Split into its own repo
+## Origin
 
-This folder was built inside `ai-certified-next` because the session could not create repositories. To move it:
-
-```
-git subtree split --prefix=human-arena -b human-arena-main
-git push git@github.com:doranalytics/human-arena.git human-arena-main:main
-```
-
-Then import `doranalytics/human-arena` in Vercel.
+Built on 2 Sep 2026 as the successor to `doranalytics/ai-certified-next`, whose Supabase pattern, tiers and grader shape it carries over. The product decisions behind it are in that repo's `docs/HUMAN-ARENA.md`.
 
 ## Costs and models
 
