@@ -71,13 +71,13 @@ export function TopBar({ title }: { title: string }) {
 
       {attempt && c ? (
         <div className="flex items-center gap-1.5">
-          <div className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1 text-[13px]", over ? "border-bad/40 text-bad" : "border-line-2")}>
+          <button onClick={() => openDialog({ kind: "brief", slug: attempt.slug })} title="Show the challenge brief" className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1 text-[13px] hover:bg-bg-2", over ? "border-bad/40 text-bad" : "border-line-2")}>
             <Swords size={14} className="text-clay" />
             <span className="max-w-[180px] truncate font-medium">{c.title}</span>
             <span className="tabular-nums text-ink-2">
               {fmtClock(elapsed)} <span className="text-ink-3">/ {c.minutes}:00</span>
             </span>
-          </div>
+          </button>
           <div className="relative">
             <button onClick={() => setHintOpen((v) => !v)} className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] text-ink-2 hover:bg-bg-3" title="Reveal a hint">
               <Lightbulb size={15} /> Hint {attempt.hintsUsed > 0 && <span className="text-ink-3">({attempt.hintsUsed})</span>}
