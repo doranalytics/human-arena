@@ -3,14 +3,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Trophy, Search, X } from "lucide-react";
 import { Dialog } from "../dialog";
 import { Avatar } from "../avatar";
-import { TierBadge, type BadgeTier } from "../icons";
+import { TierBadge, IconLinkedIn, IconX, type BadgeTier } from "../icons";
 import { closeDialog } from "@/lib/ui";
 import { useStore, totalPoints } from "@/lib/store";
 import { useSession } from "@/lib/session";
 import { tierFor, type Tier } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 
-interface Row { id: string; name: string; avatar?: string | null; points: number; challenges: number; rank: number; you?: boolean }
+interface Row { id: string; name: string; avatar?: string | null; linkedin?: string | null; x?: string | null; points: number; challenges: number; rank: number; you?: boolean }
 
 /* Same pill palette as the How to AI Games board. */
 const TIER_PILL: Record<string, string> = {
@@ -43,6 +43,17 @@ function rankRows(rows: Omit<Row, "rank">[]): Row[] {
   });
 }
 
+function Socials({ row, size = 5 }: { row: Row; size?: number }) {
+  if (!row.linkedin && !row.x) return null;
+  const cls = `flex h-${size} w-${size} items-center justify-center rounded-full text-white opacity-85 transition-opacity hover:opacity-100`;
+  return (
+    <span className="ml-1 hidden shrink-0 items-center gap-1 sm:flex" onClick={(e) => e.stopPropagation()}>
+      {row.linkedin && <a href={row.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${row.name} on LinkedIn`} className={cn(cls, "bg-[#0A66C2]")}><IconLinkedIn size={10} /></a>}
+      {row.x && <a href={row.x} target="_blank" rel="noopener noreferrer" aria-label={`${row.name} on X`} className={cn(cls, "bg-ink")}><IconX size={9} /></a>}
+    </span>
+  );
+}
+
 function MemberCard({ row, onClose }: { row: Row; onClose: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
@@ -66,6 +77,12 @@ function MemberCard({ row, onClose }: { row: Row; onClose: () => void }) {
           {tier !== "Analog" && <TierBadge tier={tier as BadgeTier} size={20} />}
           {tier}
         </p>
+        {(row.linkedin || row.x) && (
+          <div className="mt-4 flex justify-center gap-2">
+            {row.linkedin && <a href={row.linkedin} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#0A66C2] px-3 text-[12.5px] font-medium text-white hover:bg-[#004182]"><IconLinkedIn size={12} /> LinkedIn</a>}
+            {row.x && <a href={row.x} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-[12.5px] font-medium text-bg hover:bg-black"><IconX size={11} /> X</a>}
+          </div>
+        )}
         <div className="mt-5 grid grid-cols-3 gap-2">
           {([[`#${row.rank}`, "rank"], [row.points, "pts"], [row.challenges, "done"]] as const).map(([n, l]) => (
             <div key={l} className="rounded-xl bg-bg-2 py-3">
@@ -104,9 +121,9 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
     const mine = Object.values(results).filter((r) => board === "all" || data.at - new Date(r.at).getTime() < 7 * 86400000);
     const pts = totalPoints(Object.fromEntries(mine.map((r) => [r.slug, r])));
     if (pts <= 0) return data.rows;
-    const you: Omit<Row, "rank"> = { id: "you", name: session.me?.name || settings.name || "You", avatar: session.me?.avatar || settings.avatar, points: pts, challenges: mine.filter((r) => r.passed).length, you: true };
+    const you: Omit<Row, "rank"> = { id: "you", name: session.me?.name || settings.name || "You", avatar: session.me?.avatar || settings.avatar, linkedin: session.me?.linkedin || settings.linkedin, x: session.me?.x || settings.x, points: pts, challenges: mine.filter((r) => r.passed).length, you: true };
     return rankRows([...data.rows.filter((r) => !r.you), you]);
-  }, [data, board, results, settings.name, settings.avatar, session.me]);
+  }, [data, board, results, settings.name, settings.avatar, settings.linkedin, settings.x, session.me]);
 
   const filtered = useMemo(() => {
     if (!rows) return null;
@@ -165,6 +182,7 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
                     {row.name}
                     {row.you && <span className="ml-1 text-[12.5px] font-normal text-ink-3">· you</span>}
                   </span>
+                  <Socials row={row} />
                 </span>
                 <TierPill tier={tier} className="hidden sm:flex" />
                 <span className="w-14 shrink-0 text-right font-serif text-[22px] font-bold tabular-nums">{row.points}</span>

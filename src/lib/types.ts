@@ -41,6 +41,12 @@ export interface Settings {
   /** small square data URL (or https URL) for the profile photo */
   avatar?: string | null;
   product: "claude" | "chatgpt";
+  /** custom instructions the assistant follows in every chat */
+  instructions?: string;
+  /** facts the assistant has been told to remember, carried across chats */
+  memories?: string[];
+  linkedin?: string;
+  x?: string;
   model: ModelChoice;
   effort: Effort;
 }
@@ -61,7 +67,10 @@ export type ArenaEventType =
   | "project_created"
   | "chat_in_project"
   | "project_file_added"
-  | "hint_used";
+  | "hint_used"
+  | "link_read"
+  | "memory_saved"
+  | "instructions_set";
 
 export interface ArenaEvent {
   type: ArenaEventType;

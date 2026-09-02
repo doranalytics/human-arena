@@ -174,6 +174,18 @@ export function updateSettings(patch: Partial<Settings>) {
   if (patch.model) track("model_selected", patch.model);
   if (patch.effort) track("effort_selected", patch.effort);
 }
+export function addMemory(fact: string) {
+  const f = fact.trim();
+  if (!f) return;
+  setState((s) => {
+    const cur = s.settings.memories ?? [];
+    if (cur.includes(f)) return {};
+    return { settings: { ...s.settings, memories: [...cur, f].slice(-50) } };
+  });
+}
+export function removeMemory(fact: string) {
+  setState((s) => ({ settings: { ...s.settings, memories: (s.settings.memories ?? []).filter((m) => m !== fact) } }));
+}
 
 /* ------------------------------------------------------------------ arena */
 export function track(type: ArenaEventType, detail?: string) {

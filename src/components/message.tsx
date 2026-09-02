@@ -26,6 +26,8 @@ const TOOL_LABEL: Record<string, string> = {
   list_tables: "Listed warehouse tables",
   read_table: "Read a warehouse table",
   list_events: "Checked the calendar",
+  read_link: "Read a link",
+  remember: "Saved to memory",
 };
 function ToolIcon({ name }: { name: string }) {
   const c = TOOL_CONNECTOR[name];
@@ -41,6 +43,8 @@ function ToolIcon({ name }: { name: string }) {
 function toolSummary(name: string, input: unknown): string {
   const i = (input ?? {}) as Record<string, unknown>;
   if (typeof i.query === "string" && i.query) return `“${i.query}”`;
+  if (typeof i.url === "string") return i.url.replace(/^https?:\/\//, "").slice(0, 60);
+  if (typeof i.fact === "string") return `“${i.fact.slice(0, 60)}”`;
   if (typeof i.table === "string") return i.table + (i.contains ? ` · ${i.contains}` : "");
   if (typeof i.id === "string") return i.id;
   return "";

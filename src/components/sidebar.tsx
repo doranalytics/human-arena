@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Plus, FolderOpen, Cable, Zap, SlidersHorizontal, Search, MessageSquare, ChevronDown, PanelLeft, Trash2 } from "lucide-react";
+import { Plus, FolderOpen, Cable, Zap, Search, MessageSquare, ChevronDown, PanelLeft, Trash2 } from "lucide-react";
 import { useStore, newChat, openChat, openProject, deleteChat } from "@/lib/store";
 import { openDialog, toggleSidebar } from "@/lib/ui";
 import { useSession } from "@/lib/session";
@@ -50,7 +50,6 @@ export function Sidebar() {
         <NavItem icon={<FolderOpen size={16} />} label="Projects" onClick={() => openDialog({ kind: "new-project" })} />
         <NavItem icon={<Cable size={16} />} label="Connectors" onClick={() => openDialog({ kind: "connectors" })} />
         <NavItem icon={<Zap size={16} />} label="Skills" onClick={() => openDialog({ kind: "skills" })} />
-        <NavItem icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings" })} />
       </div>
 
       <div className="mt-4 flex-1 overflow-y-auto px-2.5 pb-2">

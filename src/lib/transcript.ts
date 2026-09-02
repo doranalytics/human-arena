@@ -5,6 +5,8 @@ export interface ChatForGrading {
   title: string;
   projectName?: string;
   projectInstructions?: string;
+  customInstructions?: string;
+  memories?: string[];
   messages: UIMessage[];
 }
 
@@ -17,6 +19,8 @@ export function transcriptOf(chats: ChatForGrading[]): string {
       const head = [`=== CHAT: ${c.title} ===`];
       if (c.projectName) head.push(`Project: ${c.projectName}`);
       if (c.projectInstructions) head.push(`Project instructions in force:\n${c.projectInstructions}`);
+      if (c.customInstructions) head.push(`Custom instructions in force:\n${c.customInstructions}`);
+      if (c.memories?.length) head.push(`Memories in force:\n${c.memories.map((m) => `- ${m}`).join("\n")}`);
       const body = c.messages.map((m) => {
         const lines: string[] = [];
         for (const p of m.parts) {

@@ -8,6 +8,8 @@ export interface Member {
   pseudonym: string;
   display_name: string | null;
   avatar_url: string | null;
+  linkedin_url: string | null;
+  x_url: string | null;
 }
 
 export async function getUser() {
@@ -26,7 +28,7 @@ export async function getMember(): Promise<Member | null> {
   const user = await getUser();
   if (!user || !adminConfigured()) return null;
   try {
-    const { data } = await adminClient().from("members").select("id,email,pseudonym,display_name,avatar_url").eq("auth_id", user.id).maybeSingle();
+    const { data } = await adminClient().from("members").select("id,email,pseudonym,display_name,avatar_url,linkedin_url,x_url").eq("auth_id", user.id).maybeSingle();
     return (data as Member | null) ?? null;
   } catch {
     return null;

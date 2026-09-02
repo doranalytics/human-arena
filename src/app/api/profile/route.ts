@@ -27,19 +27,25 @@ export async function GET() {
       at: r.submitted_at,
     };
   });
-  return NextResponse.json({ configured, member: { id: member.id, email: member.email, name: member.display_name || member.pseudonym, avatar: member.avatar_url }, results });
+  return NextResponse.json({ configured, member: { id: member.id, email: member.email, name: member.display_name || member.pseudonym, avatar: member.avatar_url, linkedin: member.linkedin_url, x: member.x_url }, results });
 }
 
 export async function PATCH(request: Request) {
   const member = await getMember();
   if (!member) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
-  const b = (await request.json().catch(() => ({}))) as { name?: string; product?: string; avatar?: string | null };
+  const b = (await request.json().catch(() => ({}))) as { name?: string; product?: string; avatar?: string | null; linkedin?: string | null; x?: string | null };
   const patch: Record<string, unknown> = {};
   if ("name" in b) patch.display_name = String(b.name ?? "").trim().slice(0, 80) || null;
   if ("avatar" in b) {
     const a = String(b.avatar ?? "");
     patch.avatar_url = a.startsWith("data:image/") && a.length < 60_000 ? a : a.startsWith("https://") ? a.slice(0, 500) : null;
   }
+  const url = (v: unknown, host: RegExp) => {
+    const t = String(v ?? "").trim();
+    return t && host.test(t) ? t.slice(0, 300) : null;
+  };
+  if ("linkedin" in b) patch.linkedin_url = url(b.linkedin, /^https:\/\/(www\.)?linkedin\.com\/in\//i);
+  if ("x" in b) patch.x_url = url(b.x, /^https:\/\/(www\.)?(x|twitter)\.com\//i);
   if (b.product === "claude" || b.product === "chatgpt") patch.product = b.product;
   if (!Object.keys(patch).length) return NextResponse.json({ ok: true });
   const { error } = await adminClient().from("members").update(patch).eq("id", member.id);

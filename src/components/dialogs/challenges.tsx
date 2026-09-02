@@ -4,7 +4,8 @@ import ReactMarkdown from "react-markdown";
 import { Check, Clock, Download, Lock, Swords, Trophy } from "lucide-react";
 import { Dialog, Button } from "../dialog";
 import { CHALLENGES, getChallenge, TOTAL_POINTS } from "@/lib/arena/challenges";
-import { BADGES, HINT_COST } from "@/lib/arena/types";
+import { HINT_COST, type Fixture } from "@/lib/arena/types";
+import { skillFor } from "@/lib/arena/skills";
 import { useStore, startAttempt, newChat, totalPoints } from "@/lib/store";
 import { openDialog, closeDialog, toast } from "@/lib/ui";
 import { cn } from "@/lib/utils";
@@ -15,11 +16,11 @@ export function ChallengesDialog({ open }: { open: boolean }) {
   const pts = totalPoints(results);
   const done = Object.values(results).filter((r) => r.passed).length;
   return (
-    <Dialog open={open} onClose={closeDialog} wide title={<span className="flex items-center gap-2"><Swords size={16} className="text-clay" /> The Arena</span>}>
+    <Dialog open={open} onClose={closeDialog} wide title={<span className="flex items-center gap-2"><Swords size={16} className="text-clay" /> Challenges</span>}>
       <div className="mb-4 flex items-end justify-between">
         <div>
           <div className="font-serif text-[22px]">Learn by doing. Timed, graded, no consequences.</div>
-          <div className="mt-1 text-[13px] text-ink-2">You play as yourself at Halden Outdoor Co. Each challenge teaches one thing the assistant can do. The arena watches what you click, not just what you type.</div>
+          <div className="mt-1 text-[13px] text-ink-2">Each challenge is one skill: a feature you can operate or a prompting move you can make. Everything you need is in the brief. The arena watches what you click, not just what you type.</div>
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[22px] font-medium tabular-nums">{pts}<span className="text-[13px] text-ink-3"> / {TOTAL_POINTS}</span></div>
@@ -39,7 +40,7 @@ export function ChallengesDialog({ open }: { open: boolean }) {
               <div className="mt-0.5 text-[13px] text-ink-2">{c.hook}</div>
               <div className="mt-2.5 flex items-center gap-3 text-[11.5px] text-ink-3">
                 <span className="flex shrink-0 items-center gap-1 whitespace-nowrap"><Clock size={11} /> {c.minutes} min</span>
-                <span>{c.badges.map((b) => BADGES[b]?.emoji).join(" ")} {c.teaches}</span>
+                <span>{c.badges.map((b) => skillFor(b).emoji).join(" ")} {c.teaches}</span>
               </div>
             </button>
           );
@@ -79,13 +80,16 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
     setStarting(false);
   }
 
-  function download(name: string, body: string) {
-    const url = URL.createObjectURL(new Blob([body], { type: "text/plain" }));
+  function download(f: Fixture) {
     const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
+    if (f.url) {
+      a.href = f.url;
+    } else {
+      a.href = URL.createObjectURL(new Blob([f.body ?? ""], { type: "text/plain" }));
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+    a.download = f.filename;
     a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   return (
@@ -110,7 +114,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
       <div className="text-[13px] text-ink-2">{c.hook}</div>
       <div className="prose-chat mt-3 text-[14.5px]"><ReactMarkdown>{c.brief}</ReactMarkdown></div>
       {c.fixtures?.map((f) => (
-        <button key={f.filename} onClick={() => download(f.filename, f.body)} className="mt-3 flex items-center gap-2 rounded-lg border border-line-2 px-3 py-2 text-[13px] hover:bg-bg-2">
+        <button key={f.filename} onClick={() => download(f)} className="mt-3 flex items-center gap-2 rounded-lg border border-line-2 px-3 py-2 text-[13px] hover:bg-bg-2">
           <Download size={14} /> {f.title} <span className="text-ink-3">({f.filename})</span>
         </button>
       ))}
@@ -124,7 +128,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
         {c.deliverable}
         <div className="mt-1.5 text-ink-3">The arena checks {c.behaviors.length} thing{c.behaviors.length === 1 ? "" : "s"} you did and {c.checks.length} thing{c.checks.length === 1 ? "" : "s"} the reply contains. It tells you which after you submit.</div>
       </div>
-      <div className="mt-2 text-[12px] text-ink-3">Unlocks: {c.badges.map((b) => `${BADGES[b]?.emoji} ${BADGES[b]?.name}`).join(", ")}</div>
+      <div className="mt-2 text-[12px] text-ink-3">Unlocks: {c.badges.map((b) => `${skillFor(b).emoji} ${skillFor(b).name}`).join(", ")}</div>
     </Dialog>
   );
 }

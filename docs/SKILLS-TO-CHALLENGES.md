@@ -20,46 +20,44 @@ Small build first: link reading (fetch a pasted URL), personalization (a custom-
 
 Later, the arena cannot observe them yet: voice dictation, voice chat, automations, browser agent, file agent, browser extension, agent building, image generation, image editing, artifacts, charts, diagrams, Claude Design, file export, calendar files, QR codes.
 
-## The 30 challenges
+## The 31 challenges (as built, 2 Sep 2026)
 
-| # | Challenge | Skill(s) | You do | The arena checks | Min | Pts |
-|---|---|---|---|---|---|---|
-| 1 | Ten words | Constraints | Ask anything. Get the answer in exactly ten words. | Reply is exactly ten words | 3 | 15 |
-| 2 | Make it ask first | Make it ask first | Ask for help planning something and tell it to interview you before answering. | Three or more questions before any plan; the plan uses your answers | 5 | 25 |
-| 3 | Grade yourself | Iteration, Verify | Get a draft, have it score the draft against three criteria, then rewrite. | Rubric, score, and a rewrite that changed | 6 | 30 |
-| 4 | Two audiences | Audience switching | One topic explained for a ten-year-old and for an expert. | Both versions, clearly different register | 5 | 25 |
-| 5 | The other side | Steelman | State a view you hold. Get the strongest case against it, then its weakest point. | Real counter-argument, then self-critique | 5 | 30 |
-| 6 | Rehearsal | Roleplay | Have it play a tough counterpart for three rounds, then break character and coach you. | Stays in character three turns, then feedback | 6 | 30 |
-| 7 | Twenty then three | Brainstorming, Constraints | Twenty ideas, then narrow to three by a criterion you name. | Twenty numbered, criterion applied, three picked | 5 | 25 |
-| 8 | Side by side | Comparisons | Compare three options across four criteria you choose, as a table, with a pick. | Three by four table and a recommendation | 5 | 25 |
-| 9 | Tutor mode | Tutor mode | Learn something by being quizzed one question at a time, no lecture. | One question per turn, waits, adapts | 6 | 30 |
-| 10 | Deslop | Constraints, Style training | The brief includes an AI-sounding paragraph. Make it sound human in one instruction. | Slop markers gone, meaning kept | 4 | 25 |
-| 11 | Sound like you | Style training | Paste two samples of your writing. Get a new paragraph in your voice on a new topic. | Two samples given; output mirrors them | 6 | 30 |
-| 12 | Reply to this | Drafting | The brief includes a favour request. Draft a reply that says no and offers an alternative, under 80 words. | Declines, alternative, under 80 words | 4 | 25 |
-| 13 | There and back | Translation, Verify | Translate a paragraph into another language and back, then ask what changed. | Both directions and a diff | 4 | 20 |
-| 14 | One page | Summarizing, File upload | Attach any long document. Five bullets and a one-line so-what. | File attached; five bullets; one line | 5 | 30 |
-| 15 | Pull the table | Data extraction, File upload | Attach the sample of messy line items. Get a clean table with four named columns and a total. | Table; total matches the key | 6 | 35 |
-| 16 | Read the PDF | PDF reading | Attach the sample PDF. Answer three questions from it. | PDF attached; three correct | 6 | 35 |
-| 17 | Show, don't tell | Camera input | Attach any photo. Three bullets and one caption with no exclamation marks. | Image attached; specific description; caption | 4 | 20 |
-| 18 | Picture to text | Image to text, Screenshot | Attach a photo or screenshot of text. Get it out verbatim, then one line on what it says. | Image attached; transcription; summary | 4 | 25 |
-| 19 | Picture math | Screenshot, Data extraction | Screenshot the sample table image. Ask for one column's total. | Total matches the key | 5 | 30 |
-| 20 | Fresh news | Live search | Two news items from the last seven days on a topic you pick, with dates and links. | Search on; two dated, linked items | 5 | 30 |
-| 21 | Check it | Verify, Live search | Ask a factual question with search off, then turn search on and make it check its own answer. | Off turn then on turn; corrections listed | 6 | 35 |
-| 22 | Deep dive | Deep research | Research mode on a question you pick. Headed report, four or more sources. | Research on; sections; four sources | 10 | 45 |
-| 23 | Read the link | Link reading, Summarizing | Paste a URL. Three bullets and one quoted line. Small build. | URL fetched; bullets; quote | 4 | 25 |
-| 24 | Pick the right brain | Model choice | A multi-step puzzle from the brief. Switch to Smart and High before asking. | Smart and High selected; answer correct | 6 | 35 |
-| 25 | Connect and ask | Connectors, Data extraction | Connect the data warehouse. Get last month's total revenue and where it came from. | Connector used; number matches the key | 6 | 40 |
-| 26 | Inbox to reply | Connectors, Drafting | Find the newest email in your inbox and draft a reply under 100 words that answers its question. | Gmail used; right email; answers it | 7 | 40 |
-| 27 | Skill up | Skills | Use the meeting-notes skill on the transcript in your Drive. | Skill invoked; Drive used | 6 | 35 |
-| 28 | Make a skill | Skills | Create a skill for a task you repeat, then run it. | Skill created and invoked | 7 | 40 |
-| 29 | Set up shop | Projects, Custom instructions | Put your format rules in a project's instructions. Ask inside it without restating them. | Project created; chat inside; format followed | 6 | 35 |
-| 30 | Call me | Personalization | Set how you want to be addressed in Customize. Start a new chat and prove it stuck. Small build. | Instruction set; new chat honours it | 4 | 25 |
+Brian's notes folded in: more than two skills per challenge where natural; briefs may mention the company but carry as few non-AI variables as possible; the learner brings nothing, every challenge ships its own material; tiers unchanged.
 
-Total: 895 points. Proposed tiers: Tourist 1, Newcomer 150, Resident 350, Citizen 600, AI-Native 800.
+| # | Challenge | Skills | Teaches | Min | Pts |
+|---|---|---|---|---|---|
+| 1 | Ten words | constraints | Constraints: tell it exactly how long, and it obeys | 3 | 25 |
+| 2 | Make it ask first | interviewing | Make it ask first: get the questions before the plan | 5 | 40 |
+| 3 | Grade yourself | iteration, verification | Iteration and verification: make it critique and redo its own work | 6 | 45 |
+| 4 | Two audiences | audience | Audience switching: change the reader, change the writing | 5 | 40 |
+| 5 | The other side | steelman | Steelman: get the strongest case against your view | 5 | 45 |
+| 6 | Rehearsal | roleplay, iteration | Roleplay: make it play the other person, then coach you | 6 | 50 |
+| 7 | Twenty then three | brainstorming, constraints | Brainstorming with constraints: go wide, then cut by a rule | 5 | 40 |
+| 8 | Side by side | comparisons | Comparisons: force a table and a recommendation | 5 | 40 |
+| 9 | Tutor mode | tutoring | Tutor mode: one question at a time, adapts to your answers | 6 | 50 |
+| 10 | Deslop | constraints, style-training | Constraints and style: strip the AI voice in one instruction | 4 | 40 |
+| 11 | Sound like you | style-training, iteration | Style training: show samples, then get new writing in that voice | 6 | 45 |
+| 12 | Reply to this | drafting, constraints | Drafting: brief the assistant with the message and the outcome | 4 | 40 |
+| 13 | There and back | translation, verification | Translation with verification: round-trip and diff | 4 | 35 |
+| 14 | One page | file-upload, summarizing | File upload and summarizing: attach, then ask for the shape you want | 5 | 45 |
+| 15 | Pull the table | extraction, file-upload | Data extraction from a file: name the columns you want | 6 | 55 |
+| 16 | Read the PDF | pdf, extraction | PDF reading and extraction: attach the PDF, ask precise questions | 6 | 55 |
+| 17 | Show, don't tell | camera | Camera input: send a picture and ask about it | 4 | 35 |
+| 18 | Picture to text | ocr, screenshot | Image to text: transcribe first, then work with it | 4 | 40 |
+| 19 | Picture math | screenshot, extraction | Screenshot input and extraction: pull numbers out of a picture | 5 | 50 |
+| 20 | Fresh news | web-search | Live search: turn it on when the question is about now | 5 | 45 |
+| 21 | Check it | verification, web-search | Verification with search: make it check its own answer | 6 | 55 |
+| 22 | Deep dive | deep-research | Deep research: many searches, then a structured report | 10 | 70 |
+| 23 | Read the link | url-reading, summarizing | Link reading: hand over a page and ask about it | 4 | 40 |
+| 24 | Pick the right brain | model-choice | Model choice: pick Smart and High effort for hard reasoning | 6 | 55 |
+| 25 | Connect and ask | connectors, extraction | Connectors: plug in a data source and ask it directly | 6 | 60 |
+| 26 | Inbox to reply | connectors, drafting, summarizing | Connectors and drafting: work an inbox through the assistant | 7 | 60 |
+| 27 | Skill up | skills, connectors | Skills: invoke a saved prompt with a slash command | 6 | 55 |
+| 28 | Make a skill | skills, custom-instructions | Skills: write your own and run it | 7 | 60 |
+| 29 | Set up shop | projects, custom-instructions | Projects: instructions that every chat inside inherits | 6 | 55 |
+| 30 | Call me | personalization, custom-instructions | Personalization: custom instructions the assistant always follows | 4 | 40 |
+| 31 | Remember this | memory | Memory: tell it to remember, then use it in a fresh chat | 5 | 40 |
 
-## Decisions for Brian
+Total: 1450 points over about 166 minutes. Tiers stay at 1 / 150 / 400 / 750 / 1200, so AI-Native needs 83 percent of the points. The speed multiplier floors at 0.6, so a very slow full run can land short of AI-Native; revisit before launch.
 
-1. Build the three small features (link reading, custom instructions, memory) as part of this pass, or ship the 27 that need nothing?
-2. Show the 16 later skills as locked "coming" chips on the badge wall, or hide them until the arena can grade them?
-3. Confirm adding Model choice and Skills to the skill list.
-4. Tier thresholds above, or keep the current 150 / 400 / 750 / 1200.
+Built alongside: link reading (read_link tool), custom instructions (Customize, injected into every chat), memory (remember tool, facts listed in Customize), LinkedIn and X on the profile and leaderboard, the 48-skill wall with the 16 not-yet-gradable skills marked "soon". Tool sense is awarded after five feature-challenge passes.

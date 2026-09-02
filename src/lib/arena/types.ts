@@ -19,7 +19,11 @@ export interface Check {
 export interface Fixture {
   filename: string;
   title: string;
-  body: string;
+  /** inline text content (text fixtures) */
+  body?: string;
+  /** served file for binary fixtures (PDF, images), under /public */
+  url?: string;
+  mediaType?: string;
 }
 
 export interface Hint {
@@ -55,19 +59,7 @@ export interface ChallengeKey {
   key: string;
 }
 
-export const BADGES: Record<string, { emoji: string; name: string }> = {
-  "first-chat": { emoji: "💬", name: "First words" },
-  "web-search": { emoji: "📰", name: "Live search" },
-  "deep-research": { emoji: "🔬", name: "Deep research" },
-  "file-upload": { emoji: "📎", name: "File upload" },
-  vision: { emoji: "📸", name: "Image input" },
-  "model-choice": { emoji: "🧠", name: "Model choice" },
-  connectors: { emoji: "📬", name: "Connectors" },
-  "data-query": { emoji: "📊", name: "Data query" },
-  skills: { emoji: "⚡", name: "Skills" },
-  projects: { emoji: "🗂️", name: "Projects" },
-  "email-drafting": { emoji: "✉️", name: "Email drafting" },
-};
+export { SKILLS as BADGES } from "./skills";
 
 /** Speed: full credit to 75% of the box, then linear to 0.7 at 100%, floor 0.6 after. */
 export function speedMultiplier(secondsUsed: number, minutes: number): number {

@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage } from "ai";
 import { ArrowUp, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
-import { useStore, saveMessages, track, getState } from "@/lib/store";
+import { useStore, saveMessages, track, getState, addMemory } from "@/lib/store";
 import { Message } from "./message";
 import { Composer, type ComposerSubmit } from "./composer";
 import { Spark } from "./icons";
@@ -59,8 +59,17 @@ export function ChatView({ chat }: { chat: Chat }) {
         if (!isToolUIPart(p) || !("toolCallId" in p) || trackedTools.current.has(p.toolCallId)) continue;
         if (p.state !== "output-available") continue;
         trackedTools.current.add(p.toolCallId);
-        const c = TOOL_CONNECTOR[getToolName(p)];
+        const name = getToolName(p);
+        const c = TOOL_CONNECTOR[name];
         if (c) track("connector_used", c);
+        if (name === "read_link") track("link_read");
+        if (name === "remember") {
+          const out = (p as { output?: { saved?: boolean; fact?: string } }).output;
+          if (out?.saved && out.fact) {
+            addMemory(out.fact);
+            track("memory_saved");
+          }
+        }
       }
     }
   }, [messages, chat.id]);
@@ -90,6 +99,8 @@ export function ChatView({ chat }: { chat: Chat }) {
             skill: sk ? { name: sk.name, prompt: sk.prompt } : null,
             project: project ? { name: project.name, instructions: project.instructions, files: project.files.map((f) => ({ name: f.name, text: f.text })) } : null,
             userName: name,
+            instructions: st.settings.instructions ?? "",
+            memories: st.settings.memories ?? [],
           },
         },
       );

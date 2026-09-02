@@ -7,7 +7,6 @@ import { getChallenge } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
 import { fmtClock, cn } from "@/lib/utils";
 import type { ArenaResult } from "@/lib/types";
-import { Spark } from "./icons";
 
 function useElapsed(startedAt: string | undefined) {
   const [now, setNow] = useState(() => Date.now());
@@ -34,7 +33,7 @@ export function TopBar({ title }: { title: string }) {
     const st = getState();
     const chats = attemptChats().map((ch) => {
       const p = ch.projectId ? st.projects.find((x) => x.id === ch.projectId) : null;
-      return { title: ch.title, projectName: p?.name, projectInstructions: p?.instructions, messages: ch.messages };
+      return { title: ch.title, projectName: p?.name, projectInstructions: p?.instructions, customInstructions: st.settings.instructions || undefined, memories: st.settings.memories, messages: ch.messages };
     });
     try {
       const r = await fetch("/api/arena/submit", {
@@ -64,8 +63,7 @@ export function TopBar({ title }: { title: string }) {
           <PanelLeft size={17} />
         </button>
       )}
-      <div className="flex shrink-0 items-center gap-2 pr-3">
-        <Spark size={20} className="text-clay" />
+      <div className="flex shrink-0 items-center pr-3">
         <span className="font-serif text-[16px] font-semibold tracking-tight">Human Arena</span>
       </div>
       <div className="hidden h-5 w-px shrink-0 bg-line sm:block" />
@@ -128,7 +126,7 @@ export function TopBar({ title }: { title: string }) {
             <Trophy size={14} className="text-clay" /> <span className="hidden sm:inline">Leaderboard</span>
           </button>
           <button onClick={() => openDialog({ kind: "challenges" })} className="flex h-8 items-center gap-1.5 rounded-lg bg-clay px-3 text-[13px] font-semibold text-white shadow-sm shadow-clay/30 hover:bg-clay-dark">
-            <Swords size={14} /> Arena
+            <Swords size={14} /> Challenges
           </button>
           <button onClick={() => openDialog({ kind: "settings" })} className="rounded-lg p-1.5 text-ink-2 hover:bg-bg-3" title="Settings and badges">
             <Settings size={17} />

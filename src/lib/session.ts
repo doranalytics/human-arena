@@ -7,6 +7,8 @@ export interface Me {
   email: string;
   name: string;
   avatar?: string | null;
+  linkedin?: string | null;
+  x?: string | null;
 }
 interface SessionState {
   loaded: boolean;

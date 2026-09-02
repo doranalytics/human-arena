@@ -6,6 +6,8 @@ export interface BoardRow {
   id: string;
   name: string;
   avatar?: string | null;
+  linkedin?: string | null;
+  x?: string | null;
   points: number;
   challenges: number;
   rank: number;
@@ -31,10 +33,12 @@ export async function GET(req: Request) {
   const member = await getMember();
   const { data, error } = await adminClient().rpc("leaderboard", { p_board: board });
   if (error) return NextResponse.json({ rows: [], live: true, me: member?.id ?? null, error: error.message });
-  const rows: BoardRow[] = (data as { id: string; display_name: string | null; pseudonym: string; avatar_url: string | null; points: number; challenges: number; rank: number }[]).map((r) => ({
+  const rows: BoardRow[] = (data as { id: string; display_name: string | null; pseudonym: string; avatar_url: string | null; linkedin_url: string | null; x_url: string | null; points: number; challenges: number; rank: number }[]).map((r) => ({
     id: r.id,
     name: r.display_name || r.pseudonym,
     avatar: r.avatar_url,
+    linkedin: r.linkedin_url,
+    x: r.x_url,
     points: Number(r.points),
     challenges: Number(r.challenges),
     rank: Number(r.rank),

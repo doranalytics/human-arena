@@ -1,14 +1,16 @@
 "use client";
 import { useRef, useState } from "react";
-import { Camera, Check, Trash2 } from "lucide-react";
+import { Camera, Check, Trash2, X } from "lucide-react";
 import { Dialog, Button, inputCls } from "../dialog";
 import { Avatar } from "../avatar";
-import { TierBadge, TIER_STYLE, type BadgeTier } from "../icons";
+import { TierBadge, TIER_STYLE, IconLinkedIn, IconX, type BadgeTier } from "../icons";
 import { closeDialog, toast } from "@/lib/ui";
-import { useStore, updateSettings, setState, totalPoints } from "@/lib/store";
+import { useStore, updateSettings, setState, totalPoints, removeMemory, track } from "@/lib/store";
 import { useSession, setSession } from "@/lib/session";
-import { BADGES } from "@/lib/arena/types";
+import { SKILLS, SKILL_GROUPS, TOOL_SENSE_THRESHOLD } from "@/lib/arena/skills";
+import { FEATURE_SLUGS } from "@/lib/arena/challenges";
 import { TIERS, tierFor } from "@/lib/tiers";
+import { xHandle, linkedinSlug, xUrl, linkedinUrl } from "@/lib/social";
 import { cn } from "@/lib/utils";
 
 /** Shrinks a picked image to a small square JPEG data URL so it fits in localStorage and a members row. */
@@ -42,29 +44,51 @@ export function SettingsDialog({ open }: { open: boolean }) {
 }
 
 function SettingsForm() {
-  const open = true;
   const settings = useStore((s) => s.settings);
   const results = useStore((s) => s.results);
   const session = useSession();
   const savedName = session.me?.name || settings.name || "";
   const savedAvatar = session.me?.avatar || settings.avatar || null;
+  const savedLinkedin = session.me?.linkedin || settings.linkedin || "";
+  const savedX = session.me?.x || settings.x || "";
+  const savedInstructions = settings.instructions || "";
 
   const [name, setName] = useState(savedName);
   const [avatar, setAvatar] = useState<string | null>(savedAvatar);
+  const [linkedin, setLinkedin] = useState(savedLinkedin);
+  const [x, setX] = useState(savedX);
+  const [instructions, setInstructions] = useState(savedInstructions);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const dirty = name.trim() !== savedName.trim() || (avatar ?? null) !== (savedAvatar ?? null);
-  const earned = new Set(Object.values(results).flatMap((r) => r.badges));
+  const liSlug = linkedinSlug(linkedin);
+  const xH = xHandle(x);
+  const liBad = linkedin.trim() !== "" && !liSlug;
+  const xBad = x.trim() !== "" && !xH;
+  const liFinal = liSlug ? linkedinUrl(liSlug) : "";
+  const xFinal = xH ? xUrl(xH) : "";
+
+  const dirty =
+    name.trim() !== savedName.trim() ||
+    (avatar ?? null) !== (savedAvatar ?? null) ||
+    liFinal !== savedLinkedin ||
+    xFinal !== savedX ||
+    instructions.trim() !== savedInstructions.trim();
+
+  const earned = new Set(Object.values(results).filter((r) => r.passed).flatMap((r) => r.badges));
+  const featurePasses = Object.values(results).filter((r) => r.passed && FEATURE_SLUGS.has(r.slug)).length;
+  if (featurePasses >= TOOL_SENSE_THRESHOLD) earned.add("tool-choice");
   const pts = totalPoints(results);
   const tier = tierFor(pts);
   const current = TIERS.find((t) => t.tier === tier) ?? null;
   const next = TIERS.find((t) => t.min > pts) ?? null;
   const floor = current?.min ?? 0;
   const progress = next ? Math.min(1, Math.max(0, (pts - floor) / (next.min - floor))) : 1;
+  const gradable = Object.values(SKILLS).filter((s) => s.status === "ready").length;
+  const memories = settings.memories ?? [];
 
   async function pick(file: File | undefined) {
     if (!file) return;
@@ -77,16 +101,19 @@ function SettingsForm() {
   }
 
   async function save() {
+    if (liBad || xBad) return toast({ title: liBad ? "That LinkedIn link does not look right" : "That X handle does not look right", body: liBad ? "Paste your profile URL, like linkedin.com/in/you." : "Letters, numbers and underscores, up to 15.", tone: "bad" });
     const n = name.trim().slice(0, 80);
+    const ins = instructions.trim().slice(0, 2000);
     setSaving(true);
-    updateSettings({ name: n, avatar });
+    updateSettings({ name: n, avatar, linkedin: liFinal || undefined, x: xFinal || undefined, instructions: ins });
+    if (ins && ins !== savedInstructions.trim()) track("instructions_set");
     if (session.me) {
-      const r = await fetch("/api/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: n, avatar }) }).catch(() => null);
+      const r = await fetch("/api/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: n, avatar, linkedin: liFinal || null, x: xFinal || null }) }).catch(() => null);
       if (!r || !r.ok) {
         setSaving(false);
         return toast({ title: "Saved here, not on the board", body: "Could not reach the server. Try again in a moment.", tone: "bad" });
       }
-      setSession({ me: { ...session.me, name: n || session.me.name, avatar } });
+      setSession({ me: { ...session.me, name: n || session.me.name, avatar, linkedin: liFinal || null, x: xFinal || null } });
     }
     setSaving(false);
     toast({ title: "Profile saved", tone: "info" });
@@ -103,7 +130,7 @@ function SettingsForm() {
 
   return (
     <Dialog
-      open={open}
+      open
       onClose={closeDialog}
       title="Customize"
       footer={
@@ -126,7 +153,7 @@ function SettingsForm() {
               </span>
             </button>
             <div className="min-w-0 flex-1">
-              <input className={inputCls} value={name} placeholder="How you appear on the board" maxLength={80} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && dirty && void save()} />
+              <input className={inputCls} value={name} placeholder="How you appear on the board" maxLength={80} onChange={(e) => setName(e.target.value)} />
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <Button variant="outline" className="h-8 px-3 text-[12.5px]" onClick={() => fileRef.current?.click()}>
                   <Camera size={13} /> {avatar ? "Change photo" : "Add a photo"}
@@ -138,9 +165,47 @@ function SettingsForm() {
                 )}
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => void pick(e.target.files?.[0]).then(() => { if (fileRef.current) fileRef.current.value = ""; })} />
               </div>
-              <div className="mt-1.5 text-[12px] text-ink-3">You enter the arena as yourself, working at Halden Outdoor Co. Photos are cropped square and stay small.</div>
             </div>
           </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <label className="relative block">
+              <span className="pointer-events-none absolute left-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#0A66C2] text-white"><IconLinkedIn size={10} /></span>
+              <input className={cn(inputCls, "pl-10", liBad && "border-bad")} value={linkedin} placeholder="linkedin.com/in/you" onChange={(e) => setLinkedin(e.target.value)} />
+            </label>
+            <label className="relative block">
+              <span className="pointer-events-none absolute left-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-ink text-bg"><IconX size={9} /></span>
+              <input className={cn(inputCls, "pl-10", xBad && "border-bad")} value={x} placeholder="@handle" onChange={(e) => setX(e.target.value)} />
+            </label>
+          </div>
+          <div className="mt-1.5 text-[12px] text-ink-3">Links show next to your name on the leaderboard. Paste a URL or a handle; either works.</div>
+        </section>
+
+        <section>
+          <Label>Custom instructions</Label>
+          <textarea
+            className={cn(inputCls, "min-h-[76px] resize-y leading-relaxed")}
+            value={instructions}
+            maxLength={2000}
+            placeholder={"How should the assistant behave in every chat? For example: call me Captain. Keep answers short. End each reply with a question."}
+            onChange={(e) => setInstructions(e.target.value)}
+          />
+          <div className="mt-1.5 text-[12px] text-ink-3">Applied to every chat, on top of any project instructions.</div>
+        </section>
+
+        <section>
+          <Label>Memory <span className="font-normal">· {memories.length} {memories.length === 1 ? "fact" : "facts"}</span></Label>
+          {memories.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-line px-3 py-2 text-[12.5px] text-ink-3">Nothing yet. Tell the assistant &ldquo;remember that…&rdquo; and it lands here, then every new chat knows it.</div>
+          ) : (
+            <ul className="divide-y divide-line rounded-lg border border-line">
+              {memories.map((m) => (
+                <li key={m} className="flex items-center gap-2 px-3 py-1.5 text-[13px]">
+                  <span className="min-w-0 flex-1">{m}</span>
+                  <button onClick={() => removeMemory(m)} className="rounded p-1 text-ink-3 hover:bg-bg-3 hover:text-bad" title="Forget"><X size={13} /></button>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section>
@@ -153,9 +218,7 @@ function SettingsForm() {
                   <span className="font-serif text-[20px] font-semibold leading-none">{tier}</span>
                   <span className="text-[13px] tabular-nums text-ink-2">{pts} pts</span>
                 </div>
-                <div className="mt-1 text-[12.5px] text-ink-3">
-                  {tier === "Analog" ? "Finish one challenge to become a Tourist." : current?.blurb}
-                </div>
+                <div className="mt-1 text-[12.5px] text-ink-3">{tier === "Analog" ? "Finish one challenge to become a Tourist." : current?.blurb}</div>
               </div>
               {next && (
                 <div className="shrink-0 text-right">
@@ -167,7 +230,6 @@ function SettingsForm() {
             <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-line">
               <div className="h-full rounded-full transition-all" style={{ width: `${Math.round(progress * 100)}%`, background: TIER_STYLE[(next?.tier ?? "AI-Native") as BadgeTier].fill }} />
             </div>
-
             <ol className="mt-4 grid grid-cols-5 gap-1">
               {TIERS.map((t) => {
                 const unlocked = pts >= t.min;
@@ -187,17 +249,28 @@ function SettingsForm() {
         </section>
 
         <section>
-          <Label>Badges <span className="font-normal">· {[...earned].filter((id) => id in BADGES).length} of {Object.keys(BADGES).length}</span></Label>
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-            {Object.entries(BADGES).map(([id, b]) => {
-              const has = earned.has(id);
-              return (
-                <div key={id} className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[12.5px]", has ? "border-line bg-bg" : "border-dashed border-line text-ink-3")}>
-                  <span className={cn("text-[16px]", !has && "opacity-50 grayscale")}>{b.emoji}</span>
-                  <span className="truncate">{b.name}</span>
+          <Label>Skills <span className="font-normal">· {[...earned].filter((id) => id in SKILLS).length} of {gradable} earned · {Object.keys(SKILLS).length - gradable} coming</span></Label>
+          <div className="space-y-3">
+            {SKILL_GROUPS.map((g) => (
+              <div key={g}>
+                <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-ink-3">{g}</div>
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                  {Object.entries(SKILLS)
+                    .filter(([, s]) => s.group === g)
+                    .map(([id, s]) => {
+                      const has = earned.has(id);
+                      const later = s.status === "later";
+                      return (
+                        <div key={id} title={later ? "The arena cannot grade this yet" : id === "tool-choice" ? `Earned after ${TOOL_SENSE_THRESHOLD} feature challenges` : undefined} className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[12.5px]", has ? "border-line bg-bg" : "border-dashed border-line text-ink-3", later && "opacity-60")}>
+                          <span className={cn("text-[15px]", !has && "opacity-50 grayscale")}>{s.emoji}</span>
+                          <span className="min-w-0 flex-1 truncate">{s.name}</span>
+                          {later && <span className="shrink-0 text-[10px] uppercase tracking-wide text-ink-3">soon</span>}
+                        </div>
+                      );
+                    })}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </section>
 
@@ -237,8 +310,8 @@ function SettingsForm() {
           <Button
             variant="danger"
             onClick={() => {
-              if (!confirm("Clear chats, projects, skills and local results in this browser?")) return;
-              setState({ chats: [], projects: [], skills: [], connectors: [], attempt: null, results: {}, activeChatId: null, activeProjectId: null });
+              if (!confirm("Clear chats, projects, skills, memories and local results in this browser?")) return;
+              setState((s) => ({ chats: [], projects: [], skills: [], connectors: [], attempt: null, results: {}, activeChatId: null, activeProjectId: null, settings: { ...s.settings, memories: [] } }));
               toast({ title: "Cleared", tone: "info" });
             }}
           >

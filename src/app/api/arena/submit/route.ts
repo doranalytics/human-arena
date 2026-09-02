@@ -16,7 +16,7 @@ interface Body {
   startedAt: string;
   hintsUsed: number;
   events: ArenaEvent[];
-  chats: { title: string; projectName?: string; projectInstructions?: string; messages: UIMessage[] }[];
+  chats: { title: string; projectName?: string; projectInstructions?: string; customInstructions?: string; memories?: string[]; messages: UIMessage[] }[];
 }
 
 export async function POST(req: Request) {

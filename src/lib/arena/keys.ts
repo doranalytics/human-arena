@@ -2,45 +2,39 @@ import "server-only";
 import type { ChallengeKey } from "./types";
 
 const KEYS: ChallengeKey[] = [
-  { slug: "first-words", key: `Any three-line poem counts as a haiku; do not count syllables strictly. Must contain "Halden" and at least one of: pack, packs, tent, tents, layer, layers, jacket, fleece.` },
-  {
-    slug: "fresh-news",
-    key: `Two separate news items. Each must have a date within 7 days of the attempt date given in the transcript header, and a URL or a named publication that came from a web search result (the transcript will show search tool calls). Items with no date, or dated outside the window, fail "two-items". Fabricated links (no search results in the transcript) fail "sourced".`,
-  },
-  {
-    slug: "july-margin",
-    key: `July 2024 gross margin is 41.8%. Accept 41.8 or 41.8%. The source is either the warehouse table monthly_financials (row 2024-07) or Marcus's email "FY24 monthly margin table (for the deck)". The transcript must show a connector tool call (read_table, search_gmail or read_email); a number with no tool call fails "source".`,
-  },
-  {
-    slug: "read-the-fine-print",
-    key: `Price: USD 4.62 per metre. Earliest ship date: 5 October 2026. Risk clause: minimum order 25,000 metres per colour, non-cancellable once dyeing starts (either the minimum or the non-cancellable part passes "clause"). The transcript must contain the attached file (a file part or the pasted quote text).`,
-  },
-  {
-    slug: "pick-the-brain",
-    key: `Wholesale: partner pays 249 x 0.55 = 136.95. Profit = 136.95 - 92 - 11 = 33.95 per unit. Direct: 249 - 92 - 19 = 138.00 per unit. 1,000 direct units = 138,000 profit. 138,000 / 33.95 = 4,064.8, rounded up 4,065 wholesale units. Accept 4,064 or 4,065 for "equiv". Accept small rounding on the per-unit figures (33.95 or 34; 138).`,
-  },
-  {
-    slug: "deep-dive",
-    key: `Pass "structure" for a title plus three or more headed sections (markdown headings or clearly labelled sections). Pass "sources" when four or more distinct URLs or named publications appear and the transcript shows web search tool calls; without search calls, fail. "on-topic": the report discusses supplier delays and/or near-shoring or reshoring for outdoor apparel or apparel brands generally.`,
-  },
-  {
-    slug: "skill-up",
-    key: `Decisions in the 26 August transcript: Tomasz requests a Verdant Mills sample this week; Marcus models both options (air freight vs Verdant) by 3 September; nobody commits to air freight yet; fall campaign launches 15 September with "Walk further"; board deck draft by 10 September, Marcus owns; Timberline held at net-30. Pass "decisions" if at least three of these appear. Pass "actions" if owners and at least two of the dates (3 Sep, 10 Sep, 15 Sep, "this week") appear. Sections must be Decisions, Action items, Open questions (wording may vary slightly).`,
-  },
-  {
-    slug: "set-up-shop",
-    key: `The transcript header lists the project instructions. Pass "format" if the reply has the four parts: what shipped, what slipped, one number, one ask (labels may vary). Pass "no-repeat" if the project instructions contain the format and the user's message in the chat does NOT itself spell out all four parts; a short request like "write this week's summary" passes.`,
-  },
-  {
-    slug: "inbox-triage",
-    key: `Tomasz's latest email (31 Aug, "Re: Bergstrom delay: Verdant sample update"): Verdant can do the sample in 2 weeks if approved by Wednesday; air freight quote came back at $41,200. Pass "found" if the transcript shows read_email or search_gmail returning that email. The draft must (1) approve the Verdant sample, (2) acknowledge the $41,200 quote (accept 41,200 or 41.2k), (3) ask to hold air freight until Marcus's model on 3 September. Count words of the draft body only for "length".`,
-  },
-  {
-    slug: "show-dont-tell",
-    key: `You cannot see the image. Pass "described" when the reply names concrete visual specifics (objects, colours, text, layout) rather than hedging that it cannot see an image; fail if the assistant says no image was provided. Pass "caption" if exactly one caption is offered and it contains no exclamation mark.`,
-  },
+  { slug: "ten-words", key: `Count the words of the assistant's final substantive answer (ignore a trailing note like "(10 words)"). Hyphenated words count as one. Exactly 10 passes. If there were several attempts, grade the last reply only.` },
+  { slug: "make-it-ask-first", key: `"asked": before any itinerary, agenda or plan appears, the assistant must have asked at least three distinct questions (in one message or across several). A plan given in the same message as the questions fails. "used": the final plan must reference at least two specifics from the user's answers (dates, budget, location, goals, people, constraints).` },
+  { slug: "grade-yourself", key: `"rubric": the assistant produced a score (out of 10 or similar) against three criteria that the user named or that the assistant listed at the user's request. "rewrite": a later draft exists that differs materially from the first (not a copy). Word count near 100 is not graded.` },
+  { slug: "two-audiences", key: `"both": two explanations, each labelled for its audience (child / ten-year-old, and engineer / expert). "register": the child version uses simple words and an analogy or everyday picture; the engineer version uses technical terms such as membrane, ePTFE or PU, pore size, vapour pressure, hydrostatic head, MVTR, DWR. Two near-identical paragraphs fail.` },
+  { slug: "the-other-side", key: `"counter": the assistant argued against remote work with at least three concrete points (for example onboarding, mentorship, spontaneous collaboration, culture, accountability, blurred hours, equipment/security, coordination cost) and did not add "on the other hand" balance in the same reply. "weakest": after the user asked, the assistant named one of its own points as weakest and gave a reason.` },
+  { slug: "rehearsal", key: `"character": across at least three assistant turns the assistant speaks as the buyer pushing for a discount and does not narrate or coach. "coach": after the user says break character (or similar), the assistant steps out and gives specific feedback on what the user said in the rounds.` },
+  { slug: "twenty-then-three", key: `"twenty": a numbered list of exactly twenty tent names (19 or 21 fail). "three": three of those names chosen, each with a reason that mentions pronounceability, saying it aloud, or ease in a shop.` },
+  { slug: "side-by-side", key: `"table": a markdown table whose rows or columns cover courier, postal and pallet freight, and whose other axis covers cost, speed, tracking and damage risk. "pick": one option recommended for fragile and non-urgent with a reason; courier or pallet freight are both reasonable, postal is acceptable only if the reason addresses damage risk.` },
+  { slug: "tutor-mode", key: `"one-at-a-time": at least three assistant turns each contain exactly one question and no lecture longer than two sentences; a turn with several questions fails. "adapts": at least one later question references the user's earlier answer (corrects a mistake, or builds on a right answer). The topic is gross margin: (revenue minus cost of goods) divided by revenue.` },
+  { slug: "deslop", key: `"clean": the rewrite contains none of: "in today's fast-paced world", "it's crucial to note", "leveraging", "cutting-edge", "unlock", "unprecedented", "ultimately", "working smarter", "let's dive in", "best practices", "transform", "one step at a time", "fostering". "meaning": it still says that good communication, good tools and teamwork make a team more productive.` },
+  { slug: "sound-like-you", key: `"samples": both sample notes appear in the user's messages. "voice": the new note is about delayed jackets, uses short direct sentences, opens with the news, has no corporate filler, and ends with a next step or an invitation to respond. A generic formal memo fails.` },
+  { slug: "reply-to-this", key: `"no": the reply states the user cannot cover Saturday. "alt": one concrete alternative (another day, a partial shift, naming someone else, helping find cover). "length": the reply body is under 80 words. Count the body only.` },
+  { slug: "there-and-back", key: `"french": a French translation of the tent paragraph. "back": an English back-translation plus a list or paragraph naming differences (word choices, units, nuance). If the assistant says nothing changed, it must at least say so explicitly and compare; an absent comparison fails.` },
+  { slug: "one-page", key: `"five": five bullets that are true to the policy (for example: 30-day deadline, receipts over $25, approval thresholds 500/2,500, hotel caps 220/160, meals $65/day, gifts $75, mileage $0.62, corporate card reconciliation by the 5th). "late": late claims: 30 to 60 days are paid but flagged; over 60 days are not paid unless the finance director grants a written exception. Either half stated correctly passes.` },
+  { slug: "pull-the-table", key: `Correct line totals: booth 2400.00; catalogues 40 x 3.15 = 126.00; demo tent shipping 218.50; lunches 87.20 + 91.05 + 64.75 = 243.00; badges 58.00; hotel 2 x 189 = 378.00; taxis 24.60 + 27.10 = 51.70; freight surcharge 45.00; banner reprint 112.00; parking 3 x 18 = 54.00. Grand total 3686.20. "table": four columns item, quantity, unit price, total (headers may be worded slightly differently). "total": 3,686.20 (accept 3686.2). Lunches or taxis may be one row or split rows.` },
+  { slug: "read-the-pdf", key: `From the PDF: price USD 3.85 per metre; minimum order 8,000 metres per colour; late-delivery credit 2 percent per full week up to a maximum of 10 percent of order value (the answer must state 10 percent as the maximum). The transcript must show the PDF as an attached file.` },
+  { slug: "show-dont-tell", key: `The label reads: wash cold on gentle; do not use fabric softener; tumble dry low to reactivate the water repellent finish; do not iron; do not dry clean. "checklist": at least three of these steps listed. "never": one of: fabric softener, ironing, dry cleaning (or hot wash). You cannot see the image; grade the assistant's reply against this text.` },
+  { slug: "picture-to-text", key: `The note says: Trade show, Thursday. Booth 214, hall B, set up from 7am. Bring 40 catalogues and the demo tent. Buyer meetings 10:30, 1:15 and 3:00. Call the freight desk before 4pm. Dinner with the retail team at 7, Alder Street. "transcribed": at least five of the six lines reproduced with the numbers right. "ordered": a checklist ordered by time (7am setup, 10:30, 1:15, 3:00, before 4pm, 7pm dinner).` },
+  { slug: "picture-math", key: `Table (USD thousands): PNW 412/438/471; Mountain West 297/305/352; Northeast 254/261/288; Southwest 143/151/139; Canada 118/124/137; Online direct 366/389/402. June total = 1,789. April-to-June growth: PNW +59, Mountain West +55, Northeast +34, Southwest -4, Canada +19, Online +36. Largest increase: Pacific Northwest (+59). Accept Mountain West only if the assistant explicitly used percentage growth (+18.5% vs PNW +14.3%) and said so.` },
+  { slug: "fresh-news", key: `Two separate items about outdoor gear, apparel, or the outdoor industry. Each must show a date within 7 days of the attempt date and a URL from the search results in the transcript. No search tool calls in the transcript means fail on "sourced".` },
+  { slug: "check-it", key: `Gore-Tex was invented in 1969 by Bob Gore (Wilbert L. Gore's son) at W. L. Gore and Associates; patented in the early 1970s, commercialised 1976. "two-turns": the first assistant answer has no web_search tool call; a later assistant turn has one. "verified": the second turn explicitly compares its earlier answer with what search found, and either corrects or confirms each fact. A second answer that ignores the first fails.` },
+  { slug: "deep-dive", key: `"structure": a title and three or more headed sections. "sources": four or more distinct URLs or named publications, and the transcript shows web search tool calls. Without search calls, fail.` },
+  { slug: "read-the-link", key: `The transcript must show a read_link tool call for the Wikipedia Ultralight backpacking page. "bullets": three bullets consistent with the fetched text (base weight, gear choices, trade-offs, history, safety). "quote": one sentence in quotation marks that appears in the tool result text. A quote not present in the fetched text fails.` },
+  { slug: "pick-the-brain", key: `Wholesale: partner pays 249 x 0.55 = 136.95; profit = 136.95 - 92 - 11 = 33.95 per unit. Direct: 249 - 92 - 19 = 138.00 per unit. 1,000 direct units = 138,000; 138,000 / 33.95 = 4,064.8, so 4,065 wholesale units (accept 4,064 or 4,065). Accept rounding on the per-unit figures (33.95 or 34; 138).` },
+  { slug: "connect-and-ask", key: `The most recent month in monthly_financials is 2025-08 with revenue 2,490,000 USD (accept $2.49M, 2.49 million). "source": the reply names monthly_financials (or "the monthly financials table"). The transcript must show a read_table or list_tables call; a number with no tool call fails "number".` },
+  { slug: "inbox-to-reply", key: `The newest unread email is from the CFO, subject "Board deck: what I need from ops", dated 1 September 2026, asking for three things for the 18 September board (a one-slide supplier plan, an FY24 margin trend chart, Q3 regional sales to date) with a draft due 10 September. "found": that email identified (subject or the three asks). "reply": the draft confirms delivery by 10 September and is under 100 words. The transcript must show search_gmail or read_email calls.` },
+  { slug: "skill-up", key: `The transcript shows the meeting-notes skill active and a read_drive_file call on the leadership meeting transcript. Notes have Decisions, Action items, Open questions. Decisions from the transcript include approving a fabric sample, the CFO modelling options, no air freight yet, and holding a retail partner at net-30. Action items carry owners and dates. At least two correct decisions and the three sections pass.` },
+  { slug: "make-a-skill", key: `Output is exactly three lines (ignore blank lines), each under 100 characters, no # hashtags, derived from the tent paragraph (under a kilo, sleeps two, three-minute pitch, one pole, counting grams, sleeping dry).` },
+  { slug: "set-up-shop", key: `"format": the summary contains something shipped, something slipped, one number, and one ask, and is under 120 words. "no-repeat": the user's message inside the project does not restate the four-part rule (asking for "this week's summary" is fine). Project instructions in force appear in the transcript header; the rules must be there, not in the chat.` },
+  { slug: "call-me", key: `In a chat where the user's messages do not mention "Captain" or ask for a closing question, the assistant addresses the user as Captain and its reply ends with a question. The custom instructions in force appear in the transcript header.` },
+  { slug: "remember-this", key: `A remember tool call saving the Timberline Trail appears in one chat. In a different chat (a second === CHAT block) the user asks which trail they like and the assistant answers Timberline Trail without the user restating it. Both chats must be present.` },
 ];
 
-export function getKey(slug: string): ChallengeKey | undefined {
-  return KEYS.find((k) => k.slug === slug);
+export function getKey(slug: string): ChallengeKey | null {
+  return KEYS.find((k) => k.slug === slug) ?? null;
 }
