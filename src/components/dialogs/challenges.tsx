@@ -117,7 +117,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
         </>
       }
     >
-      <div className="prose-chat text-[15px]"><ReactMarkdown>{c.brief}</ReactMarkdown></div>
+      <BriefBody brief={c.brief} />
       {c.fixtures?.map((f) => (
         <button key={f.filename} onClick={() => download(f)} className="mt-3 flex items-center gap-2 rounded-lg border border-line-2 px-3 py-2 text-[13px] hover:bg-bg-2">
           <Download size={14} /> {f.title} <span className="text-ink-3">({f.filename})</span>
@@ -135,6 +135,47 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
       <div className="mt-2 text-[12px] text-ink-3">Unlocks: {c.badges.map((b) => `${skillFor(b).emoji} ${skillFor(b).name}`).join(", ")}</div>
     </Dialog>
   );
+}
+
+/** Briefs are short markdown. Paragraphs become numbered steps, quotes become sample cards, bare links become chips. */
+function BriefBody({ brief }: { brief: string }) {
+  const blocks = brief.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+  const steps = blocks.filter((b) => !b.startsWith(">") && !/^https?:\/\/\S+$/.test(b) && !/^Sample \d+:$/.test(b));
+  let n = 0;
+  if (steps.length <= 1) {
+    return (
+      <div className="space-y-3">
+        {blocks.map((b, i) => (
+          <Block key={i} text={b} lead />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <ol className="space-y-3">
+      {blocks.map((b, i) => {
+        const isStep = steps.includes(b);
+        if (isStep) n += 1;
+        return (
+          <li key={i} className={cn("flex gap-3", !isStep && "pl-9")}>
+            {isStep && <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-clay font-serif text-[13px] font-semibold text-bg">{n}</span>}
+            <div className="min-w-0 flex-1"><Block text={b} /></div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function Block({ text, lead }: { text: string; lead?: boolean }) {
+  if (/^https?:\/\/\S+$/.test(text))
+    return <a href={text} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 font-mono text-[12.5px] text-ink-2 hover:bg-bg-3"><span className="truncate">{text.replace(/^https?:\/\//, "")}</span></a>;
+  if (text.startsWith(">")) {
+    const inner = text.split("\n").map((l) => l.replace(/^>\s?/, "")).join("\n");
+    return <div className="rounded-lg border-l-2 border-clay/60 bg-bg-2 px-3.5 py-2.5 text-[13.5px] leading-relaxed text-ink-2"><ReactMarkdown>{inner}</ReactMarkdown></div>;
+  }
+  if (/^Sample \d+:$/.test(text)) return <div className="text-[11.5px] font-medium uppercase tracking-wide text-ink-3">{text.replace(":", "")}</div>;
+  return <div className={cn("prose-chat leading-relaxed", lead ? "text-[17px]" : "text-[15px]")}><ReactMarkdown>{text}</ReactMarkdown></div>;
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
