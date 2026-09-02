@@ -117,6 +117,10 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
         </>
       }
     >
+      <div className="mb-4 flex items-start gap-3 rounded-lg border border-clay/30 bg-clay/[0.07] px-3.5 py-2.5">
+        <span className="mt-0.5 shrink-0 text-[10.5px] font-semibold uppercase tracking-wide text-clay-dark">You&rsquo;ll learn</span>
+        <span className="font-serif text-[16px] leading-snug text-ink">{c.hook}</span>
+      </div>
       <BriefBody brief={c.brief} />
       {c.fixtures?.map((f) => (
         <button key={f.filename} onClick={() => download(f)} className="mt-3 flex items-center gap-2 rounded-lg border border-line-2 px-3 py-2 text-[13px] hover:bg-bg-2">
