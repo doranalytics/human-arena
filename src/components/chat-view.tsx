@@ -49,6 +49,7 @@ export function ChatView({ chat }: { chat: Chat }) {
   const trackedTools = useRef<Set<string>>(new Set());
   const [webSearch, setWebSearch] = useState(false);
   const [research, setResearch] = useState(false);
+  const [cowork, setCowork] = useState(false);
 
   // Persist and observe. Connector use is read off the assistant's tool parts.
   useEffect(() => {
@@ -84,6 +85,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       for (const f of files) track(f.type.startsWith("image/") ? "image_attached" : "file_attached", f.name);
       if (webSearch) track("web_search_on");
       if (research) track("research_on");
+      if (cowork) track("cowork_on");
       if (skill) track("skill_invoked", skill);
       if (dictated) track("dictation_used");
       track("message_sent");
@@ -96,6 +98,7 @@ export function ChatView({ chat }: { chat: Chat }) {
             effort: st.settings.effort,
             webSearch,
             research,
+            cowork,
             connectors: st.connectors,
             skill: sk ? { name: sk.name, prompt: sk.prompt } : null,
             project: project ? { name: project.name, instructions: project.instructions, files: project.files.map((f) => ({ name: f.name, text: f.text })) } : null,
@@ -106,12 +109,12 @@ export function ChatView({ chat }: { chat: Chat }) {
         },
       );
     },
-    [sendMessage, webSearch, research, project, customSkills, name],
+    [sendMessage, webSearch, research, cowork, project, customSkills, name],
   );
 
   const empty = messages.length === 0;
   const composer = (
-    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} projectName={project?.name ?? null} />
+    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} projectName={project?.name ?? null} />
   );
 
   if (empty)

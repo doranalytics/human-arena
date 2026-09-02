@@ -19,10 +19,12 @@ interface Props {
   setWebSearch: (v: boolean) => void;
   research: boolean;
   setResearch: (v: boolean) => void;
+  cowork: boolean;
+  setCowork: (v: boolean) => void;
   projectName: string | null;
 }
 
-export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, projectName }: Props) {
+export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, projectName }: Props) {
   const [text, setText] = useState("");
   const dictated = useRef(false);
   const dictation = useDictation((t) => { dictated.current = true; setText((cur) => (cur ? cur.replace(/\s*$/, " ") : "") + t); });
@@ -158,7 +160,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
             if (fs.length) addFiles(fs);
           }}
           rows={1}
-          placeholder="How can I help you today?"
+          placeholder={cowork ? "What should I get done?" : "How can I help you today?"}
           className="max-h-60 w-full resize-none bg-transparent px-4 pb-1 pt-3.5 text-[16px] leading-6 outline-none placeholder:text-ink-3"
         />
         <div className="flex items-center gap-1 px-2.5 pb-2.5 pt-1">
@@ -180,10 +182,8 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
             )}
           </div>
           <div className="flex items-center rounded-lg border border-line p-0.5 text-[13px]">
-            <span className="rounded-md bg-bg-3 px-2.5 py-1 font-medium">Chat</span>
-            <span className="px-2.5 py-1 text-ink-3" title="Coming later">
-              Cowork
-            </span>
+            <button type="button" onClick={() => setCowork(false)} className={cn("rounded-md px-2.5 py-1", !cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Chat</button>
+            <button type="button" onClick={() => setCowork(true)} title="Hand it a task. It plans the steps and works through them with your connectors." className={cn("rounded-md px-2.5 py-1", cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Cowork</button>
           </div>
           {webSearch && !research && <Chip icon={<Globe size={12} />} label="Web search" onRemove={() => setWebSearch(false)} />}
           {research && <Chip icon={<Telescope size={12} />} label="Research" onRemove={() => setResearch(false)} />}

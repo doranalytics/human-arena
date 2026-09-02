@@ -73,7 +73,8 @@ export type ArenaEventType =
   | "link_read"
   | "memory_saved"
   | "instructions_set"
-  | "dictation_used";
+  | "dictation_used"
+  | "cowork_on";
 
 export interface ArenaEvent {
   type: ArenaEventType;

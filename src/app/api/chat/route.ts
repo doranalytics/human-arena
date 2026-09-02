@@ -17,6 +17,8 @@ interface Body {
   effort?: string;
   webSearch?: boolean;
   research?: boolean;
+  /** Cowork: autonomous multi-step work with the connected tools */
+  cowork?: boolean;
   connectors?: string[];
   skill?: { name: string; prompt: string } | null;
   project?: { name: string; instructions: string; files: { name: string; text: string }[] } | null;
@@ -40,6 +42,10 @@ function systemPrompt(b: Body, connected: ConnectorId[]) {
   if (b.research)
     parts.push(
       `RESEARCH MODE. Work like a research assistant: run several searches from different angles (at least four), read enough to be sure, then write a structured report: a title, a two-sentence summary, three or more headed sections, and a Sources list with links. Prefer recent, primary sources. State the date of each finding.`,
+    );
+  if (b.cowork)
+    parts.push(
+      `COWORK MODE. The user handed you a task rather than a question. Work like a capable colleague: write a two-to-five step plan in one short line each, then carry it out using the tools you have (connectors, read_link, web search when on) without stopping to ask unless something is genuinely blocking. Chain as many tool calls as the task needs. Finish with the deliverable itself (the numbers, the draft, the list), then a two-line summary of what you did and anything you could not do.`,
     );
   if (b.project) {
     parts.push(`PROJECT: ${b.project.name}\nProject instructions (follow them in every reply):\n${b.project.instructions || "(none)"}`);
@@ -113,7 +119,7 @@ export async function POST(req: Request) {
     system: systemPrompt(b, connected),
     messages: await convertToModelMessages(inlineTextFiles(b.messages)),
     tools,
-    stopWhen: stepCountIs(b.research ? 16 : 8),
+    stopWhen: stepCountIs(b.research || b.cowork ? 20 : 8),
     maxOutputTokens: b.research ? 8000 : 4000,
     providerOptions,
     onError: ({ error }) => console.error("[chat]", error instanceof Error ? error.message : error),

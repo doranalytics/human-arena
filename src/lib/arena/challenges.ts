@@ -68,13 +68,11 @@ export const CHALLENGES: ChallengeDef[] = [
     badges: ["chat", "constraints"],
     minutes: 3,
     points: 25,
-    brief: `Pick a complex subject. **Quantum physics** works if nothing comes to mind.
-
-Ask the assistant to **explain it in exactly ten words**. Not nine, not eleven.`,
+    brief: `Ask the AI to explain a complex subject in **10 words**. For example, quantum physics.`,
     deliverable: "A ten-word explanation.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
     checks: [{ id: "ten", label: "The final answer is exactly ten words and explains the subject" }],
-    hints: [{ text: "Put the length rule in the same message as the subject: 'Explain quantum physics in exactly ten words.'" }, { text: "If it misses, say 'Count the words and try again.' The arena grades the final reply." }],
+    hints: [{ text: "Say: 'Explain quantum physics in exactly ten words.'" }],
   },
   {
     slug: "make-it-ask-first",
@@ -85,10 +83,10 @@ Ask the assistant to **explain it in exactly ten words**. Not nine, not eleven.`
     badges: ["interviewing"],
     minutes: 5,
     points: 40,
-    brief: `You need a plan for a **two-day team offsite for twelve people**.
+    brief: `Ask for help planning a **team offsite**.
 
-Do not let the assistant guess. Tell it to **interview you first**: at least three questions, one at a time or all at once, before it writes anything. Answer them, then get the plan.`,
-    deliverable: "Questions from the assistant, your answers, then a plan built on them.",
+Before it answers, tell it to **ask you three questions** first. Answer them, and the plan follows.`,
+    deliverable: "Three questions from the assistant, then a plan built on your answers.",
     behaviors: [{ id: "sent", label: "Sent at least two messages", event: "message_sent" }],
     checks: [
       { id: "asked", label: "The assistant asked three or more questions before giving any plan" },
@@ -105,16 +103,16 @@ Do not let the assistant guess. Tell it to **interview you first**: at least thr
     badges: ["iteration", "verification"],
     minutes: 6,
     points: 45,
-    brief: `Ask for a **100-word note to customers announcing a two-week shipping delay**.
+    brief: `Ask for a **short note telling customers about a shipping delay**.
 
-Then make the assistant **grade its own draft** out of 10 against three criteria you name (for example: clear, apologetic without grovelling, tells them what happens next). Finally, have it **rewrite** to fix what it marked down.`,
-    deliverable: "Draft, a scored critique against three criteria, and a rewrite.",
+Then ask the assistant to **grade its own draft** and **rewrite it** to fix what it marked down.`,
+    deliverable: "A draft, a self-grade, and a better rewrite.",
     behaviors: [{ id: "sent", label: "Sent at least two messages", event: "message_sent" }],
     checks: [
-      { id: "rubric", label: "The assistant scored the draft against three named criteria" },
+      { id: "rubric", label: "The assistant graded its own draft against stated criteria" },
       { id: "rewrite", label: "A rewrite followed that differs from the first draft" },
     ],
-    hints: [{ text: "Three messages: ask for the draft, ask for the grade, ask for the rewrite." }, { text: "Name your criteria explicitly so the grade is against something." }],
+    hints: [{ text: "Three messages: ask for the note, ask it to grade the note, ask it to rewrite." }],
   },
   {
     slug: "two-audiences",
@@ -148,16 +146,13 @@ Both in the same reply, clearly labelled.`,
     badges: ["steelman"],
     minutes: 5,
     points: 45,
-    brief: `Take this position: **"Remote work is better than office work for a small company."**
+    brief: `Take this position: **"Remote work is better than office work."**
 
-Tell the assistant you hold that view, then make it argue the **strongest possible case against it**, no hedging. When it has, ask it to name the **weakest point in its own argument**.`,
-    deliverable: "A real counter-argument, then its weakest point.",
-    behaviors: [{ id: "sent", label: "Sent at least two messages", event: "message_sent" }],
-    checks: [
-      { id: "counter", label: "The assistant argued against remote work with concrete points and no 'both sides' hedging" },
-      { id: "weakest", label: "It then identified the weakest point of its own case" },
-    ],
-    hints: [{ text: "Say 'Argue the opposite as hard as you can. No balance, no caveats.'" }, { text: "Then: 'Which of your points is weakest, and why?'" }],
+Tell the assistant you believe it, then make it **argue the opposite as hard as it can**. No balance, no both-sides.`,
+    deliverable: "A real argument against your view.",
+    behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
+    checks: [{ id: "counter", label: "The assistant argued against remote work with concrete points and no both-sides hedging" }],
+    hints: [{ text: "Say: 'I think remote work is better. Argue the opposite as hard as you can. No caveats.'" }],
   },
   {
     slug: "rehearsal",
@@ -168,16 +163,16 @@ Tell the assistant you hold that view, then make it argue the **strongest possib
     badges: ["roleplay", "iteration"],
     minutes: 6,
     points: 50,
-    brief: `A retail buyer wants a **10 percent discount** on next season's order. You need to hold the price.
+    brief: `Have the assistant **play a tough customer** pushing you for a discount. Hold your price for a few exchanges.
 
-Have the assistant **play the buyer** for **three rounds** (it pushes, you respond, three times). Then tell it to **break character** and give you feedback on how you did.`,
-    deliverable: "Three in-character exchanges, then out-of-character coaching.",
-    behaviors: [{ id: "sent", label: "Sent at least four messages", event: "message_sent" }],
+Then tell it to **break character** and give you feedback on how you did.`,
+    deliverable: "A few in-character exchanges, then coaching.",
+    behaviors: [{ id: "sent", label: "Sent at least three messages", event: "message_sent" }],
     checks: [
-      { id: "character", label: "The assistant stayed in character as the buyer for three exchanges" },
-      { id: "coach", label: "After 'break character', it gave feedback on the user's responses" },
+      { id: "character", label: "The assistant stayed in character as the customer across the exchanges" },
+      { id: "coach", label: "After 'break character', it gave feedback on your responses" },
     ],
-    hints: [{ text: "Open with: 'Play a retail buyer pushing for 10% off. Stay in character until I say stop.'" }, { text: "After three rounds: 'Break character. How did I do?'" }],
+    hints: [{ text: "Open with: 'Play a customer who wants a discount. Stay in character until I say stop.'" }, { text: "After a few rounds: 'Break character. How did I do?'" }],
   },
   {
     slug: "twenty-then-three",
@@ -188,16 +183,16 @@ Have the assistant **play the buyer** for **three rounds** (it pushes, you respo
     badges: ["brainstorming", "constraints"],
     minutes: 5,
     points: 40,
-    brief: `Get **twenty names for a new ultralight tent**, numbered.
+    brief: `Ask for **twenty names for a new tent**.
 
-Then give the assistant one criterion, **"easy to say out loud in a shop"**, and have it pick the **best three** and say why each passed.`,
-    deliverable: "Twenty numbered names, then three picked by the criterion.",
+Then give it **one rule** of your choosing and have it pick the **best three**.`,
+    deliverable: "Twenty names, then three picked by your rule.",
     behaviors: [{ id: "sent", label: "Sent at least two messages", event: "message_sent" }],
     checks: [
-      { id: "twenty", label: "Twenty numbered names were produced" },
-      { id: "three", label: "Three were chosen with reasons that reference the criterion" },
+      { id: "twenty", label: "Twenty names were produced" },
+      { id: "three", label: "Three were chosen using the rule you gave" },
     ],
-    hints: [{ text: "Ask for exactly twenty, numbered. Then in a second message give the criterion and ask for three." }],
+    hints: [{ text: "Ask for exactly twenty. Then in a second message give a rule, like 'easy to say out loud', and ask for three." }],
   },
   {
     slug: "side-by-side",
@@ -208,16 +203,14 @@ Then give the assistant one criterion, **"easy to say out loud in a shop"**, and
     badges: ["comparisons"],
     minutes: 5,
     points: 40,
-    brief: `Compare **three ways to ship a 12 kg parcel across the country**: courier, postal service, and pallet freight.
-
-Make the assistant build a **table** with your four criteria: **cost, speed, tracking, and damage risk**. Then it must **pick one** for a fragile, non-urgent shipment and say why.`,
-    deliverable: "A three-by-four table and a recommendation.",
+    brief: `Ask the assistant to compare **courier, post and freight** for shipping a parcel, **as a table**, and to **pick one**.`,
+    deliverable: "A comparison table and a pick.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
     checks: [
-      { id: "table", label: "A table with the three options and the four criteria" },
-      { id: "pick", label: "One option recommended for fragile and non-urgent, with a reason" },
+      { id: "table", label: "A table comparing the three options" },
+      { id: "pick", label: "One option recommended, with a reason" },
     ],
-    hints: [{ text: "Say 'as a table' and list the four criteria by name." }],
+    hints: [{ text: "Say 'as a table' and 'then pick one'." }],
   },
   {
     slug: "tutor-mode",
@@ -228,14 +221,12 @@ Make the assistant build a **table** with your four criteria: **cost, speed, tra
     badges: ["tutoring"],
     minutes: 6,
     points: 50,
-    brief: `Learn **what gross margin is and how it is calculated**, but not from a lecture.
-
-Tell the assistant to **quiz you one question at a time**, wait for your answer, and adjust the next question to what you got right or wrong. Go at least **three questions** deep.`,
-    deliverable: "Three or more single questions with your answers in between.",
-    behaviors: [{ id: "sent", label: "Sent at least three messages", event: "message_sent" }],
+    brief: `Ask the assistant to **teach you what gross margin is** by **quizzing you one question at a time**. No lecture.`,
+    deliverable: "Questions one at a time, with your answers in between.",
+    behaviors: [{ id: "sent", label: "Sent at least two messages", event: "message_sent" }],
     checks: [
       { id: "one-at-a-time", label: "The assistant asked one question per turn and waited for the answer" },
-      { id: "adapts", label: "Later questions responded to earlier answers (correcting or advancing)" },
+      { id: "adapts", label: "A later question responded to an earlier answer" },
     ],
     hints: [{ text: "Say 'Teach me gross margin by asking one question at a time. Don't explain until I answer.'" }],
   },
@@ -267,25 +258,23 @@ Same meaning, no filler phrases, no "let's dive in", no "in today's fast-paced w
     title: "Sound like you",
     hook: "Two samples of your writing are enough for it to copy your voice.",
     teaches: "Style training: show samples, then get new writing in that voice",
-    badges: ["style-training", "iteration"],
+    badges: ["style-training"],
     minutes: 6,
     points: 45,
-    brief: `Here are two notes written in your voice. Paste both, then ask for a **new note in the same voice** about a **delayed delivery of jackets**.
+    brief: `Here are two notes written in your voice. Paste both, then ask for a **new note in the same voice** about a **delayed delivery**.
 
 Sample 1:
 > ${WRITING_SAMPLE_1}
 
 Sample 2:
-> ${WRITING_SAMPLE_2}
-
-If the result sounds generic, tell it what to fix and get a second version.`,
+> ${WRITING_SAMPLE_2}`,
     deliverable: "A new note that reads like the samples.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
     checks: [
       { id: "samples", label: "Both samples were given to the assistant" },
       { id: "voice", label: "The new note matches the samples: short sentences, direct, no corporate filler, ends with a next step" },
     ],
-    hints: [{ text: "Paste both samples in one message and say 'Write like this.'" }, { text: "Point at specifics: 'Shorter sentences. Start with the news. End with what happens next.'" }],
+    hints: [{ text: "Paste both samples in one message and say 'Write like this.'" }],
   },
   {
     slug: "reply-to-this",
@@ -293,22 +282,21 @@ If the result sounds generic, tell it what to fix and get a second version.`,
     title: "Reply to this",
     hook: "Give it the message and the outcome you want, and it drafts the reply.",
     teaches: "Drafting: brief the assistant with the message and the outcome",
-    badges: ["drafting", "constraints"],
+    badges: ["drafting"],
     minutes: 4,
     points: 40,
     brief: `A colleague sent this:
 
 > ${FAVOUR_REQUEST}
 
-Draft a reply that **says no**, **offers one alternative** (a different day, or finding someone else), and is **under 80 words**.`,
-    deliverable: "A reply under 80 words that declines and offers an alternative.",
+Draft a **short reply that says no**.`,
+    deliverable: "A short reply that declines.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
     checks: [
       { id: "no", label: "The reply clearly declines the Saturday shift" },
-      { id: "alt", label: "It offers one concrete alternative" },
-      { id: "length", label: "It is under 80 words" },
+      { id: "length", label: "It is short" },
     ],
-    hints: [{ text: "Paste the message, then say what you want: 'Reply, say no, offer an alternative, under 80 words.'" }],
+    hints: [{ text: "Paste the message, then say what you want: 'Reply and say no, keep it short.'" }],
   },
   {
     slug: "there-and-back",
@@ -343,13 +331,10 @@ Draft a reply that **says no**, **offers one alternative** (a different day, or 
     points: 45,
     brief: `Download the expense policy from this brief and **attach it** to the chat.
 
-Ask for **five bullets** a new starter must know, plus **one line** on what happens if a claim is late.`,
-    deliverable: "Five bullets and a one-line answer on late claims.",
+Ask for the **five things a new starter must know**.`,
+    deliverable: "Five bullets drawn from the document.",
     behaviors: [{ id: "file", label: "Attached the file", event: "file_attached" }],
-    checks: [
-      { id: "five", label: "Five bullets drawn from the document" },
-      { id: "late", label: "One line stating the late-claim rule correctly" },
-    ],
+    checks: [{ id: "five", label: "Five bullets drawn from the document" }],
     fixtures: [{ filename: "expense-policy.txt", title: "Expense policy", body: LONG_DOC }],
     hints: [{ text: "Use the + button or drag the file onto the chat. Then ask." }],
   },
@@ -364,15 +349,15 @@ Ask for **five bullets** a new starter must know, plus **one line** on what happ
     points: 55,
     brief: `Download the trade show expense notes and **attach** them.
 
-Get a **clean table** with exactly these columns: **item, quantity, unit price, total**. Then a **grand total** at the bottom.`,
-    deliverable: "A four-column table and a grand total.",
+Ask for a **clean table with a total**.`,
+    deliverable: "A table and a correct total.",
     behaviors: [{ id: "file", label: "Attached the file", event: "file_attached" }],
     checks: [
-      { id: "table", label: "A table with the four named columns" },
-      { id: "total", label: "The grand total is correct" },
+      { id: "table", label: "A table with one row per line item" },
+      { id: "total", label: "The total is correct" },
     ],
     fixtures: [{ filename: "trade-show-expenses.txt", title: "Trade show expense notes", body: MESSY_LINES }],
-    hints: [{ text: "Name the four columns in your message. Say 'one row per line item'." }, { text: "Ask it to show the arithmetic for the total so you can check it." }],
+    hints: [{ text: "Say 'one row per line item, with a total at the bottom'." }],
   },
   {
     slug: "read-the-pdf",
@@ -385,16 +370,15 @@ Get a **clean table** with exactly these columns: **item, quantity, unit price, 
     points: 55,
     brief: `Download the supply agreement PDF and **attach it**.
 
-Ask three things: the **price per metre**, the **minimum order per colour**, and the **maximum late-delivery credit**.`,
-    deliverable: "Three correct figures from the PDF.",
+Ask for the **price per metre** and the **minimum order**.`,
+    deliverable: "Two correct figures from the PDF.",
     behaviors: [{ id: "file", label: "Attached the PDF", event: "file_attached" }],
     checks: [
       { id: "price", label: "Price per metre is correct" },
       { id: "minimum", label: "Minimum order per colour is correct" },
-      { id: "credit", label: "Maximum late-delivery credit is correct" },
     ],
     fixtures: [{ filename: "supply-agreement.pdf", title: "Supply agreement (PDF)", url: "/fixtures/supply-agreement.pdf", mediaType: "application/pdf" }],
-    hints: [{ text: "Attach the PDF with + and ask all three questions in one message." }],
+    hints: [{ text: "Attach the PDF with + and ask both questions in one message." }],
   },
   {
     slug: "show-dont-tell",
@@ -407,13 +391,10 @@ Ask three things: the **price per metre**, the **minimum order per colour**, and
     points: 35,
     brief: `Download the photo of the care label and **attach it**.
 
-Ask for the **washing instructions as a checklist** and **one thing a customer should never do** with this jacket.`,
-    deliverable: "A checklist from the label and one 'never'.",
+Ask **what you must never do** with this jacket.`,
+    deliverable: "The prohibited step, read from the photo.",
     behaviors: [{ id: "image", label: "Attached an image", event: "image_attached" }],
-    checks: [
-      { id: "checklist", label: "The care steps from the label are listed" },
-      { id: "never", label: "One prohibited action from the label is named" },
-    ],
+    checks: [{ id: "never", label: "A prohibited action from the label is named" }],
     fixtures: [{ filename: "care-label.png", title: "Photo of the care label", url: "/fixtures/care-label.png", mediaType: "image/png" }],
     hints: [{ text: "Use the image button in the composer, or drag the picture in." }],
   },
@@ -423,20 +404,17 @@ Ask for the **washing instructions as a checklist** and **one thing a customer s
     title: "Picture to text",
     hook: "It transcribes handwriting and screenshots, then works with the text.",
     teaches: "Image to text: transcribe first, then work with it",
-    badges: ["ocr", "screenshot"],
+    badges: ["ocr"],
     minutes: 4,
     points: 40,
     brief: `Download the handwritten note and **attach it**.
 
-Get the text **transcribed exactly**, then turned into a **time-ordered checklist** for the day.`,
-    deliverable: "A transcription and an ordered checklist.",
+Ask the assistant to **type out what it says**.`,
+    deliverable: "The note, as text.",
     behaviors: [{ id: "image", label: "Attached an image", event: "image_attached" }],
-    checks: [
-      { id: "transcribed", label: "The note's lines are transcribed accurately" },
-      { id: "ordered", label: "A checklist in time order follows" },
-    ],
+    checks: [{ id: "transcribed", label: "The note's lines are transcribed accurately" }],
     fixtures: [{ filename: "handwritten-note.png", title: "Handwritten note", url: "/fixtures/handwritten-note.png", mediaType: "image/png" }],
-    hints: [{ text: "Ask for 'the exact text first, then a checklist in the order things happen'." }],
+    hints: [{ text: "Attach the image and ask for 'the exact text'." }],
   },
   {
     slug: "picture-math",
@@ -447,15 +425,12 @@ Get the text **transcribed exactly**, then turned into a **time-ordered checklis
     badges: ["screenshot", "extraction"],
     minutes: 5,
     points: 50,
-    brief: `Download the screenshot of the regional sales table and **attach it**.
+    brief: `Download the screenshot of the sales table and **attach it**.
 
-Ask for the **total of the June column** and **which region grew most from April to June**.`,
-    deliverable: "The June total and the fastest-growing region.",
+Ask for the **total of the June column**.`,
+    deliverable: "The June total.",
     behaviors: [{ id: "image", label: "Attached an image", event: "image_attached" }],
-    checks: [
-      { id: "june", label: "The June total is correct" },
-      { id: "growth", label: "The region with the largest April-to-June increase is correct" },
-    ],
+    checks: [{ id: "june", label: "The June total is correct" }],
     fixtures: [{ filename: "regional-sales-q2.png", title: "Screenshot of the sales table", url: "/fixtures/regional-sales-q2.png", mediaType: "image/png" }],
     hints: [{ text: "Ask it to read the table out first, then do the sums. Errors show up in the read-out." }],
   },
@@ -470,10 +445,8 @@ Ask for the **total of the June column** and **which region grew most from April
     badges: ["web-search"],
     minutes: 5,
     points: 45,
-    brief: `Get **two news items about the outdoor gear industry from the last seven days**, each with the **date** and a **link**.
-
-Old news does not count. Neither does anything made up.`,
-    deliverable: "Two dated, linked items from the past week.",
+    brief: `Ask for **two news stories from this week about outdoor gear**, with links.`,
+    deliverable: "Two recent stories with links.",
     behaviors: [{ id: "search", label: "Turned on web search", event: "web_search_on" }],
     checks: [
       { id: "two-items", label: "Two distinct items, each dated within the last seven days" },
@@ -510,9 +483,9 @@ Then turn web search **on** and tell the assistant to **verify its previous answ
     badges: ["deep-research"],
     minutes: 10,
     points: 70,
-    brief: `Turn on **Research** and ask: **how are outdoor apparel brands handling supplier delays and near-shoring in 2026?**
+    brief: `Turn on **Research** and ask: **how are outdoor apparel brands handling supplier delays in 2026?**
 
-You want a **report** with a title, at least **three headed sections**, and **four or more cited sources**.`,
+You want a proper report with sources, not a quick answer.`,
     deliverable: "A sectioned, cited report.",
     behaviors: [{ id: "research", label: "Turned on Research", event: "research_on" }],
     checks: [
@@ -530,15 +503,12 @@ You want a **report** with a title, at least **three headed sections**, and **fo
     badges: ["url-reading", "summarizing"],
     minutes: 4,
     points: 40,
-    brief: `Paste this link and ask for **three bullets** on what the page says and **one sentence quoted directly** from it:
+    brief: `Paste this link and ask **what the page says**:
 
 https://en.wikipedia.org/wiki/Ultralight_backpacking`,
-    deliverable: "Three bullets and one direct quote from the page.",
+    deliverable: "A summary of the page.",
     behaviors: [{ id: "link", label: "The assistant fetched the link", event: "link_read" }],
-    checks: [
-      { id: "bullets", label: "Three bullets that reflect the fetched page" },
-      { id: "quote", label: "One sentence quoted from the page text" },
-    ],
+    checks: [{ id: "bullets", label: "The summary reflects the fetched page" }],
     hints: [{ text: "Just paste the URL with your request. The assistant fetches it." }],
   },
 
@@ -554,8 +524,8 @@ https://en.wikipedia.org/wiki/Ultralight_backpacking`,
     points: 55,
     brief: `A jacket sells for **$249**. It costs **$92** to make. Retail partners buy it at **45 percent off** the price. Wholesale orders cost **$11** per unit to fulfil, direct online orders cost **$19**.
 
-Switch to the **Smart** model and **High** effort, then ask: **profit per unit on wholesale versus direct, and how many wholesale units equal the profit of 1,000 direct units?**`,
-    deliverable: "Three correct numbers, asked with Smart and High.",
+Switch to the **Smart** model and **High** effort, then ask for the **profit per unit on wholesale versus direct**.`,
+    deliverable: "Two correct numbers, asked with Smart and High.",
     behaviors: [
       { id: "smart", label: "Selected the Smart model", event: "model_selected", detail: "smart" },
       { id: "high", label: "Set effort to High", event: "effort_selected", detail: "high" },
@@ -563,7 +533,6 @@ Switch to the **Smart** model and **High** effort, then ask: **profit per unit o
     checks: [
       { id: "wholesale", label: "Wholesale profit per unit is correct" },
       { id: "direct", label: "Direct profit per unit is correct" },
-      { id: "equiv", label: "The wholesale-unit equivalent of 1,000 direct units is correct" },
     ],
     hints: [{ text: "The model picker is at the bottom right of the composer. Change both the model and the effort." }],
   },
@@ -576,16 +545,13 @@ Switch to the **Smart** model and **High** effort, then ask: **profit per unit o
     badges: ["connectors", "extraction"],
     minutes: 6,
     points: 60,
-    brief: `Connect the **data warehouse** (Connectors, in the sidebar).
+    brief: `Connect the **data warehouse** (Customize, then Connectors).
 
-Ask for the company's **revenue in the most recent month on record**, and make the assistant say **which table** it read.`,
-    deliverable: "The latest month's revenue, with its table named.",
+Ask for the company's **revenue in the most recent month on record**.`,
+    deliverable: "The latest month's revenue, read from the warehouse.",
     behaviors: [{ id: "used", label: "Used the warehouse connector", event: "connector_used", detail: "warehouse" }],
-    checks: [
-      { id: "number", label: "The latest month's revenue is correct" },
-      { id: "source", label: "The table it came from is named" },
-    ],
-    hints: [{ text: "Connectors in the sidebar. Connect the warehouse, then ask." }, { text: "If it guesses, say 'Read it from the warehouse, and tell me the table.'" }],
+    checks: [{ id: "number", label: "The latest month's revenue is correct" }],
+    hints: [{ text: "Customize in the sidebar, then Connectors. Connect the warehouse, then ask." }],
   },
   {
     slug: "inbox-to-reply",
@@ -593,19 +559,19 @@ Ask for the company's **revenue in the most recent month on record**, and make t
     title: "Inbox to reply",
     hook: "With your inbox connected it finds the email and drafts the reply.",
     teaches: "Connectors and drafting: work an inbox through the assistant",
-    badges: ["connectors", "drafting", "summarizing"],
+    badges: ["connectors", "drafting"],
     minutes: 7,
     points: 60,
     brief: `Connect **Gmail**.
 
-Ask the assistant to find the **newest unread email** in your inbox, tell you **what it asks for** in one line, and **draft a reply** under 100 words that confirms you will do it by the date it names.`,
-    deliverable: "The ask in one line and a reply under 100 words.",
+Ask the assistant to find your **newest unread email** and **draft a short reply** to it.`,
+    deliverable: "The right email found, and a reply drafted.",
     behaviors: [{ id: "gmail", label: "Used the Gmail connector", event: "connector_used", detail: "gmail" }],
     checks: [
       { id: "found", label: "The newest unread email was identified correctly" },
-      { id: "reply", label: "The draft confirms the request by its date and is under 100 words" },
+      { id: "reply", label: "The draft replies to what that email asks" },
     ],
-    hints: [{ text: "Connect Gmail in the sidebar, then say 'Find my newest unread email.'" }],
+    hints: [{ text: "Customize, then Connectors, connect Gmail. Then say 'Find my newest unread email and draft a reply.'" }],
   },
   {
     slug: "skill-up",
@@ -633,10 +599,10 @@ Type **/meeting-notes** and ask for notes on that transcript. The skill sets the
     title: "Make a skill",
     hook: "Anything you ask for twice can become your own slash command.",
     teaches: "Skills: write your own and run it",
-    badges: ["skills", "custom-instructions"],
+    badges: ["skills"],
     minutes: 7,
     points: 60,
-    brief: `Create a skill called **/three-lines** (Skills, in the sidebar). Its instruction: turn any text into **exactly three lines under 100 characters each**, no hashtags.
+    brief: `Create a skill called **/three-lines** (Customize, then Skills). Its instruction: *turn any text into three short lines*.
 
 Then run it on this:
 
@@ -646,8 +612,8 @@ Then run it on this:
       { id: "created", label: "Created a skill", event: "skill_created" },
       { id: "invoked", label: "Invoked it with /", event: "skill_invoked", detail: "three-lines" },
     ],
-    checks: [{ id: "three", label: "The output is three lines, each under 100 characters, no hashtags" }],
-    hints: [{ text: "Skills in the sidebar, then New skill. Name it three-lines and paste the instruction." }, { text: "In the chat, type /three-lines, then paste the paragraph." }],
+    checks: [{ id: "three", label: "The output is three short lines" }],
+    hints: [{ text: "Customize, then Skills, then Add. Name it three-lines and paste the instruction." }, { text: "In the chat, type /three-lines, then paste the paragraph." }],
   },
   {
     slug: "set-up-shop",
@@ -658,19 +624,19 @@ Then run it on this:
     badges: ["projects", "custom-instructions"],
     minutes: 6,
     points: 55,
-    brief: `Create a **project** for a weekly summary. Put these rules in its **instructions**: *what shipped, what slipped, one number, one ask; under 120 words*.
+    brief: `Create a **project** and put one rule in its **instructions**: *always answer in three bullets*.
 
-Start a chat **inside the project** and ask for a summary of "this week" using anything it likes. Do not repeat the rules in the chat.`,
-    deliverable: "A summary that follows the rules you never typed in the chat.",
+Start a chat **inside the project** and ask it anything. Do not mention the rule in the chat.`,
+    deliverable: "A three-bullet answer to a question that never mentioned bullets.",
     behaviors: [
       { id: "project", label: "Created a project", event: "project_created" },
       { id: "inside", label: "Started a chat inside it", event: "chat_in_project" },
     ],
     checks: [
-      { id: "format", label: "The summary has the four parts and is under 120 words" },
-      { id: "no-repeat", label: "The chat message did not restate the rules" },
+      { id: "format", label: "The reply is three bullets" },
+      { id: "no-repeat", label: "The chat message did not mention bullets or the rule" },
     ],
-    hints: [{ text: "Projects in the sidebar, then New project. Paste the rules into Instructions." }, { text: "Open the project and start a chat from there." }],
+    hints: [{ text: "Projects in the sidebar, then New project. Paste the rule into Instructions." }, { text: "Open the project and start a chat from there." }],
   },
   {
     slug: "call-me",
@@ -678,16 +644,16 @@ Start a chat **inside the project** and ask for a summary of "this week" using a
     title: "Call me",
     hook: "Custom instructions follow you into every chat.",
     teaches: "Personalization: custom instructions the assistant always follows",
-    badges: ["personalization", "custom-instructions"],
+    badges: ["personalization"],
     minutes: 4,
     points: 40,
-    brief: `Open **Customize** (the gear, top right) and set two custom instructions: **call me "Captain"**, and **end every reply with one question**.
+    brief: `Open **Settings** (the gear, top right), then **General**, and add one custom instruction: **call me Captain**.
 
-Start a **new chat** and ask anything. The reply should do both without you asking.`,
-    deliverable: "A reply that uses the name and ends with a question, unprompted.",
+Start a **new chat** and ask anything.`,
+    deliverable: "A reply that calls you Captain without being asked in the chat.",
     behaviors: [{ id: "set", label: "Saved custom instructions", event: "instructions_set" }],
-    checks: [{ id: "honoured", label: "The reply addresses the user as Captain and ends with a question, with neither asked for in the chat" }],
-    hints: [{ text: "Customize is behind the gear at the top right, or your name at the bottom of the sidebar. Save after typing." }],
+    checks: [{ id: "honoured", label: "The reply addresses the user as Captain, with the name never mentioned in the chat" }],
+    hints: [{ text: "Gear top right, General, type the instruction, Save. Then New." }],
   },
   {
     slug: "remember-this",
@@ -725,12 +691,33 @@ Fix any words it misheard before you send.`,
     checks: [{ id: "tips", label: "The reply gives three tips about packing a wet tent" }],
     hints: [{ text: "The microphone is at the bottom right of the message box, next to Send. Click it once, speak, click it again to stop." }],
   },
+  {
+    slug: "hand-it-off",
+    order: 33,
+    title: "Hand it off",
+    hook: "In Cowork mode it plans the steps and works through them on its own.",
+    teaches: "Cowork: give it a multi-step task and let it run",
+    badges: ["cowork", "connectors"],
+    minutes: 6,
+    points: 55,
+    brief: `Connect **Gmail** and the **data warehouse**. Switch the composer from **Chat** to **Cowork**.
+
+Then say: **"Read my newest unread email and pull the numbers it asks for from the warehouse."** Watch it work.`,
+    deliverable: "The email found and its numbers pulled, in one go.",
+    behaviors: [
+      { id: "cowork", label: "Used Cowork mode", event: "cowork_on" },
+      { id: "gmail", label: "Read Gmail", event: "connector_used", detail: "gmail" },
+      { id: "warehouse", label: "Read the warehouse", event: "connector_used", detail: "warehouse" },
+    ],
+    checks: [{ id: "numbers", label: "The reply reports figures from the warehouse that the email asked for" }],
+    hints: [{ text: "The Chat / Cowork switch is in the message box. Cowork keeps going through several steps without asking." }],
+  },
 ];
 
 export const TOTAL_POINTS = CHALLENGES.reduce((s, c) => s + c.points, 0);
 
 /** Feature challenges count toward Tool sense. */
-export const FEATURE_SLUGS = new Set(["one-page", "pull-the-table", "read-the-pdf", "show-dont-tell", "picture-to-text", "picture-math", "fresh-news", "check-it", "deep-dive", "read-the-link", "pick-the-brain", "connect-and-ask", "inbox-to-reply", "skill-up", "make-a-skill", "set-up-shop", "call-me", "remember-this", "say-it"]);
+export const FEATURE_SLUGS = new Set(["one-page", "pull-the-table", "read-the-pdf", "show-dont-tell", "picture-to-text", "picture-math", "fresh-news", "check-it", "deep-dive", "read-the-link", "pick-the-brain", "connect-and-ask", "inbox-to-reply", "skill-up", "make-a-skill", "set-up-shop", "call-me", "remember-this", "say-it", "hand-it-off"]);
 
 export function getChallenge(slug: string) {
   return CHALLENGES.find((c) => c.slug === slug) ?? null;

@@ -50,6 +50,7 @@ export const SKILLS: Record<string, SkillDef> = {
   "web-search": s("📰", "Live search", "Retrieval and agents"),
   "deep-research": s("🔬", "Deep research", "Retrieval and agents"),
   connectors: s("📬", "Connectors", "Retrieval and agents"),
+  cowork: s("🧑‍💻", "Cowork mode", "Retrieval and agents"),
   automations: s("⏰", "Automations", "Retrieval and agents", "later"),
   "browser-agent": s("🤖", "Browser agent", "Retrieval and agents", "later"),
   "computer-files": s("🧹", "File agent", "Retrieval and agents", "later"),
