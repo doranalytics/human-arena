@@ -38,6 +38,8 @@ export interface CustomSkill {
 
 export interface Settings {
   name: string;
+  /** small square data URL (or https URL) for the profile photo */
+  avatar?: string | null;
   product: "claude" | "chatgpt";
   model: ModelChoice;
   effort: Effort;

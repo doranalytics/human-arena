@@ -11,3 +11,38 @@ export function Spark({ size = 28, className = "" }: { size?: number; className?
     </svg>
   );
 }
+
+// 12-lobe rosette, ported from ai-certified-next (same geometry as its favicon). viewBox 0 0 100 100.
+const ROSETTE_PATH =
+  "M97.5 50.0L96.4 52.4L93.5 54.6L89.8 56.3L86.7 57.8L85.3 59.4L85.7 61.6L87.6 64.4L89.9 67.8L91.4 71.1L91.1 73.8L89.0 75.3L85.4 75.7L81.3 75.4L77.9 75.1L75.8 75.8L75.1 77.9L75.4 81.3L75.7 85.4L75.3 89.0L73.8 91.1L71.1 91.4L67.8 89.9L64.4 87.6L61.6 85.7L59.4 85.3L57.8 86.7L56.3 89.8L54.6 93.5L52.4 96.4L50.0 97.5L47.6 96.4L45.4 93.5L43.7 89.8L42.2 86.7L40.6 85.3L38.4 85.7L35.6 87.6L32.2 89.9L28.9 91.4L26.3 91.1L24.7 89.0L24.3 85.4L24.6 81.3L24.9 77.9L24.2 75.8L22.1 75.1L18.7 75.4L14.6 75.7L11.0 75.3L8.9 73.8L8.6 71.1L10.1 67.8L12.4 64.4L14.3 61.6L14.7 59.4L13.3 57.8L10.2 56.3L6.5 54.6L3.6 52.4L2.5 50.0L3.6 47.6L6.5 45.4L10.2 43.7L13.3 42.2L14.7 40.6L14.3 38.4L12.4 35.6L10.1 32.2L8.6 28.9L8.9 26.2L11.0 24.7L14.6 24.3L18.7 24.6L22.1 24.9L24.2 24.2L24.9 22.1L24.6 18.7L24.3 14.6L24.7 11.0L26.2 8.9L28.9 8.6L32.2 10.1L35.6 12.4L38.4 14.3L40.6 14.7L42.2 13.3L43.7 10.2L45.4 6.5L47.6 3.6L50.0 2.5L52.4 3.6L54.6 6.5L56.3 10.2L57.8 13.3L59.4 14.7L61.6 14.3L64.4 12.4L67.8 10.1L71.1 8.6L73.8 8.9L75.3 11.0L75.7 14.6L75.4 18.7L75.1 22.1L75.8 24.2L77.9 24.9L81.3 24.6L85.4 24.3L89.0 24.7L91.1 26.2L91.4 28.9L89.9 32.2L87.6 35.6L85.7 38.4L85.3 40.6L86.7 42.2L89.8 43.7L93.5 45.4L96.4 47.6Z";
+
+/** Tier colours. Same palette as the How to AI Games board so the two products read as one family. */
+export const TIER_STYLE = {
+  Tourist: { fill: "#FFA26B", ring: "#FFF4EC" },
+  Newcomer: { fill: "#F0570F", ring: "#FBF3E4" },
+  Resident: { fill: "#B8410B", ring: "#FBF3E4" },
+  Citizen: { fill: "#1C1917", ring: "#FBF3E4" },
+  "AI-Native": { fill: "#D4A13C", ring: "#FFF8E6" },
+} as const;
+export type BadgeTier = keyof typeof TIER_STYLE;
+
+/** Tier badge: the rosette in the tier's colour. Locked tiers are a hollow dashed outline. */
+export function TierBadge({ tier, locked, size = 64, className = "" }: { tier: BadgeTier; locked?: boolean; size?: number; className?: string }) {
+  const c = TIER_STYLE[tier];
+  if (locked) {
+    return (
+      <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true" className={`shrink-0 ${className}`}>
+        <path d={ROSETTE_PATH} fill="none" stroke="#D6D3D1" strokeWidth="2.5" strokeDasharray="4 3" />
+        <circle cx="50" cy="50" r="24" fill="none" stroke="#D6D3D1" strokeWidth="2" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true" className={`shrink-0 ${className}`}>
+      <path d={ROSETTE_PATH} fill={c.fill} />
+      <circle cx="50" cy="50" r="27" fill={c.ring} />
+      <circle cx="50" cy="50" r="21" fill={c.fill} />
+      <circle cx="50" cy="50" r="15" fill={c.ring} />
+    </svg>
+  );
+}

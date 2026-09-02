@@ -6,6 +6,7 @@ export interface Me {
   id: string;
   email: string;
   name: string;
+  avatar?: string | null;
 }
 interface SessionState {
   loaded: boolean;

@@ -6,9 +6,11 @@ import { closeDialog } from "@/lib/ui";
 import { useStore, totalPoints } from "@/lib/store";
 import { useSession } from "@/lib/session";
 import { tierFor } from "@/lib/tiers";
+import { Avatar } from "../avatar";
+import { TierBadge, type BadgeTier } from "../icons";
 import { cn } from "@/lib/utils";
 
-interface Row { id: string; name: string; points: number; challenges: number; rank: number; you?: boolean }
+interface Row { id: string; name: string; avatar?: string | null; points: number; challenges: number; rank: number; you?: boolean }
 
 export function LeaderboardDialog({ open }: { open: boolean }) {
   const [board, setBoard] = useState<"all" | "week">("all");
@@ -30,7 +32,7 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
           const mine = Object.values(results).filter((r) => board === "all" || Date.now() - new Date(r.at).getTime() < 7 * 86400000);
           const pts = totalPoints(Object.fromEntries(mine.map((r) => [r.slug, r])));
           if (pts > 0) {
-            rs = [...rs.filter((r) => !r.you), { id: "you", name: (session.me?.name || settings.name || "You") + " (you)", points: pts, challenges: mine.filter((r) => r.passed).length, rank: 0, you: true }]
+            rs = [...rs.filter((r) => !r.you), { id: "you", name: (session.me?.name || settings.name || "You") + " (you)", avatar: session.me?.avatar || settings.avatar, points: pts, challenges: mine.filter((r) => r.passed).length, rank: 0, you: true }]
               .sort((a, b) => b.points - a.points || b.challenges - a.challenges)
               .map((r, i) => ({ ...r, rank: i + 1 }));
           }
@@ -38,7 +40,7 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
         setData({ board, rows: rs, live: j.live });
       })
       .catch(() => setData({ board, rows: [], live: false }));
-  }, [open, board, results, settings.name, session.me]);
+  }, [open, board, results, settings.name, settings.avatar, session.me]);
 
   return (
     <Dialog open={open} onClose={closeDialog} title={<span className="flex items-center gap-2"><Trophy size={16} className="text-clay" /> Leaderboard</span>}>
@@ -56,8 +58,12 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
           {rows.map((r) => (
             <div key={r.id} className={cn("flex items-center gap-3 py-2 text-[13.5px]", r.you && "font-medium")}>
               <span className="w-6 text-right tabular-nums text-ink-3">{r.rank}</span>
+              <Avatar name={r.name} src={r.avatar} size={26} />
               <span className="min-w-0 flex-1 truncate">{r.name}</span>
-              <span className="text-[12px] text-ink-3">{tierFor(r.points)}</span>
+              <span className="inline-flex items-center gap-1 text-[12px] text-ink-3">
+                {tierFor(r.points) !== "Analog" && <TierBadge tier={tierFor(r.points) as BadgeTier} size={14} />}
+                {tierFor(r.points)}
+              </span>
               <span className="w-12 text-right tabular-nums">{r.points}</span>
             </div>
           ))}

@@ -5,6 +5,8 @@ import { useStore, newChat, openChat, openProject, deleteChat } from "@/lib/stor
 import { openDialog, toggleSidebar } from "@/lib/ui";
 import { useSession } from "@/lib/session";
 import { tierFor } from "@/lib/tiers";
+import { Avatar } from "./avatar";
+import { TierBadge } from "./icons";
 import { totalPoints } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -31,12 +33,7 @@ export function Sidebar() {
   const [searching, setSearching] = useState(false);
 
   const name = session.me?.name || settings.name || "You";
-  const initials = name
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const avatar = session.me?.avatar || settings.avatar;
   const pts = totalPoints(results);
   const list = chats.filter((c) => !q || c.title.toLowerCase().includes(q.toLowerCase()));
 
@@ -96,9 +93,13 @@ export function Sidebar() {
 
       <div className="border-t border-line px-2.5 py-2">
         <button onClick={() => openDialog({ kind: "settings" })} className="flex h-10 w-full items-center gap-2.5 rounded-lg px-2 hover:bg-bg-3">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2c2b28] text-[11px] font-semibold text-bg">{initials || "?"}</span>
+          <Avatar name={name} src={avatar} size={28} />
           <span className="min-w-0 flex-1 truncate text-left text-[13.5px]">
-            {name} <span className="text-ink-3">· {tierFor(pts)}</span>
+            {name}{" "}
+            <span className="inline-flex items-center gap-1 text-ink-3">
+              · {tierFor(pts) !== "Analog" && <TierBadge tier={tierFor(pts) as Exclude<ReturnType<typeof tierFor>, "Analog">} size={12} />}
+              {tierFor(pts)}
+            </span>
           </span>
           <ChevronDown size={14} className="text-ink-3" />
         </button>
