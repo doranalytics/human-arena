@@ -319,9 +319,10 @@ function Progress() {
                   const has = earned.has(id);
                   const later = s.status === "later";
                   return (
-                    <div key={id} title={later ? "The arena cannot grade this yet" : id === "tool-choice" ? `Earned after ${TOOL_SENSE_THRESHOLD} feature challenges` : undefined} className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[12.5px]", has ? "border-line bg-bg" : "border-dashed border-line text-ink-3", later && "opacity-60")}>
-                      <span className={cn("text-[15px]", !has && "opacity-50 grayscale")}>{s.emoji}</span>
+                    <div key={id} title={later ? "The arena cannot grade this yet" : id === "tool-choice" ? `Earned after ${TOOL_SENSE_THRESHOLD} feature challenges` : undefined} className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[12.5px]", has ? "border-ok/50 bg-ok/10 font-medium text-ink shadow-sm shadow-ok/10" : "border-dashed border-line text-ink-3", later && "opacity-60")}>
+                      <span className={cn("text-[15px]", !has && "opacity-40 grayscale")}>{s.emoji}</span>
                       <span className="min-w-0 flex-1 truncate">{s.name}</span>
+                      {has && <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-ok text-bg"><Check size={10} strokeWidth={3} /></span>}
                       {later && <span className="shrink-0 text-[10px] uppercase tracking-wide text-ink-3">soon</span>}
                     </div>
                   );
