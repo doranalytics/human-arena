@@ -77,9 +77,9 @@ export const CHALLENGES: ChallengeDef[] = [
   {
     slug: "make-it-ask-first",
     order: 2,
-    title: "Make it ask first",
+    title: "Interview me",
     hook: "AI can interview you before it answers, so the answer fits your situation.",
-    teaches: "Make it ask first: get the questions before the plan",
+    teaches: "Interview me: get the questions before the plan",
     badges: ["interviewing"],
     minutes: 5,
     points: 40,

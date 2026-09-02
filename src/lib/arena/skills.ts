@@ -22,7 +22,7 @@ export const SKILLS: Record<string, SkillDef> = {
   // prompting moves
   chat: s("💬", "Chat", "Prompting moves"),
   constraints: s("📏", "Constraints", "Prompting moves"),
-  interviewing: s("❓", "Make it ask first", "Prompting moves"),
+  interviewing: s("❓", "Interview me", "Prompting moves"),
   iteration: s("🔁", "Iteration", "Prompting moves"),
   verification: s("✅", "Verify the output", "Prompting moves"),
   audience: s("🎓", "Audience switching", "Prompting moves"),

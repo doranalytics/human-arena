@@ -27,7 +27,7 @@ Brian's notes folded in: more than two skills per challenge where natural; brief
 | # | Challenge | Skills | Teaches | Min | Pts |
 |---|---|---|---|---|---|
 | 1 | Ten words | chat, constraints | Constraints: tell it exactly how long, and it obeys | 3 | 25 |
-| 2 | Make it ask first | interviewing | Make it ask first: get the questions before the plan | 5 | 40 |
+| 2 | Interview me | interviewing | Make it ask first: get the questions before the plan | 5 | 40 |
 | 3 | Grade yourself | iteration, verification | Iteration and verification: make it critique and redo its own work | 6 | 45 |
 | 4 | Two audiences | audience | Audience switching: change the reader, change the writing | 5 | 40 |
 | 5 | The other side | steelman | Steelman: get the strongest case against your view | 5 | 45 |
