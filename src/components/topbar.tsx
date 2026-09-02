@@ -118,7 +118,7 @@ export function TopBar({ title }: { title: string }) {
           <button onClick={() => openDialog({ kind: "challenges" })} className="flex h-8 items-center gap-1.5 rounded-lg bg-clay px-3 text-[13px] font-semibold text-white shadow-sm shadow-clay/30 hover:bg-clay-dark">
             <Swords size={14} /> Challenges
           </button>
-          <button onClick={() => openDialog({ kind: "settings", section: "general" })} className="rounded-lg p-1.5 text-ink-2 hover:bg-bg-3" title="Settings">
+          <button onClick={() => openDialog({ kind: "settings", section: "account" })} className="rounded-lg p-1.5 text-ink-2 hover:bg-bg-3" title="Your profile and settings">
             <Settings size={17} />
           </button>
         </div>

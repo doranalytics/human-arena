@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { Trophy, Search, X } from "lucide-react";
+import { Trophy, Search, X, Lock } from "lucide-react";
 import { Dialog } from "../dialog";
 import { Avatar } from "../avatar";
 import { TierBadge, IconLinkedIn, IconX, type BadgeTier } from "../icons";
@@ -10,7 +10,7 @@ import { useSession } from "@/lib/session";
 import { tierFor, type Tier } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 
-interface Row { id: string; name: string; avatar?: string | null; linkedin?: string | null; x?: string | null; points: number; challenges: number; rank: number; you?: boolean }
+interface Row { id: string; name: string; avatar?: string | null; linkedin?: string | null; x?: string | null; paid?: boolean; seed?: boolean; points: number; challenges: number; rank: number; you?: boolean }
 
 /* Same pill palette as the How to AI Games board. */
 const TIER_PILL: Record<string, string> = {
@@ -44,7 +44,7 @@ function rankRows(rows: Omit<Row, "rank">[]): Row[] {
 }
 
 function Socials({ row, size = 5 }: { row: Row; size?: number }) {
-  if (!row.linkedin && !row.x) return null;
+  if ((!row.paid && !row.you) || (!row.linkedin && !row.x)) return null;
   const cls = `flex h-${size} w-${size} items-center justify-center rounded-full text-white opacity-85 transition-opacity hover:opacity-100`;
   return (
     <span className="ml-1 hidden shrink-0 items-center gap-1 sm:flex" onClick={(e) => e.stopPropagation()}>
@@ -68,8 +68,10 @@ function MemberCard({ row, onClose }: { row: Row; onClose: () => void }) {
         <div className="flex justify-center">
           {row.you && !row.avatar ? (
             <span className="flex h-24 w-24 items-center justify-center rounded-full bg-clay font-serif text-3xl font-bold text-bg">{row.name.charAt(0).toUpperCase()}</span>
-          ) : (
+          ) : row.paid || row.you ? (
             <Avatar name={row.name} src={row.avatar} size={96} />
+          ) : (
+            <span className="flex h-24 w-24 items-center justify-center rounded-full bg-bg-3 text-ink-3"><Lock size={28} /></span>
           )}
         </div>
         <p className="mt-4 font-serif text-2xl font-bold">{row.name}</p>
@@ -77,11 +79,13 @@ function MemberCard({ row, onClose }: { row: Row; onClose: () => void }) {
           {tier !== "Analog" && <TierBadge tier={tier as BadgeTier} size={20} />}
           {tier}
         </p>
-        {(row.linkedin || row.x) && (
+        {(row.paid || row.you) && (row.linkedin || row.x) ? (
           <div className="mt-4 flex justify-center gap-2">
             {row.linkedin && <a href={row.linkedin} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[#0A66C2] px-3 text-[12.5px] font-medium text-white hover:bg-[#004182]"><IconLinkedIn size={12} /> LinkedIn</a>}
             {row.x && <a href={row.x} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-[12.5px] font-medium text-bg hover:bg-black"><IconX size={11} /> X</a>}
           </div>
+        ) : (
+          <p className="mt-4 text-[12.5px] text-ink-3">{row.you ? "Add your links under Account." : "Photo and links show for paying members."}</p>
         )}
         <div className="mt-5 grid grid-cols-3 gap-2">
           {([[`#${row.rank}`, "rank"], [row.points, "pts"], [row.challenges, "done"]] as const).map(([n, l]) => (
@@ -121,7 +125,7 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
     const mine = Object.values(results).filter((r) => board === "all" || data.at - new Date(r.at).getTime() < 7 * 86400000);
     const pts = totalPoints(Object.fromEntries(mine.map((r) => [r.slug, r])));
     if (pts <= 0) return data.rows;
-    const you: Omit<Row, "rank"> = { id: "you", name: session.me?.name || settings.name || "You", avatar: session.me?.avatar || settings.avatar, linkedin: session.me?.linkedin || settings.linkedin, x: session.me?.x || settings.x, points: pts, challenges: mine.filter((r) => r.passed).length, you: true };
+    const you: Omit<Row, "rank"> = { id: "you", name: session.me?.name || settings.name || "You", avatar: session.me?.avatar || settings.avatar, linkedin: session.me?.linkedin || settings.linkedin, x: session.me?.x || settings.x, paid: true, points: pts, challenges: mine.filter((r) => r.passed).length, you: true };
     return rankRows([...data.rows.filter((r) => !r.you), you]);
   }, [data, board, results, settings.name, settings.avatar, settings.linkedin, settings.x, session.me]);
 
@@ -175,10 +179,12 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
                 <span className="flex min-w-0 flex-1 items-center gap-3">
                   {row.you && !row.avatar ? (
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-clay font-serif text-[14px] font-bold text-bg">{row.name.charAt(0).toUpperCase()}</span>
-                  ) : (
+                  ) : row.paid || row.you ? (
                     <Avatar name={row.name} src={row.avatar} size={36} />
+                  ) : (
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-bg-3 text-ink-3"><Lock size={14} /></span>
                   )}
-                  <span className={cn("min-w-0 truncate text-[14px]", row.you ? "font-medium" : "font-medium text-ink")}>
+                  <span className={cn("min-w-0 truncate text-[14px] font-medium", row.paid || row.you ? "text-ink" : "text-ink-3")}>
                     {row.name}
                     {row.you && <span className="ml-1 text-[12.5px] font-normal text-ink-3">· you</span>}
                   </span>
@@ -191,7 +197,7 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
           })}
         </ol>
       )}
-      <div className="mt-3 text-[12px] text-ink-3">{live ? "Live board." : "Sample board. Sign in (Customize) to be ranked for real once the backend is connected."} Weeks run Monday to Sunday, UTC.</div>
+      <div className="mt-3 text-[12px] text-ink-3">{live ? "Sign in under Account to be ranked." : "Sample board."} Weeks run Monday to Sunday, UTC.</div>
       {openRow && <MemberCard row={openRow} onClose={() => setOpenRow(null)} />}
     </Dialog>
   );
