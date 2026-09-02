@@ -14,6 +14,7 @@ import { ResultDialog } from "./dialogs/result";
 import { LeaderboardDialog } from "./dialogs/leaderboard";
 import { SettingsDialog } from "./dialogs/settings";
 import { NewProjectDialog } from "./dialogs/new-project";
+import { QuitDialog } from "./dialogs/quit";
 import type { ArenaResult } from "@/lib/types";
 
 export function Arena() {
@@ -71,6 +72,7 @@ export function Arena() {
       <LeaderboardDialog open={dialog?.kind === "leaderboard"} />
       {dialog?.kind === "settings" && <SettingsDialog key={dialog.section ?? "general"} section={dialog.section ?? "general"} />}
       <NewProjectDialog open={dialog?.kind === "new-project"} />
+      {dialog?.kind === "quit" && <QuitDialog />}
       <span hidden onClick={closeDialog} />
     </div>
   );

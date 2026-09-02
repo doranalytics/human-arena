@@ -106,13 +106,7 @@ export function TopBar({ title }: { title: string }) {
           <button onClick={submit} disabled={submitting} className="flex h-8 items-center gap-1.5 rounded-lg bg-ink px-3 text-[13px] font-medium text-bg hover:bg-black disabled:opacity-60">
             <Flag size={14} /> {submitting ? "Grading…" : "Submit"}
           </button>
-          <button
-            onClick={() => {
-              if (confirm("Quit this challenge? Nothing is scored.")) endAttempt();
-            }}
-            className="rounded-lg p-1.5 text-ink-3 hover:bg-bg-3 hover:text-ink"
-            title="Quit challenge"
-          >
+          <button onClick={() => openDialog({ kind: "quit" })} className="rounded-lg p-1.5 text-ink-3 hover:bg-bg-3 hover:text-ink" title="Quit challenge">
             <X size={15} />
           </button>
         </div>

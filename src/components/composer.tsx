@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type DragEvent } from "react";
+import { useDictation } from "@/lib/dictation";
 import { Plus, Paperclip, Image as ImageIcon, Globe, Telescope, Zap, Cable, ChevronDown, X, FileText, Check, Mic } from "lucide-react";
 import { useStore, updateSettings } from "@/lib/store";
 import { openDialog } from "@/lib/ui";
@@ -8,7 +9,7 @@ import { MODELS, EFFORTS, type ModelChoice, type Effort } from "@/lib/models";
 import { cn } from "@/lib/utils";
 import { StopOrSend } from "./chat-view";
 
-export type ComposerSubmit = (args: { text: string; files: File[]; skill: string | null }) => Promise<void>;
+export type ComposerSubmit = (args: { text: string; files: File[]; skill: string | null; dictated?: boolean })  => Promise<void>;
 
 interface Props {
   onSubmit: ComposerSubmit;
@@ -23,6 +24,8 @@ interface Props {
 
 export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, projectName }: Props) {
   const [text, setText] = useState("");
+  const dictated = useRef(false);
+  const dictation = useDictation((t) => { dictated.current = true; setText((cur) => (cur ? cur.replace(/\s*$/, " ") : "") + t); });
   const [files, setFiles] = useState<File[]>([]);
   const [plusOpen, setPlusOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
@@ -67,8 +70,11 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
     const t = text.trim();
     const f = files;
     setText("");
+    const viaVoice = dictated.current;
+    dictated.current = false;
+    if (dictation.listening) dictation.stop();
     setFiles([]);
-    await onSubmit({ text: t, files: f, skill });
+    await onSubmit({ text: t, files: f, skill, dictated: viaVoice });
     ta.current?.focus();
   }
 
@@ -202,7 +208,13 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
               </div>
             )}
           </div>
-          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-3" title="Voice comes later" disabled>
+          <button
+            type="button"
+            onClick={() => (dictation.listening ? dictation.stop() : dictation.start())}
+            disabled={!dictation.supported}
+            title={!dictation.supported ? "Dictation needs Chrome, Edge or Safari" : dictation.listening ? "Stop dictating" : "Dictate"}
+            className={cn("flex h-8 w-8 items-center justify-center rounded-lg transition", dictation.listening ? "bg-bad/10 text-bad animate-pulse" : "text-ink-3 hover:bg-bg-3 hover:text-ink disabled:opacity-40")}
+          >
             <Mic size={17} />
           </button>
           <StopOrSend busy={busy} canSend={canSend} onStop={onStop} />

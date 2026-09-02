@@ -20,7 +20,7 @@ Small build first: link reading (fetch a pasted URL), personalization (a custom-
 
 Later, the arena cannot observe them yet: voice dictation, voice chat, automations, browser agent, file agent, browser extension, agent building, image generation, image editing, artifacts, charts, diagrams, Claude Design, file export, calendar files, QR codes.
 
-## The 31 challenges (as built, 2 Sep 2026)
+## The 32 challenges (as built, 2 Sep 2026)
 
 Brian's notes folded in: more than two skills per challenge where natural; briefs may mention the company but carry as few non-AI variables as possible; the learner brings nothing, every challenge ships its own material; tiers unchanged.
 
@@ -57,7 +57,8 @@ Brian's notes folded in: more than two skills per challenge where natural; brief
 | 29 | Set up shop | projects, custom-instructions | Projects: instructions that every chat inside inherits | 6 | 55 |
 | 30 | Call me | personalization, custom-instructions | Personalization: custom instructions the assistant always follows | 4 | 40 |
 | 31 | Remember this | memory | Memory: tell it to remember, then use it in a fresh chat | 5 | 40 |
+| 32 | Say it out loud | dictation | Voice dictation: speak the prompt instead of typing it | 3 | 35 |
 
-Total: 1450 points over about 166 minutes. Tiers stay at 1 / 150 / 400 / 750 / 1200, so AI-Native needs 83 percent of the points. The speed multiplier floors at 0.6, so a very slow full run can land short of AI-Native; revisit before launch.
+Total: 1485 points over about 169 minutes. Tiers stay at 1 / 150 / 400 / 750 / 1200, so AI-Native needs 81 percent of the points. The speed multiplier floors at 0.6, so a very slow full run can land short of AI-Native; revisit before launch.
 
-Built alongside: link reading (read_link tool), custom instructions (Customize, injected into every chat), memory (remember tool, facts listed in Customize), LinkedIn and X on the profile and leaderboard, the 48-skill wall with the 16 not-yet-gradable skills marked "soon". Tool sense is awarded after five feature-challenge passes.
+Built alongside: link reading (read_link tool), custom instructions (Customize, injected into every chat), memory (remember tool, facts listed in Customize), LinkedIn and X on the profile and leaderboard, voice dictation on the browser's Web Speech API (Chrome, Edge, Safari; no key), the 48-skill wall with the 15 not-yet-gradable skills marked "soon". Tool sense is awarded after five feature-challenge passes.

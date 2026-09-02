@@ -8,7 +8,8 @@ export type DialogKind =
   | { kind: "result"; slug: string }
   | { kind: "leaderboard" }
   | { kind: "settings"; section?: SettingsSection }
-  | { kind: "new-project" };
+  | { kind: "new-project" }
+  | { kind: "quit" };
 
 export type SettingsSection = "general" | "account" | "progress" | "skills" | "connectors" | "memory";
 

@@ -78,13 +78,14 @@ export function ChatView({ chat }: { chat: Chat }) {
   }, [messages, status]);
 
   const onSubmit = useCallback<ComposerSubmit>(
-    async ({ text, files, skill }) => {
+    async ({ text, files, skill, dictated }) => {
       const st = getState();
       const fileParts = files.length ? await toFileParts(files) : [];
       for (const f of files) track(f.type.startsWith("image/") ? "image_attached" : "file_attached", f.name);
       if (webSearch) track("web_search_on");
       if (research) track("research_on");
       if (skill) track("skill_invoked", skill);
+      if (dictated) track("dictation_used");
       track("message_sent");
       const sk = skill ? (BUILTIN_SKILLS.find((s) => s.name === skill) ?? customSkills.find((s) => s.name === skill)) : null;
       await sendMessage(

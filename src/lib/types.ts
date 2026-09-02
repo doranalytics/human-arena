@@ -71,7 +71,8 @@ export type ArenaEventType =
   | "hint_used"
   | "link_read"
   | "memory_saved"
-  | "instructions_set";
+  | "instructions_set"
+  | "dictation_used";
 
 export interface ArenaEvent {
   type: ArenaEventType;

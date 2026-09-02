@@ -43,7 +43,7 @@ export const SKILLS: Record<string, SkillDef> = {
   screenshot: s("🖥️", "Screenshot input", "Input"),
   translation: s("🌍", "Translation", "Input"),
   "url-reading": s("🔗", "Link reading", "Input"),
-  dictation: s("🗣️", "Voice dictation", "Input", "later"),
+  dictation: s("🗣️", "Voice dictation", "Input"),
   "voice-chat": s("🎙️", "Voice chat", "Input", "later"),
   // retrieval and agents
   "web-search": s("📰", "Live search", "Retrieval and agents"),

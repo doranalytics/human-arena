@@ -33,6 +33,7 @@ const KEYS: ChallengeKey[] = [
   { slug: "set-up-shop", key: `"format": the summary contains something shipped, something slipped, one number, and one ask, and is under 120 words. "no-repeat": the user's message inside the project does not restate the four-part rule (asking for "this week's summary" is fine). Project instructions in force appear in the transcript header; the rules must be there, not in the chat.` },
   { slug: "call-me", key: `In a chat where the user's messages do not mention "Captain" or ask for a closing question, the assistant addresses the user as Captain and its reply ends with a question. The custom instructions in force appear in the transcript header.` },
   { slug: "remember-this", key: `A remember tool call saving the Timberline Trail appears in one chat. In a different chat (a second === CHAT block) the user asks which trail they like and the assistant answers Timberline Trail without the user restating it. Both chats must be present.` },
+  { slug: "say-it", key: `The user's message asks for tips on packing a wet tent (wording may vary from dictation errors; accept anything close). "tips": the reply contains three distinct tips relevant to a wet tent (shake or wipe it, pack the fly separately, dry it at home within a day, keep it out of the stuff sack, etc.).` },
 ];
 
 export function getKey(slug: string): ChallengeKey | null {

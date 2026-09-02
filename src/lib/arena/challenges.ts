@@ -706,12 +706,31 @@ Then start a **new chat** and ask **"which trail do I like best?"** It should kn
     checks: [{ id: "recalled", label: "In a second chat, the assistant named the Timberline Trail without being told again" }],
     hints: [{ text: "Say 'Remember this: my favourite trail is the Timberline Trail.' Then use New for a fresh chat." }],
   },
+  {
+    slug: "say-it",
+    order: 32,
+    title: "Say it out loud",
+    hook: "Typing is the slow way in.",
+    teaches: "Voice dictation: speak the prompt instead of typing it",
+    badges: ["dictation"],
+    minutes: 3,
+    points: 35,
+    brief: `Click the **microphone** in the message box and **say** this, then send it:
+
+> "Give me three tips for packing up a tent when it is still wet."
+
+Fix any words it misheard before you send. Dictation needs Chrome, Edge or Safari.`,
+    deliverable: "A dictated message and a reply with three tips.",
+    behaviors: [{ id: "voice", label: "Dictated a message", event: "dictation_used" }],
+    checks: [{ id: "tips", label: "The reply gives three tips about packing a wet tent" }],
+    hints: [{ text: "The microphone is at the bottom right of the message box, next to Send. Click it once, speak, click it again to stop." }],
+  },
 ];
 
 export const TOTAL_POINTS = CHALLENGES.reduce((s, c) => s + c.points, 0);
 
 /** Feature challenges count toward Tool sense. */
-export const FEATURE_SLUGS = new Set(["one-page", "pull-the-table", "read-the-pdf", "show-dont-tell", "picture-to-text", "picture-math", "fresh-news", "check-it", "deep-dive", "read-the-link", "pick-the-brain", "connect-and-ask", "inbox-to-reply", "skill-up", "make-a-skill", "set-up-shop", "call-me", "remember-this"]);
+export const FEATURE_SLUGS = new Set(["one-page", "pull-the-table", "read-the-pdf", "show-dont-tell", "picture-to-text", "picture-math", "fresh-news", "check-it", "deep-dive", "read-the-link", "pick-the-brain", "connect-and-ask", "inbox-to-reply", "skill-up", "make-a-skill", "set-up-shop", "call-me", "remember-this", "say-it"]);
 
 export function getChallenge(slug: string) {
   return CHALLENGES.find((c) => c.slug === slug) ?? null;
