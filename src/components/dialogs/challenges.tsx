@@ -17,30 +17,33 @@ export function ChallengesDialog({ open }: { open: boolean }) {
   const done = Object.values(results).filter((r) => r.passed).length;
   return (
     <Dialog open={open} onClose={closeDialog} wide title={<span className="flex items-center gap-2"><Swords size={16} className="text-clay" /> Challenges</span>}>
-      <div className="mb-4 flex items-end justify-between">
+      <div className="mb-3 flex items-end justify-between gap-4">
         <div>
-          <div className="font-serif text-[22px]">Learn by doing. Timed, graded, no consequences.</div>
-          <div className="mt-1 text-[13px] text-ink-2">Each challenge is one skill: a feature you can operate or a prompting move you can make. Everything you need is in the brief. The arena watches what you click, not just what you type.</div>
+          <div className="font-serif text-[20px]">Learn by doing. Timed, graded, no consequences.</div>
+          <div className="mt-0.5 text-[12.5px] text-ink-2">Each card says what you will learn. Everything you need is in the brief.</div>
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[22px] font-medium tabular-nums">{pts}<span className="text-[13px] text-ink-3"> / {TOTAL_POINTS}</span></div>
           <div className="text-[12px] text-ink-3">{done} of {CHALLENGES.length} done</div>
         </div>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-1.5 sm:grid-cols-2">
         {[...CHALLENGES].sort((a, b) => a.order - b.order).map((c) => {
           const r = results[c.slug];
           const running = attempt?.slug === c.slug;
           return (
-            <button key={c.slug} onClick={() => openDialog({ kind: "brief", slug: c.slug })} className={cn("flex flex-col rounded-xl border border-line bg-bg p-3.5 text-left transition hover:border-line-2 hover:bg-bg-2", r?.passed && "border-ok/30", running && "border-clay")}>
-              <div className="flex w-full items-start justify-between gap-2">
-                <div className="text-[14.5px] font-medium">{c.order}. {c.title}</div>
-                {r?.passed ? <span className="flex items-center gap-1 rounded-md bg-ok/10 px-1.5 py-0.5 text-[11.5px] font-medium text-ok"><Check size={12} /> {r.points}</span> : running ? <span className="rounded-md bg-clay/10 px-1.5 py-0.5 text-[11.5px] font-medium text-clay-dark">Running</span> : <span className="text-[12px] text-ink-3">{c.points} pts</span>}
+            <button key={c.slug} onClick={() => openDialog({ kind: "brief", slug: c.slug })} className={cn("flex flex-col gap-1 rounded-xl border border-line bg-bg px-3 py-2.5 text-left transition hover:border-line-2 hover:bg-bg-2", r?.passed && "border-ok/30", running && "border-clay")}>
+              <div className="flex w-full items-baseline justify-between gap-2">
+                <div className="min-w-0 truncate text-[13.5px] font-medium"><span className="mr-1.5 tabular-nums text-ink-3">{c.order}</span>{c.title}</div>
+                {r?.passed ? <span className="flex shrink-0 items-center gap-1 rounded-md bg-ok/10 px-1.5 py-0.5 text-[11px] font-medium text-ok"><Check size={11} /> {r.points}</span> : running ? <span className="shrink-0 rounded-md bg-clay/10 px-1.5 py-0.5 text-[11px] font-medium text-clay-dark">Running</span> : <span className="shrink-0 text-[11.5px] tabular-nums text-ink-3">{c.points} pts</span>}
               </div>
-              <div className="mt-0.5 text-[13px] text-ink-2">{c.hook}</div>
-              <div className="mt-2.5 flex items-center gap-3 text-[11.5px] text-ink-3">
-                <span className="flex shrink-0 items-center gap-1 whitespace-nowrap"><Clock size={11} /> {c.minutes} min</span>
-                <span>{c.badges.map((b) => skillFor(b).emoji).join(" ")} {c.teaches}</span>
+              <div className="text-[12.5px] leading-snug text-ink-2">{c.hook}</div>
+              <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[11px] text-ink-3">
+                <span className="mr-1 flex shrink-0 items-center gap-1 whitespace-nowrap"><Clock size={10} /> {c.minutes} min</span>
+                {c.badges.map((b) => {
+                  const sk = skillFor(b);
+                  return <span key={b} className="inline-flex items-center gap-1 rounded-md border border-line bg-bg-2 px-1.5 py-px text-ink-2"><span className="text-[11px]">{sk.emoji}</span>{sk.name}</span>;
+                })}
               </div>
             </button>
           );

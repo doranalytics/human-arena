@@ -33,6 +33,7 @@ export interface Hint {
 export interface ChallengeDef {
   slug: string;
   title: string;
+  /** the transferable lesson, one line: what you learn, not what you do */
   hook: string;
   /** what this teaches, one line, shown on the card */
   teaches: string;
