@@ -114,8 +114,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
         </>
       }
     >
-      <div className="text-[13px] text-ink-2">{c.hook}</div>
-      <div className="prose-chat mt-3 text-[14.5px]"><ReactMarkdown>{c.brief}</ReactMarkdown></div>
+      <div className="prose-chat text-[15px]"><ReactMarkdown>{c.brief}</ReactMarkdown></div>
       {c.fixtures?.map((f) => (
         <button key={f.filename} onClick={() => download(f)} className="mt-3 flex items-center gap-2 rounded-lg border border-line-2 px-3 py-2 text-[13px] hover:bg-bg-2">
           <Download size={14} /> {f.title} <span className="text-ink-3">({f.filename})</span>
