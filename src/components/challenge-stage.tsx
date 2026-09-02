@@ -3,9 +3,8 @@ import { FileText, Image as ImageIcon, GripVertical, Table2, Quote, Swords, Flag
 import { LearnCard } from "./learn-card";
 import type { ChallengeDef, Material } from "@/lib/arena/types";
 import type { Attempt } from "@/lib/types";
-import { useElapsed } from "@/lib/use-elapsed";
 import { MATERIAL_MIME, sendToComposer } from "@/lib/materials";
-import { fmtClock, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { SkillPill } from "./skill-pill";
 
 function Card({ m, compact }: { m: Material; compact?: boolean }) {
@@ -43,26 +42,18 @@ function Card({ m, compact }: { m: Material; compact?: boolean }) {
 }
 
 /** Full stage: shown in place of the greeting while the chat is empty and a challenge is running. */
-export function ChallengeStage({ c, attempt }: { c: ChallengeDef; attempt: Attempt }) {
-  const elapsed = useElapsed(attempt.startedAt);
-  const over = elapsed > c.minutes * 60;
+export function ChallengeStage({ c }: { c: ChallengeDef; attempt: Attempt }) {
   const materials = c.materials ?? [];
   return (
     <div className="w-full max-w-[760px]">
-      <div className="mb-5 flex items-end justify-between gap-6">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-[12px] font-medium text-ink-3"><Swords size={13} className="text-clay" /> Challenge {c.order}</div>
-          <h1 className="mt-1 font-serif text-[34px] leading-tight tracking-tight text-ink">{c.title}</h1>
-          <div className="mt-3"><LearnCard text={c.hook} /></div>
-        </div>
-        <div className="shrink-0 text-right">
-          <div className={cn("font-serif text-[44px] leading-none tabular-nums", over ? "text-bad" : "text-ink")}>{fmtClock(elapsed)}</div>
-          <div className="mt-1 text-[12px] text-ink-3">of {c.minutes}:00</div>
-        </div>
+      <div className="mb-4">
+        <div className="flex items-center gap-2 text-[12px] font-medium text-ink-3"><Swords size={13} className="text-clay" /> Challenge {c.order}</div>
+        <h1 className="mt-1 font-serif text-[34px] leading-tight tracking-tight text-ink">{c.title}</h1>
+        <div className="mt-3"><LearnCard text={c.hook} /></div>
       </div>
-      <div className="rounded-xl border border-clay/30 bg-clay/[0.06] px-4 py-3">
-        <div className="text-[10.5px] font-semibold uppercase tracking-wide text-clay-dark">Your move</div>
-        <div className="prose-chat mt-0.5 text-[15px]">{c.brief.split(/\n\s*\n/).map((p, i) => <p key={i} className="my-1" dangerouslySetInnerHTML={{ __html: p.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>") }} />)}</div>
+      <div className="px-1">
+        <div className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">Your move</div>
+        <div className="prose-chat mt-0.5 text-[16px]">{c.brief.split(/\n\s*\n/).map((p, i) => <p key={i} className="my-1" dangerouslySetInnerHTML={{ __html: p.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>") }} />)}</div>
       </div>
       {materials.length > 0 && (
         <div className="mt-4">

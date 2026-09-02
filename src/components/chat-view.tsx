@@ -131,7 +131,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       <div className="flex h-full flex-col items-center justify-center px-6 py-8">
         <ChallengeStage c={challenge} attempt={attempt} />
         <div className="mt-5 w-full max-w-[760px]">{composer}</div>
-        <div className="mt-3 text-[12.5px] text-ink-3">Drag anything above into the message box. The clock is running.</div>
+        <div className="mt-3 text-[12.5px] text-ink-3">Drag anything above into the message box.</div>
       </div>
     );
 
