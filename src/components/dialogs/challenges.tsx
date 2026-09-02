@@ -5,7 +5,7 @@ import { Check, Clock, Download, Lock, Swords, Trophy } from "lucide-react";
 import { Dialog, Button } from "../dialog";
 import { CHALLENGES, getChallenge, TOTAL_POINTS } from "@/lib/arena/challenges";
 import { HINT_COST, type Fixture } from "@/lib/arena/types";
-import { skillFor } from "@/lib/arena/skills";
+import { SkillPill } from "../skill-pill";
 import { useStore, startAttempt, newChat, totalPoints } from "@/lib/store";
 import { openDialog, closeDialog, toast } from "@/lib/ui";
 import { cn } from "@/lib/utils";
@@ -43,10 +43,9 @@ export function ChallengesDialog({ open }: { open: boolean }) {
               <div className="text-[12.5px] leading-snug text-ink-2">{c.hook}</div>
               <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[11px] text-ink-3">
                 <span className="mr-1 flex shrink-0 items-center gap-1 whitespace-nowrap"><Clock size={10} /> {c.minutes} min</span>
-                {c.badges.map((b) => {
-                  const sk = skillFor(b);
-                  return <span key={b} className="inline-flex items-center gap-1 rounded-md border border-line bg-bg-2 px-1.5 py-px text-ink-2"><span className="text-[11px]">{sk.emoji}</span>{sk.name}</span>;
-                })}
+                {c.badges.map((b) => (
+                  <SkillPill key={b} id={b} />
+                ))}
               </div>
             </button>
           );
@@ -136,7 +135,12 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
         <span className="shrink-0 font-medium text-ink">Done when</span>
         <span className="text-ink-2">{c.deliverable.replace(/\.$/, "")}</span>
       </div>
-      <div className="mt-2 text-[12px] text-ink-3">Unlocks: {c.badges.map((b) => `${skillFor(b).emoji} ${skillFor(b).name}`).join(", ")}</div>
+      <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12px] text-ink-3">
+        <span>Unlocks</span>
+        {c.badges.map((b) => (
+          <SkillPill key={b} id={b} size="md" />
+        ))}
+      </div>
     </Dialog>
   );
 }

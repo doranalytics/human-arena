@@ -2,7 +2,7 @@
 import { Check, X, Swords } from "lucide-react";
 import { Dialog, Button } from "../dialog";
 import { getChallenge, CHALLENGES } from "@/lib/arena/challenges";
-import { BADGES } from "@/lib/arena/types";
+import { SkillPill } from "../skill-pill";
 import { useStore } from "@/lib/store";
 import { closeDialog, openDialog } from "@/lib/ui";
 import { fmtClock } from "@/lib/utils";
@@ -51,8 +51,9 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
           <div className="mt-4 rounded-lg bg-bg-2 px-3.5 py-3 text-[14px] leading-relaxed">{r.feedback}</div>
           {r.badges.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
+              <span className="text-[12.5px] text-ink-3">Unlocked</span>
               {r.badges.map((b) => (
-                <span key={b} className="rounded-lg border border-line bg-bg px-2.5 py-1 text-[12.5px]">{BADGES[b]?.emoji} {BADGES[b]?.name} unlocked</span>
+                <SkillPill key={b} id={b} size="md" earned />
               ))}
             </div>
           )}
