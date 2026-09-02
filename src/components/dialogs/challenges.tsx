@@ -141,7 +141,11 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
 function BriefBody({ brief }: { brief: string }) {
   const blocks = brief.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
   const steps = blocks.filter((b) => !b.startsWith(">") && !/^https?:\/\/\S+$/.test(b) && !/^Sample \d+:$/.test(b));
-  let n = 0;
+  const numbered: { text: string; step: number | null }[] = [];
+  for (const b of blocks) {
+    const isStep = steps.includes(b);
+    numbered.push({ text: b, step: isStep ? numbered.filter((x) => x.step !== null).length + 1 : null });
+  }
   if (steps.length <= 1) {
     return (
       <div className="space-y-3">
@@ -153,16 +157,12 @@ function BriefBody({ brief }: { brief: string }) {
   }
   return (
     <ol className="space-y-3">
-      {blocks.map((b, i) => {
-        const isStep = steps.includes(b);
-        if (isStep) n += 1;
-        return (
-          <li key={i} className={cn("flex gap-3", !isStep && "pl-9")}>
-            {isStep && <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-clay font-serif text-[13px] font-semibold text-bg">{n}</span>}
-            <div className="min-w-0 flex-1"><Block text={b} /></div>
-          </li>
-        );
-      })}
+      {numbered.map(({ text, step }, i) => (
+        <li key={i} className={cn("flex gap-3", step === null && "pl-9")}>
+          {step !== null && <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-clay font-serif text-[13px] font-semibold text-bg">{step}</span>}
+          <div className="min-w-0 flex-1"><Block text={text} /></div>
+        </li>
+      ))}
     </ol>
   );
 }
