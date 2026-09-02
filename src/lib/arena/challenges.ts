@@ -118,19 +118,11 @@ Then ask the assistant to **grade its own draft** and **rewrite it** to fix what
     badges: ["audience"],
     minutes: 5,
     points: 40,
-    brief: `Get the assistant to explain **how a rain jacket keeps water out but lets sweat escape**, twice:
-
-1. For a **ten-year-old**.
-2. For a **textile engineer**.
-
-Both in the same reply, clearly labelled.`,
-    deliverable: "Two labelled explanations in different registers.",
+    brief: `Ask it to explain **how a rain jacket works** twice: once **for a ten-year-old**, once **for an expert**.`,
+    deliverable: "Two versions of the same explanation, one per reader.",
     behaviors: [{ id: "sent", label: "Sent a message", event: "message_sent" }],
-    checks: [
-      { id: "both", label: "Both versions are present and labelled" },
-      { id: "register", label: "The two versions differ clearly in vocabulary and depth" },
-    ],
-    hints: [{ text: "Ask for both in one message and name the two audiences." }],
+    checks: [{ id: "two", label: "Two versions, clearly written for different readers" }],
+    hints: [{ text: "Ask for both in one message: 'Explain how a rain jacket works, once for a ten-year-old and once for an expert.'" }],
   },
   {
     slug: "the-other-side",
