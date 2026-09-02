@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { useDictation } from "@/lib/dictation";
-import { Plus, Paperclip, Image as ImageIcon, Globe, Telescope, Zap, Cable, ChevronDown, X, FileText, Check, Mic } from "lucide-react";
+import { Plus, Paperclip, Image as ImageIcon, Globe, Telescope, Zap, Cable, ChevronDown, X, FileText, Check, Mic, Loader2 } from "lucide-react";
 import { useStore, updateSettings } from "@/lib/store";
 import { openDialog } from "@/lib/ui";
 import { BUILTIN_SKILLS } from "@/lib/skills";
@@ -211,11 +211,11 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
           <button
             type="button"
             onClick={() => (dictation.listening ? dictation.stop() : dictation.start())}
-            disabled={!dictation.supported}
-            title={!dictation.supported ? "Dictation needs Chrome, Edge or Safari" : dictation.listening ? "Stop dictating" : "Dictate"}
-            className={cn("flex h-8 w-8 items-center justify-center rounded-lg transition", dictation.listening ? "bg-bad/10 text-bad animate-pulse" : "text-ink-3 hover:bg-bg-3 hover:text-ink disabled:opacity-40")}
+            disabled={!dictation.supported || dictation.transcribing}
+            title={!dictation.supported ? "Dictation needs a microphone" : dictation.transcribing ? "Transcribing…" : dictation.listening ? "Stop and transcribe" : "Dictate"}
+            className={cn("flex h-8 w-8 items-center justify-center rounded-lg transition", dictation.listening ? "bg-bad/10 text-bad animate-pulse" : dictation.transcribing ? "text-clay" : "text-ink-3 hover:bg-bg-3 hover:text-ink disabled:opacity-40")}
           >
-            <Mic size={17} />
+            {dictation.transcribing ? <Loader2 size={17} className="animate-spin" /> : <Mic size={17} />}
           </button>
           <StopOrSend busy={busy} canSend={canSend} onStop={onStop} />
         </div>

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
 import { convertToModelMessages, createUIMessageStream, createUIMessageStreamResponse, stepCountIs, streamText, tool, type ToolSet, type UIMessage } from "ai";
 import { z } from "zod";
-import { EFFORTS, MODELS, isEffort, isModelChoice } from "@/lib/models";
+import { EFFORTS, MODELS, FAST_FALLBACK, isEffort, isModelChoice } from "@/lib/models";
 import { connectorTools } from "@/lib/connector-tools";
 import { isConnectorId, type ConnectorId } from "@/lib/connectors";
 import { BUILTIN_SKILLS } from "@/lib/skills";
@@ -82,22 +83,39 @@ export async function POST(req: Request) {
     if (s) b.skill = { name: s.name, prompt: s.prompt };
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return demoResponse(b);
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (!anthropicKey && !openaiKey) return demoResponse(b);
 
-  const anthropic = createAnthropic({ apiKey });
+  // Fast runs on OpenAI (GPT-5.6 Luna) when its key is present, else Claude stands in. Smart is Claude.
+  const wanted = MODELS[model];
+  const useOpenAI = wanted.provider === "openai" && !!openaiKey;
   const tools: ToolSet = { ...connectorTools(connected), ...baseTools() };
-  if (b.webSearch || b.research) tools.web_search = anthropic.tools.webSearch_20250305({ maxUses: b.research ? 10 : 4 });
-  const budget = EFFORTS[effort].thinkingBudget;
+  const search = b.webSearch || b.research;
+  let languageModel;
+  let providerOptions: Parameters<typeof streamText>[0]["providerOptions"];
+  if (useOpenAI) {
+    const openai = createOpenAI({ apiKey: openaiKey });
+    languageModel = openai(wanted.id);
+    if (search) tools.web_search = openai.tools.webSearch({ searchContextSize: b.research ? "high" : "medium" });
+    providerOptions = { openai: { reasoningEffort: EFFORTS[effort].openaiEffort } };
+  } else {
+    if (!anthropicKey) return demoResponse(b);
+    const anthropic = createAnthropic({ apiKey: anthropicKey });
+    languageModel = anthropic(wanted.provider === "anthropic" ? wanted.id : FAST_FALLBACK);
+    if (search) tools.web_search = anthropic.tools.webSearch_20250305({ maxUses: b.research ? 10 : 4 });
+    const budget = EFFORTS[effort].thinkingBudget;
+    providerOptions = budget ? { anthropic: { thinking: { type: "enabled", budgetTokens: budget } } } : undefined;
+  }
 
   const result = streamText({
-    model: anthropic(MODELS[model].id),
+    model: languageModel,
     system: systemPrompt(b, connected),
     messages: await convertToModelMessages(inlineTextFiles(b.messages)),
     tools,
     stopWhen: stepCountIs(b.research ? 16 : 8),
     maxOutputTokens: b.research ? 8000 : 4000,
-    providerOptions: budget ? { anthropic: { thinking: { type: "enabled", budgetTokens: budget } } } : undefined,
+    providerOptions,
     onError: ({ error }) => console.error("[chat]", error instanceof Error ? error.message : error),
   });
   return result.toUIMessageStreamResponse({ sendReasoning: false, sendSources: true });

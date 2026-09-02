@@ -719,7 +719,7 @@ Then start a **new chat** and ask **"which trail do I like best?"** It should kn
 
 > "Give me three tips for packing up a tent when it is still wet."
 
-Fix any words it misheard before you send. Dictation needs Chrome, Edge or Safari.`,
+Fix any words it misheard before you send.`,
     deliverable: "A dictated message and a reply with three tips.",
     behaviors: [{ id: "voice", label: "Dictated a message", event: "dictation_used" }],
     checks: [{ id: "tips", label: "The reply gives three tips about packing a wet tent" }],

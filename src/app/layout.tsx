@@ -5,10 +5,16 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const serif = Source_Serif_4({ subsets: ["latin"], variable: "--font-serif-var", weight: ["400", "500", "600"] });
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://human-arena-kappa.vercel.app";
+const DESCRIPTION = "Learn AI by doing. 32 timed challenges inside a chat that watches what you click. Nothing here is real, so click anything.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE),
   title: { default: "Human Arena", template: "%s · Human Arena" },
-  description: "A Claude-like training environment. Learn AI by doing timed challenges in a safe, instrumented chat.",
+  description: DESCRIPTION,
   icons: { icon: "/icon.svg" },
+  openGraph: { title: "Human Arena", description: DESCRIPTION, siteName: "Human Arena", type: "website", url: SITE },
+  twitter: { card: "summary_large_image", title: "Human Arena", description: DESCRIPTION },
 };
 
 export const viewport: Viewport = { themeColor: "#faf9f5" };
