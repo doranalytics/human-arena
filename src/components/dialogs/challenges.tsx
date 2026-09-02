@@ -80,7 +80,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
       /* guest clock */
     }
     startAttempt(c.slug, serverId);
-    newChat(null);
+    newChat(null, c.title);
     closeDialog();
     toast({ title: "Clock started", body: `${c.minutes} minutes. Submit from the top bar when you are done.`, tone: "info" });
     setStarting(false);

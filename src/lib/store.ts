@@ -93,9 +93,9 @@ export function useStore<T>(sel: (s: State) => T): T {
 }
 
 /* ------------------------------------------------------------------ chats */
-export function newChat(projectId: string | null = null): Chat {
+export function newChat(projectId: string | null = null, title = "New chat"): Chat {
   const now = new Date().toISOString();
-  const c: Chat = { id: uid("c"), title: "New chat", projectId, messages: [], createdAt: now, updatedAt: now, attemptId: state.attempt?.id };
+  const c: Chat = { id: uid("c"), title, projectId, messages: [], createdAt: now, updatedAt: now, attemptId: state.attempt?.id };
   setState((s) => ({ chats: [c, ...s.chats], activeChatId: c.id, activeProjectId: projectId }));
   if (projectId) track("chat_in_project", projectId);
   return c;
