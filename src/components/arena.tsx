@@ -56,7 +56,7 @@ export function Arena() {
       <div className="relative flex h-8 shrink-0 items-center justify-center gap-2 bg-[#2c2b28] px-3 text-[12px] text-bg">
         <span className="font-serif text-[13px] font-semibold tracking-tight">Human Arena</span>
         <span className="text-bg/40">·</span>
-        <span className="text-bg/80">Safe training environment. Nothing here is real, so click anything.</span>
+        <span className="text-bg/80">Safe training environment</span>
         <div className="absolute right-2 top-1 flex items-center gap-1 rounded-md bg-white/10 p-0.5 text-[11.5px]" title="Which assistant the arena looks like">
           {(["claude", "chatgpt"] as const).map((p) => (
             <button
