@@ -257,6 +257,7 @@ function Account() {
         ) : sent ? (
           <div className="rounded-lg border border-ok/40 px-3 py-2 text-[13px]">Check {email} for a sign-in link.</div>
         ) : (
+          <>
           <form
             className="flex items-stretch gap-2"
             onSubmit={(e) => {
@@ -268,6 +269,7 @@ function Account() {
             <Button type="submit" className="h-10 shrink-0 whitespace-nowrap px-4" disabled={busy || !email}>{busy ? "Sending…" : "Email me a link"}</Button>
           </form>
           <div className="mt-1.5 text-[12px] text-ink-3">No password. We send a one-tap link, and your scores start saving to the board.</div>
+          </>
         )}
       </section>
     </div>
