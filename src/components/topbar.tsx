@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useElapsed } from "@/lib/use-elapsed";
 import { PanelLeft, Swords, Trophy, Settings, Lightbulb, Flag, X, Medal } from "lucide-react";
-import { useStore, useHint, endAttempt, attemptChats, getState } from "@/lib/store";
+import { useStore, useHint, endAttempt, attemptChats, getState, newChat } from "@/lib/store";
 import { openDialog, toggleSidebar, useUI, toast } from "@/lib/ui";
 import { getChallenge } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
@@ -38,6 +38,7 @@ export function TopBar({ title }: { title: string }) {
         return;
       }
       endAttempt(j.result);
+      if (j.result.passed) newChat(null);
       toast({ title: j.result.passed ? `Challenge complete: +${j.result.points} points` : "Not quite", body: j.result.passed ? c.title : "See what the arena saw.", tone: j.result.passed ? "ok" : "bad" }, 6000);
       openDialog({ kind: "result", slug: attempt.slug });
     } catch {
