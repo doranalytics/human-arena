@@ -7,6 +7,7 @@ import { getChallenge } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
 import { fmtClock, cn } from "@/lib/utils";
 import type { ArenaResult } from "@/lib/types";
+import { Spark } from "./icons";
 
 function useElapsed(startedAt: string | undefined) {
   const [now, setNow] = useState(() => Date.now());
@@ -63,7 +64,12 @@ export function TopBar({ title }: { title: string }) {
           <PanelLeft size={17} />
         </button>
       )}
-      <div className="min-w-0 flex-1 truncate text-[13.5px] text-ink-2">{title}</div>
+      <div className="flex shrink-0 items-center gap-2 pr-3">
+        <Spark size={20} className="text-clay" />
+        <span className="font-serif text-[16px] font-semibold tracking-tight">Human Arena</span>
+      </div>
+      <div className="hidden h-5 w-px shrink-0 bg-line sm:block" />
+      <div className="min-w-0 flex-1 truncate pl-1 text-[13.5px] text-ink-2">{title}</div>
 
       {attempt && c ? (
         <div className="flex items-center gap-1.5">
@@ -117,12 +123,12 @@ export function TopBar({ title }: { title: string }) {
           </button>
         </div>
       ) : (
-        <div className="flex items-center gap-1">
-          <button onClick={() => openDialog({ kind: "challenges" })} className="flex h-8 items-center gap-1.5 rounded-lg border border-line-2 px-2.5 text-[13px] font-medium text-ink hover:bg-bg-2">
-            <Swords size={14} className="text-clay" /> Start a challenge
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => openDialog({ kind: "leaderboard" })} className="flex h-8 items-center gap-1.5 rounded-lg border border-line-2 px-2.5 text-[13px] font-medium text-ink hover:bg-bg-2" title="Leaderboard">
+            <Trophy size={14} className="text-clay" /> <span className="hidden sm:inline">Leaderboard</span>
           </button>
-          <button onClick={() => openDialog({ kind: "leaderboard" })} className="rounded-lg p-1.5 text-ink-2 hover:bg-bg-3" title="Leaderboard">
-            <Trophy size={17} />
+          <button onClick={() => openDialog({ kind: "challenges" })} className="flex h-8 items-center gap-1.5 rounded-lg bg-clay px-3 text-[13px] font-semibold text-white shadow-sm shadow-clay/30 hover:bg-clay-dark">
+            <Swords size={14} /> Arena
           </button>
           <button onClick={() => openDialog({ kind: "settings" })} className="rounded-lg p-1.5 text-ink-2 hover:bg-bg-3" title="Settings and badges">
             <Settings size={17} />

@@ -1,21 +1,89 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Trophy } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Trophy, Search, X } from "lucide-react";
 import { Dialog } from "../dialog";
+import { Avatar } from "../avatar";
+import { TierBadge, type BadgeTier } from "../icons";
 import { closeDialog } from "@/lib/ui";
 import { useStore, totalPoints } from "@/lib/store";
 import { useSession } from "@/lib/session";
-import { tierFor } from "@/lib/tiers";
-import { Avatar } from "../avatar";
-import { TierBadge, type BadgeTier } from "../icons";
+import { tierFor, type Tier } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 
 interface Row { id: string; name: string; avatar?: string | null; points: number; challenges: number; rank: number; you?: boolean }
 
+/* Same pill palette as the How to AI Games board. */
+const TIER_PILL: Record<string, string> = {
+  Tourist: "bg-[#FFF1E8] text-[#B8410B]",
+  Newcomer: "bg-[#FFE4D3] text-[#B8410B]",
+  Resident: "bg-[#F4D6C4] text-[#7A2A05]",
+  Citizen: "bg-[#E7E5E4] text-[#1C1917]",
+  "AI-Native": "bg-[#FFF0CC] text-[#7A5A10]",
+};
+
+function TierPill({ tier, className }: { tier: Tier; className?: string }) {
+  if (tier === "Analog") return <span className={cn("w-28 shrink-0", className)} />;
+  return (
+    <span className={cn("flex w-28 shrink-0 justify-end", className)}>
+      <span className={cn("inline-flex items-center gap-1 rounded-full py-0.5 pl-1 pr-2 text-[11.5px] font-semibold", TIER_PILL[tier])}>
+        <TierBadge tier={tier as BadgeTier} size={16} />
+        {tier}
+      </span>
+    </span>
+  );
+}
+
+/** Sort by points, then challenges; ties share a rank. */
+function rankRows(rows: Omit<Row, "rank">[]): Row[] {
+  const sorted = [...rows].sort((a, b) => b.points - a.points || b.challenges - a.challenges);
+  let rank = 0, prevPts = -1, prevCh = -1;
+  return sorted.map((r, i) => {
+    if (r.points !== prevPts || r.challenges !== prevCh) { rank = i + 1; prevPts = r.points; prevCh = r.challenges; }
+    return { ...r, rank };
+  });
+}
+
+function MemberCard({ row, onClose }: { row: Row; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [onClose]);
+  const tier = tierFor(row.points);
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div role="dialog" aria-modal className="fade-up relative w-full max-w-sm rounded-2xl border border-line bg-bg p-6 text-center shadow-2xl shadow-black/10">
+        <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 rounded-lg p-1.5 text-ink-2 hover:bg-bg-3"><X size={16} /></button>
+        <div className="flex justify-center">
+          {row.you && !row.avatar ? (
+            <span className="flex h-24 w-24 items-center justify-center rounded-full bg-clay font-serif text-3xl font-bold text-bg">{row.name.charAt(0).toUpperCase()}</span>
+          ) : (
+            <Avatar name={row.name} src={row.avatar} size={96} />
+          )}
+        </div>
+        <p className="mt-4 font-serif text-2xl font-bold">{row.name}</p>
+        <p className="mt-2 flex items-center justify-center gap-1.5 text-[13px] text-ink-2">
+          {tier !== "Analog" && <TierBadge tier={tier as BadgeTier} size={20} />}
+          {tier}
+        </p>
+        <div className="mt-5 grid grid-cols-3 gap-2">
+          {([[`#${row.rank}`, "rank"], [row.points, "pts"], [row.challenges, "done"]] as const).map(([n, l]) => (
+            <div key={l} className="rounded-xl bg-bg-2 py-3">
+              <p className="font-serif text-2xl font-bold tabular-nums leading-none">{n}</p>
+              <p className="mt-1 text-[11.5px] text-ink-3">{l}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function LeaderboardDialog({ open }: { open: boolean }) {
   const [board, setBoard] = useState<"all" | "week">("all");
-  const [data, setData] = useState<{ board: string; rows: Row[]; live: boolean } | null>(null);
-  const rows = data?.board === board ? data.rows : null;
+  const [q, setQ] = useState("");
+  const [openRow, setOpenRow] = useState<Row | null>(null);
+  const [data, setData] = useState<{ board: string; rows: Row[]; live: boolean; at: number } | null>(null);
   const live = data?.live ?? false;
   const results = useStore((s) => s.results);
   const settings = useStore((s) => s.settings);
@@ -25,51 +93,88 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
     if (!open) return;
     fetch(`/api/leaderboard?board=${board}`)
       .then((r) => r.json())
-      .then((j: { rows: Row[]; live: boolean }) => {
-        let rs = j.rows;
-        if (!j.live || !session.me) {
-          // Guest: put yourself on the board from local progress.
-          const mine = Object.values(results).filter((r) => board === "all" || Date.now() - new Date(r.at).getTime() < 7 * 86400000);
-          const pts = totalPoints(Object.fromEntries(mine.map((r) => [r.slug, r])));
-          if (pts > 0) {
-            rs = [...rs.filter((r) => !r.you), { id: "you", name: (session.me?.name || settings.name || "You") + " (you)", avatar: session.me?.avatar || settings.avatar, points: pts, challenges: mine.filter((r) => r.passed).length, rank: 0, you: true }]
-              .sort((a, b) => b.points - a.points || b.challenges - a.challenges)
-              .map((r, i) => ({ ...r, rank: i + 1 }));
-          }
-        }
-        setData({ board, rows: rs, live: j.live });
-      })
-      .catch(() => setData({ board, rows: [], live: false }));
-  }, [open, board, results, settings.name, settings.avatar, session.me]);
+      .then((j: { rows: Row[]; live: boolean }) => setData({ board, rows: j.rows, live: j.live, at: Date.now() }))
+      .catch(() => setData({ board, rows: [], live: false, at: Date.now() }));
+  }, [open, board]);
+
+  // Guest: merge yourself in from local progress. Signed in: the server already marks your row.
+  const rows = useMemo(() => {
+    if (!data || data.board !== board) return null;
+    if (data.live && session.me) return data.rows;
+    const mine = Object.values(results).filter((r) => board === "all" || data.at - new Date(r.at).getTime() < 7 * 86400000);
+    const pts = totalPoints(Object.fromEntries(mine.map((r) => [r.slug, r])));
+    if (pts <= 0) return data.rows;
+    const you: Omit<Row, "rank"> = { id: "you", name: session.me?.name || settings.name || "You", avatar: session.me?.avatar || settings.avatar, points: pts, challenges: mine.filter((r) => r.passed).length, you: true };
+    return rankRows([...data.rows.filter((r) => !r.you), you]);
+  }, [data, board, results, settings.name, settings.avatar, session.me]);
+
+  const filtered = useMemo(() => {
+    if (!rows) return null;
+    const s = q.trim().toLowerCase();
+    return s ? rows.filter((r) => r.name.toLowerCase().includes(s)) : rows;
+  }, [rows, q]);
 
   return (
-    <Dialog open={open} onClose={closeDialog} title={<span className="flex items-center gap-2"><Trophy size={16} className="text-clay" /> Leaderboard</span>}>
-      <div className="mb-3 flex items-center gap-1 rounded-lg bg-bg-2 p-0.5 text-[13px]">
-        {(["all", "week"] as const).map((b) => (
-          <button key={b} onClick={() => setBoard(b)} className={cn("flex-1 rounded-md py-1.5", board === b ? "bg-bg font-medium shadow-sm" : "text-ink-2")}>{b === "all" ? "All time" : "This week"}</button>
-        ))}
-      </div>
-      {rows === null ? (
-        <div className="py-8 text-center text-[13px] text-ink-3">Loading…</div>
-      ) : rows.length === 0 ? (
-        <div className="py-8 text-center text-[13px] text-ink-3">Nobody on the board yet. Finish a challenge.</div>
-      ) : (
-        <div className="divide-y divide-line">
-          {rows.map((r) => (
-            <div key={r.id} className={cn("flex items-center gap-3 py-2 text-[13.5px]", r.you && "font-medium")}>
-              <span className="w-6 text-right tabular-nums text-ink-3">{r.rank}</span>
-              <Avatar name={r.name} src={r.avatar} size={26} />
-              <span className="min-w-0 flex-1 truncate">{r.name}</span>
-              <span className="inline-flex items-center gap-1 text-[12px] text-ink-3">
-                {tierFor(r.points) !== "Analog" && <TierBadge tier={tierFor(r.points) as BadgeTier} size={14} />}
-                {tierFor(r.points)}
-              </span>
-              <span className="w-12 text-right tabular-nums">{r.points}</span>
-            </div>
+    <Dialog open={open} onClose={closeDialog} wide title={<span className="flex items-center gap-2"><Trophy size={16} className="text-clay" /> Leaderboard</span>}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex rounded-full bg-bg-2 p-1">
+          {(["all", "week"] as const).map((b) => (
+            <button key={b} onClick={() => setBoard(b)} className={cn("rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors", board === b ? "bg-ink text-bg" : "text-ink-2 hover:text-ink")}>
+              {b === "all" ? "All time" : "This week"}
+            </button>
           ))}
         </div>
+        <label className="relative">
+          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a name" className="w-44 rounded-full border border-line bg-bg py-1.5 pl-8 pr-3 text-[13px] outline-none placeholder:text-ink-3 focus:border-clay" />
+        </label>
+      </div>
+
+      <div className="mt-4 flex items-center gap-3 border-b border-line pb-2 text-[11.5px] font-medium text-ink-3 sm:gap-4">
+        <span className="w-9 shrink-0">#</span>
+        <span className="flex-1 pl-12">Member</span>
+        <span className="hidden w-28 shrink-0 text-right sm:block">Level</span>
+        <span className="w-14 shrink-0 text-right">Points</span>
+      </div>
+
+      {filtered === null ? (
+        <div className="py-10 text-center text-[13px] text-ink-3">Loading…</div>
+      ) : filtered.length === 0 ? (
+        <div className="py-10 text-center text-[13px] text-ink-2">{rows && rows.length ? "No match." : "No one yet. Finish a challenge to open the board."}</div>
+      ) : (
+        <ol className="divide-y divide-line">
+          {filtered.map((row) => {
+            const tier = tierFor(row.points);
+            return (
+              <li
+                key={row.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setOpenRow(row)}
+                onKeyDown={(e) => e.key === "Enter" && setOpenRow(row)}
+                className={cn("flex cursor-pointer items-center gap-3 py-2.5 transition-colors hover:bg-bg-2/60 sm:gap-4", row.you && "-mx-3 rounded-2xl bg-clay/5 px-3")}
+              >
+                <span className={cn("w-9 shrink-0 font-serif text-[22px] font-bold tabular-nums", row.rank <= 3 ? "text-clay" : "text-ink-3")}>{row.rank}</span>
+                <span className="flex min-w-0 flex-1 items-center gap-3">
+                  {row.you && !row.avatar ? (
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-clay font-serif text-[14px] font-bold text-bg">{row.name.charAt(0).toUpperCase()}</span>
+                  ) : (
+                    <Avatar name={row.name} src={row.avatar} size={36} />
+                  )}
+                  <span className={cn("min-w-0 truncate text-[14px]", row.you ? "font-medium" : "font-medium text-ink")}>
+                    {row.name}
+                    {row.you && <span className="ml-1 text-[12.5px] font-normal text-ink-3">· you</span>}
+                  </span>
+                </span>
+                <TierPill tier={tier} className="hidden sm:flex" />
+                <span className="w-14 shrink-0 text-right font-serif text-[22px] font-bold tabular-nums">{row.points}</span>
+              </li>
+            );
+          })}
+        </ol>
       )}
       <div className="mt-3 text-[12px] text-ink-3">{live ? "Live board." : "Sample board. Sign in (Customize) to be ranked for real once the backend is connected."} Weeks run Monday to Sunday, UTC.</div>
+      {openRow && <MemberCard row={openRow} onClose={() => setOpenRow(null)} />}
     </Dialog>
   );
 }

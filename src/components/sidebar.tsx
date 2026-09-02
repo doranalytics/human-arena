@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Plus, FolderOpen, Cable, Zap, SlidersHorizontal, Search, MessageSquare, ChevronDown, PanelLeft, Trash2, Trophy } from "lucide-react";
+import { Plus, FolderOpen, Cable, Zap, SlidersHorizontal, Search, MessageSquare, ChevronDown, PanelLeft, Trash2 } from "lucide-react";
 import { useStore, newChat, openChat, openProject, deleteChat } from "@/lib/store";
 import { openDialog, toggleSidebar } from "@/lib/ui";
 import { useSession } from "@/lib/session";
@@ -39,11 +39,10 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-full w-[272px] shrink-0 flex-col border-r border-line bg-side">
-      <div className="flex items-center justify-between px-3 pb-1 pt-3">
+      <div className="flex h-12 items-center px-3">
         <button onClick={toggleSidebar} className="rounded-lg p-1.5 text-ink-2 hover:bg-bg-3" title="Collapse sidebar">
           <PanelLeft size={17} />
         </button>
-        <div className="flex items-center gap-1.5 pr-1 text-[13px] font-medium text-ink-2">Human Arena</div>
       </div>
 
       <div className="px-2.5 pt-1">
@@ -51,7 +50,6 @@ export function Sidebar() {
         <NavItem icon={<FolderOpen size={16} />} label="Projects" onClick={() => openDialog({ kind: "new-project" })} />
         <NavItem icon={<Cable size={16} />} label="Connectors" onClick={() => openDialog({ kind: "connectors" })} />
         <NavItem icon={<Zap size={16} />} label="Skills" onClick={() => openDialog({ kind: "skills" })} />
-        <NavItem icon={<Trophy size={16} />} label="Arena" onClick={() => openDialog({ kind: "challenges" })} badge="Beta" />
         <NavItem icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings" })} />
       </div>
 
