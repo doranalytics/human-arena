@@ -63,11 +63,7 @@ export function TopBar({ title }: { title: string }) {
           <PanelLeft size={17} />
         </button>
       )}
-      <div className="flex shrink-0 items-center pr-3">
-        <span className="font-serif text-[16px] font-semibold tracking-tight">Human Arena</span>
-      </div>
-      <div className="hidden h-5 w-px shrink-0 bg-line sm:block" />
-      <div className="min-w-0 flex-1 truncate pl-1 text-[13.5px] text-ink-2">{title}</div>
+      <div className="min-w-0 flex-1 truncate text-[13.5px] text-ink-2">{title}</div>
 
       {attempt && c ? (
         <div className="flex items-center gap-1.5">

@@ -49,14 +49,21 @@ export function Arena() {
   const title = page === "projects" ? "Projects" : chat ? (chat.projectId ? `${project?.name ?? "Project"} / ${chat.title}` : chat.title) : project ? project.name : "";
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-bg">
-      {sidebarOpen && <Sidebar />}
-      <main className="flex min-w-0 flex-1 flex-col">
-        <TopBar title={title} />
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {!hydrated ? null : page === "projects" ? <ProjectsPage /> : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}
-        </div>
-      </main>
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg">
+      <div className="flex h-8 shrink-0 items-center justify-center gap-2 bg-[#2c2b28] px-3 text-[12px] text-bg">
+        <span className="font-serif text-[13px] font-semibold tracking-tight">Human Arena</span>
+        <span className="text-bg/40">·</span>
+        <span className="text-bg/80">Safe training environment. Nothing here is real, so click anything.</span>
+      </div>
+      <div className="flex min-h-0 flex-1">
+        {sidebarOpen && <Sidebar />}
+        <main className="flex min-w-0 flex-1 flex-col">
+          <TopBar title={title} />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {!hydrated ? null : page === "projects" ? <ProjectsPage /> : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}
+          </div>
+        </main>
+      </div>
       <Toasts />
       <ChallengesDialog open={dialog?.kind === "challenges"} />
       {dialog?.kind === "brief" && <BriefDialog open slug={dialog.slug} />}
