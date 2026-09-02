@@ -1,7 +1,7 @@
 "use client";
 import { Check, X, Swords } from "lucide-react";
 import { Dialog, Button } from "../dialog";
-import { getChallenge } from "@/lib/arena/challenges";
+import { getChallenge, CHALLENGES } from "@/lib/arena/challenges";
 import { BADGES } from "@/lib/arena/types";
 import { useStore } from "@/lib/store";
 import { closeDialog, openDialog } from "@/lib/ui";
@@ -10,7 +10,12 @@ import { fmtClock } from "@/lib/utils";
 export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
   const c = getChallenge(slug);
   const r = useStore((s) => s.results[slug]);
+  const results = useStore((s) => s.results);
   if (!c) return null;
+  // The next challenge in order that has not been passed yet, starting after this one and wrapping.
+  const ordered = [...CHALLENGES].sort((a, b) => a.order - b.order);
+  const i = ordered.findIndex((x) => x.slug === slug);
+  const next = [...ordered.slice(i + 1), ...ordered.slice(0, i)].find((x) => !results[x.slug]?.passed) ?? null;
   return (
     <Dialog
       open={open}
@@ -20,7 +25,13 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
         <>
           <Button variant="ghost" onClick={() => openDialog({ kind: "challenges" })}>All challenges</Button>
           {!r?.passed && <Button variant="outline" onClick={() => openDialog({ kind: "brief", slug })}>Try again</Button>}
-          <Button onClick={closeDialog}>Done</Button>
+          {r?.passed && next ? (
+            <Button onClick={() => openDialog({ kind: "brief", slug: next.slug })}>Next challenge</Button>
+          ) : r?.passed ? (
+            <Button onClick={() => openDialog({ kind: "leaderboard" })}>See the board</Button>
+          ) : (
+            <Button onClick={closeDialog}>Done</Button>
+          )}
         </>
       }
     >

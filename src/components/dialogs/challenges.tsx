@@ -32,10 +32,13 @@ export function ChallengesDialog({ open }: { open: boolean }) {
           const r = results[c.slug];
           const running = attempt?.slug === c.slug;
           return (
-            <button key={c.slug} onClick={() => openDialog({ kind: "brief", slug: c.slug })} className={cn("flex flex-col gap-1 rounded-xl border border-line bg-bg px-3 py-2.5 text-left transition hover:border-line-2 hover:bg-bg-2", r?.passed && "border-ok/30", running && "border-clay")}>
+            <button key={c.slug} onClick={() => openDialog({ kind: "brief", slug: c.slug })} className={cn("flex flex-col gap-1 rounded-xl border border-line bg-bg px-3 py-2.5 text-left transition hover:border-line-2 hover:bg-bg-2", r?.passed && "border-ok/50 bg-ok/[0.06] hover:bg-ok/10", running && "border-clay")}>
               <div className="flex w-full items-baseline justify-between gap-2">
-                <div className="min-w-0 truncate text-[13.5px] font-medium"><span className="mr-1.5 tabular-nums text-ink-3">{c.order}</span>{c.title}</div>
-                {r?.passed ? <span className="flex shrink-0 items-center gap-1 rounded-md bg-ok/10 px-1.5 py-0.5 text-[11px] font-medium text-ok"><Check size={11} /> {r.points}</span> : running ? <span className="shrink-0 rounded-md bg-clay/10 px-1.5 py-0.5 text-[11px] font-medium text-clay-dark">Running</span> : <span className="shrink-0 text-[11.5px] tabular-nums text-ink-3">{c.points} pts</span>}
+                <div className="flex min-w-0 items-center gap-1.5 truncate text-[13.5px] font-medium">
+                  {r?.passed ? <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-ok text-bg"><Check size={11} strokeWidth={3} /></span> : <span className="tabular-nums text-ink-3">{c.order}</span>}
+                  <span className="truncate">{c.title}</span>
+                </div>
+                {r?.passed ? <span className="flex shrink-0 items-center gap-1 rounded-md bg-ok px-1.5 py-0.5 text-[11px] font-semibold text-bg">Done · {r.points} pts</span> : running ? <span className="shrink-0 rounded-md bg-clay/10 px-1.5 py-0.5 text-[11px] font-medium text-clay-dark">Running</span> : <span className="shrink-0 text-[11.5px] tabular-nums text-ink-3">{c.points} pts</span>}
               </div>
               <div className="text-[12.5px] leading-snug text-ink-2">{c.hook}</div>
               <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[11px] text-ink-3">
