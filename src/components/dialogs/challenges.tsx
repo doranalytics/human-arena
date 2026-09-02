@@ -126,10 +126,9 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
         <Stat label="Points" value={String(c.points)} />
         <Stat label="Hints" value={`${c.hints.length}, ${Math.round(HINT_COST * 100)}% each`} />
       </div>
-      <div className="mt-3 rounded-lg bg-bg-2 px-3 py-2.5 text-[12.5px] text-ink-2">
-        <div className="font-medium text-ink">Done means</div>
-        {c.deliverable}
-        <div className="mt-1.5 text-ink-3">The arena checks {c.behaviors.length} thing{c.behaviors.length === 1 ? "" : "s"} you did and {c.checks.length} thing{c.checks.length === 1 ? "" : "s"} the reply contains. It tells you which after you submit.</div>
+      <div className="mt-3 flex items-baseline gap-2 rounded-lg bg-bg-2 px-3 py-2.5 text-[13px]">
+        <span className="shrink-0 font-medium text-ink">Done when</span>
+        <span className="text-ink-2">{c.deliverable.replace(/\.$/, "")}</span>
       </div>
       <div className="mt-2 text-[12px] text-ink-3">Unlocks: {c.badges.map((b) => `${skillFor(b).emoji} ${skillFor(b).name}`).join(", ")}</div>
     </Dialog>
