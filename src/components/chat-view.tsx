@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage } from "ai";
 import { ArrowUp, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
-import { useStore, saveMessages, track, getState, addMemory } from "@/lib/store";
+import { useStore, saveMessages, track, getState, addMemory, newChat } from "@/lib/store";
 import { Message } from "./message";
 import { Composer, type ComposerSubmit } from "./composer";
 import { Spark } from "./icons";
@@ -117,7 +117,12 @@ export function ChatView({ chat }: { chat: Chat }) {
   );
 
   const empty = messages.length === 0;
-  const composer = (
+  const composer = chat.closed ? (
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-ok/40 bg-ok/[0.06] px-4 py-3 text-[13.5px]">
+      <span><span className="font-medium text-ok">Challenge complete.</span> This thread is closed.</span>
+      <button onClick={() => newChat(null)} className="rounded-lg bg-ink px-3 py-1.5 text-[13px] font-medium text-bg hover:bg-black">New chat</button>
+    </div>
+  ) : (
     <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} projectName={project?.name ?? null} />
   );
 

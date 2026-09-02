@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useStore, hydrate, importResults, newChat, updateSettings } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Logo } from "./icons";
+import { UpdateBar } from "./update-bar";
 import { useUI, closeDialog, toast } from "@/lib/ui";
 import { setSession } from "@/lib/session";
 import { Sidebar } from "./sidebar";
@@ -73,6 +74,7 @@ export function Arena() {
           ))}
         </div>
       </div>
+      <UpdateBar />
       <div className="flex min-h-0 flex-1">
         {sidebarOpen && <Sidebar />}
         <main className="flex min-w-0 flex-1 flex-col">
