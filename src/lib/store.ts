@@ -184,7 +184,7 @@ export function freeTurnsLeft(s: State = state): number {
   const f = s.settings.freeTurns;
   return Math.max(0, FREE_TURNS_PER_DAY - (f && f.day === today() ? f.used : 0));
 }
-export function useFreeTurn() {
+export function consumeFreeTurn() {
   setState((s) => {
     const f = s.settings.freeTurns;
     const used = f && f.day === today() ? f.used : 0;

@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage, lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { ArrowUp, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
-import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, useFreeTurn, FREE_TURNS_PER_DAY } from "@/lib/store";
+import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn } from "@/lib/store";
 import { Message } from "./message";
 import { Composer, type ComposerSubmit } from "./composer";
 import { Spark } from "./icons";
@@ -95,7 +95,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       if (skill) track("skill_invoked", skill);
       if (dictated) track("dictation_used");
       track("message_sent");
-      if (!st.attempt) useFreeTurn();
+      if (!st.attempt) consumeFreeTurn();
       const sk = skill ? (BUILTIN_SKILLS.find((s) => s.name === skill) ?? customSkills.find((s) => s.name === skill)) : null;
       await sendMessage(
         { text, files: fileParts },
