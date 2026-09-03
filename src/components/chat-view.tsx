@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage, lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { ArrowUp, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
-import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn } from "@/lib/store";
+import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn, markCowork } from "@/lib/store";
 import { Message } from "./message";
 import { Composer, type ComposerSubmit } from "./composer";
 import { Spark } from "./icons";
@@ -12,6 +12,7 @@ import { TOOL_CONNECTOR } from "@/lib/tool-connector";
 import { BUILTIN_SKILLS } from "@/lib/skills";
 import { getChallenge } from "@/lib/arena/challenges";
 import { ChallengeStage, ChallengeStrip } from "./challenge-stage";
+import { CoworkPanel } from "./cowork-panel";
 import { useSession } from "@/lib/session";
 
 function greeting(name: string) {
@@ -91,7 +92,10 @@ export function ChatView({ chat }: { chat: Chat }) {
       for (const f of files) track(f.type.startsWith("image/") ? "image_attached" : "file_attached", f.name);
       if (webSearch) track("web_search_on");
       if (research) track("research_on");
-      if (cowork) track("cowork_on");
+      if (cowork) {
+        track("cowork_on");
+        markCowork(chat.id);
+      }
       if (skill) track("skill_invoked", skill);
       if (dictated) track("dictation_used");
       track("message_sent");
@@ -106,6 +110,7 @@ export function ChatView({ chat }: { chat: Chat }) {
             webSearch,
             research,
             cowork,
+            approval: cowork ? (st.settings.coworkApproval ?? "auto") : undefined,
             connectors: st.connectors,
             skill: sk ? { name: sk.name, prompt: sk.prompt } : null,
             project: project ? { name: project.name, instructions: project.instructions, files: project.files.map((f) => ({ name: f.name, text: f.text })) } : null,
@@ -116,7 +121,7 @@ export function ChatView({ chat }: { chat: Chat }) {
         },
       );
     },
-    [sendMessage, webSearch, research, cowork, project, customSkills, name],
+    [sendMessage, webSearch, research, cowork, project, customSkills, name, chat.id],
   );
 
   const empty = messages.length === 0;
@@ -146,7 +151,7 @@ export function ChatView({ chat }: { chat: Chat }) {
           <h1 className="font-serif text-[40px] font-normal tracking-tight text-ink">{greeting(name)}</h1>
         </div>
         <div className="w-full max-w-[760px]">{composer}</div>
-        {project && <div className="mt-3 text-[12.5px] text-ink-3">In project {project.name}. Its instructions apply to this chat.</div>}
+        {cowork ? <CoworkPanel chat={chat} /> : project && <div className="mt-3 text-[12.5px] text-ink-3">In project {project.name}. Its instructions apply to this chat.</div>}
 
       </div>
     );

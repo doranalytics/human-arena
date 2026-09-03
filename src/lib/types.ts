@@ -32,6 +32,8 @@ export interface Chat {
   closed?: boolean;
   /** created by New but nothing sent yet: hidden from the list, dropped on reload */
   draft?: boolean;
+  /** ran in Cowork mode */
+  cowork?: boolean;
 }
 
 export interface CustomSkill {
@@ -58,6 +60,8 @@ export interface Settings {
   onboarded?: boolean;
   /** free (non-challenge) messages used today */
   freeTurns?: { day: string; used: number };
+  /** Cowork approval mode */
+  coworkApproval?: "manual" | "auto" | "skip";
 }
 
 /** Everything the environment can observe. Challenges are graded against these. */

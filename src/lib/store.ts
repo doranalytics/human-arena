@@ -123,6 +123,12 @@ export function deleteChat(id: string) {
 export function renameChat(id: string, title: string) {
   setState((s) => ({ chats: s.chats.map((c) => (c.id === id ? { ...c, title } : c)) }));
 }
+export function setChatProject(id: string, projectId: string | null) {
+  setState((s) => ({ chats: s.chats.map((c) => (c.id === id ? { ...c, projectId } : c)), activeProjectId: projectId }));
+}
+export function markCowork(id: string) {
+  setState((s) => ({ chats: s.chats.map((c) => (c.id === id && !c.cowork ? { ...c, cowork: true } : c)) }));
+}
 export function togglePin(id: string) {
   setState((s) => ({ chats: s.chats.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)) }));
 }

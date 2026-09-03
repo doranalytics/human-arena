@@ -19,6 +19,7 @@ interface Body {
   research?: boolean;
   /** Cowork: autonomous multi-step work with the connected tools */
   cowork?: boolean;
+  approval?: "manual" | "auto" | "skip";
   connectors?: string[];
   skill?: { name: string; prompt: string } | null;
   project?: { name: string; instructions: string; files: { name: string; text: string }[] } | null;
@@ -42,10 +43,17 @@ function systemPrompt(b: Body, connected: ConnectorId[]) {
     parts.push(
       `RESEARCH MODE. Work like a research assistant: run several searches from different angles (at least four), read enough to be sure, then write a structured report: a title, a two-sentence summary, three or more headed sections, and a Sources list with links. Prefer recent, primary sources. State the date of each finding.`,
     );
-  if (b.cowork)
+  if (b.cowork) {
+    const approval = b.approval ?? "auto";
     parts.push(
-      `COWORK MODE. The user handed you a task rather than a question. Work like a capable colleague: write a two-to-five step plan in one short line each, then carry it out using the tools you have (connectors, read_link, web search when on) without stopping to ask unless something is genuinely blocking. Chain as many tool calls as the task needs. Finish with the deliverable itself (the numbers, the draft, the list), then a two-line summary of what you did and anything you could not do.`,
+      `COWORK MODE. The user handed you a task rather than a question. Work like a capable colleague: write a two-to-five step plan in one short line each, then carry it out using the tools you have (connectors, read_link, web search when on). Chain as many tool calls as the task needs. Finish with the deliverable itself (the numbers, the draft, the list).` +
+        (approval === "manual"
+          ? ` APPROVALS: MANUAL. After writing the plan, stop and ask "Go ahead?" before using any tool. Only proceed once the user says yes, and check in again before any step that changes what you will deliver.`
+          : approval === "skip"
+            ? ` APPROVALS: SKIPPED. Do not ask anything and do not add a summary; deliver the result and stop.`
+            : ` APPROVALS: AUTOMATIC. Do not stop to ask unless something is genuinely blocking. End with a two-line summary of what you did and anything you could not do.`),
     );
+  }
   if (b.project) {
     parts.push(`PROJECT: ${b.project.name}\nProject instructions (follow them in every reply):\n${b.project.instructions || "(none)"}`);
     if (b.project.files.length)
