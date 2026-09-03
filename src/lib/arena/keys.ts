@@ -35,6 +35,7 @@ const KEYS: ChallengeKey[] = [
   { slug: "remember-this", key: `A remember tool call saving the Timberline Trail appears in one chat. In a different chat (a second === CHAT block) the user asks which trail they like and the assistant answers Timberline Trail without the user restating it. Both chats must be present.` },
   { slug: "say-it", key: `The user's message asks for tips on packing a wet tent (wording may vary from dictation errors; accept anything close). "tips": the reply contains three distinct tips relevant to a wet tent (shake or wipe it, pack the fly separately, dry it at home within a day, keep it out of the stuff sack, etc.).` },
   { slug: "hand-it-off", key: `The newest unread email (CFO, "Board deck: what I need from ops") asks for the FY24 margin trend from the warehouse and Q3 regional sales to date. "numbers": the reply reports figures read from the warehouse that match the request, for example FY24 gross margin percentages by month (39.2 ... 43.6) or 2025 regional_sales revenue rows. The transcript must show read_email (or search_gmail) AND read_table calls.` },
+  { slug: "choose-your-own", key: `The transcript must show at least two ask_user tool calls with answers. "bio": the final bio uses at least two of the picked answers (tone, length, audience, facts). A bio written before any card, or ignoring the picks, fails.` },
 ];
 
 export function getKey(slug: string): ChallengeKey | null {

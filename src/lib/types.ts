@@ -30,6 +30,8 @@ export interface Chat {
   pinned?: boolean;
   /** a finished challenge thread: read-only */
   closed?: boolean;
+  /** created by New but nothing sent yet: hidden from the list, dropped on reload */
+  draft?: boolean;
 }
 
 export interface CustomSkill {
@@ -53,6 +55,7 @@ export interface Settings {
   x?: string;
   model: ModelChoice;
   effort: Effort;
+  onboarded?: boolean;
 }
 
 /** Everything the environment can observe. Challenges are graded against these. */
@@ -76,7 +79,8 @@ export type ArenaEventType =
   | "memory_saved"
   | "instructions_set"
   | "dictation_used"
-  | "cowork_on";
+  | "cowork_on"
+  | "ask_user_used";
 
 export interface ArenaEvent {
   type: ArenaEventType;

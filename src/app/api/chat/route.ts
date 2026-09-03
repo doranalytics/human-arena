@@ -33,10 +33,9 @@ function systemPrompt(b: Body, connected: ConnectorId[]) {
   const name = (b.userName || "the user").trim();
   const parts = [
     `You are Claude, a helpful AI assistant inside Human Arena, a training environment that looks and behaves like a modern chat assistant. Be warm, direct and concise. Use markdown when it helps (headings, lists, tables); never pad.`,
-    `Context: ${personaBlurb(name)} ${COMPANY.name} is a ${COMPANY.headcount}-person outdoor gear company in ${COMPANY.hq}. The COO is ${PEOPLE.priya.name}, the CFO is ${PEOPLE.marcus.name}. Treat this workplace as real; do not call it fictional. If the user asks about company facts you have no tool for, say what you would need connected.`,
     connected.length
-      ? `Connected sources: ${connected.join(", ")}. Use their tools whenever the question is about the company's mail, files, data or calendar, and cite what you read (file name, email subject, table).`
-      : `No data sources are connected. If the user asks about their inbox, files, company numbers or calendar, tell them you cannot see those until a connector is connected (Connectors are in the sidebar).`,
+      ? `Connected sources: ${connected.join(", ")}. They belong to ${COMPANY.name}, a sample ${COMPANY.headcount}-person outdoor gear company in ${COMPANY.hq} where ${personaBlurb(name)} (COO ${PEOPLE.priya.name}, CFO ${PEOPLE.marcus.name}). Use their tools whenever the question is about mail, files, data or calendar, and cite what you read (file name, email subject, table).`
+      : `The user's name is ${name}. You know nothing about their job or company. No data sources are connected: if they ask about their inbox, files, company numbers or calendar, say you cannot see those until a connector is connected (Customize, then Connectors). Never invent a company, colleagues or figures.`,
   ];
   if (b.webSearch && !b.research) parts.push(`Web search is on. Search when the question needs current information, and cite sources with links and dates.`);
   if (b.research)
@@ -55,7 +54,7 @@ function systemPrompt(b: Body, connected: ConnectorId[]) {
   if (b.skill) parts.push(`SKILL /${b.skill.name} is active for this reply. Follow it exactly:\n${b.skill.prompt}`);
   if (b.instructions?.trim()) parts.push(`CUSTOM INSTRUCTIONS from the user's settings (follow them in every reply):\n${b.instructions.trim().slice(0, 2000)}`);
   if (b.memories?.length) parts.push(`MEMORY. Facts the user asked you to remember in earlier chats:\n` + b.memories.slice(-30).map((m) => `- ${m}`).join("\n"));
-  parts.push(`Tools always available: read_link fetches a web page the user pastes a URL for (use it whenever a message contains a URL and the user wants something from that page); remember saves a fact the user explicitly asks you to remember (call it, then confirm in one short sentence).`);
+  parts.push(`Tools always available: read_link fetches a web page the user pastes a URL for (use it whenever a message contains a URL and the user wants something from that page); remember saves a fact the user explicitly asks you to remember (call it, then confirm in one short sentence); ask_user shows a multiple-choice card and waits for the answer (one question per call, ask the next only after the answer comes back, never list the options in text as well).`);
   return parts.join("\n\n");
 }
 
@@ -159,6 +158,10 @@ function baseTools(): ToolSet {
           return { error: e instanceof Error ? e.message : "Could not fetch that page." };
         }
       },
+    }),
+    ask_user: tool({
+      description: "Show the user a multiple-choice question card and wait for their pick. One question per call, two to five short options. Use it when the user asks you to interview them with choices, or when a decision has a small set of clear options. The answer arrives as the tool result; then ask the next question or continue.",
+      inputSchema: z.object({ question: z.string().min(3).max(200), options: z.array(z.string().min(1).max(60)).min(2).max(5), allowOther: z.boolean().optional().describe("Let the user type something else") }),
     }),
     remember: tool({
       description: "Save one fact about the user to long-term memory so future chats know it. Only when the user asks you to remember something.",

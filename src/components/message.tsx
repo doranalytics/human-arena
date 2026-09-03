@@ -3,7 +3,8 @@ import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getToolName, isToolUIPart, type UIMessage } from "ai";
-import { FileText, Globe, Loader2 } from "lucide-react";
+import { FileText, Globe, Loader2, ListChecks } from "lucide-react";
+import { useState } from "react";
 import { Spark } from "./icons";
 import { TOOL_CONNECTOR } from "@/lib/tool-connector";
 import { ConnectorLogo } from "./connector-logos";
@@ -28,6 +29,7 @@ const TOOL_LABEL: Record<string, string> = {
   read_table: "Read a warehouse table",
   list_events: "Checked the calendar",
   read_link: "Read a link",
+  ask_user: "Asked you",
   remember: "Saved to memory",
 };
 function ToolIcon({ name }: { name: string }) {
@@ -48,7 +50,7 @@ function toolSummary(name: string, input: unknown): string {
   return "";
 }
 
-export function Message({ m, streaming }: { m: UIMessage; streaming?: boolean }) {
+export function Message({ m, streaming, onToolOutput }: { m: UIMessage; streaming?: boolean; onToolOutput?: (toolCallId: string, output: string) => void }) {
   if (m.role === "user") {
     const files = m.parts.filter((p) => p.type === "file");
     const text = m.parts.filter((p) => p.type === "text").map((p) => p.text).join("\n");
@@ -83,6 +85,12 @@ export function Message({ m, streaming }: { m: UIMessage; streaming?: boolean })
       <div className="min-w-0 flex-1 space-y-2">
         {m.parts.map((p, i) => {
           if (p.type === "text") return p.text.trim() ? <Markdown key={i} text={p.text} /> : null;
+          if (isToolUIPart(p) && getToolName(p) === "ask_user") {
+            const input = ("input" in p ? p.input : undefined) as { question?: string; options?: string[]; allowOther?: boolean } | undefined;
+            const output = "output" in p ? (p.output as string | undefined) : undefined;
+            if (!input?.question) return null;
+            return <AskCard key={i} question={input.question} options={input.options ?? []} allowOther={!!input.allowOther} answer={output} onPick={(v) => onToolOutput?.(("toolCallId" in p ? p.toolCallId : "") as string, v)} />;
+          }
           if (isToolUIPart(p)) {
             const name = getToolName(p);
             const done = p.state === "output-available" || p.state === "output-error";
@@ -105,6 +113,43 @@ export function Message({ m, streaming }: { m: UIMessage; streaming?: boolean })
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+
+/** Claude-style question card: one question, a few options, pick one (or type). */
+function AskCard({ question, options, allowOther, answer, onPick }: { question: string; options: string[]; allowOther: boolean; answer?: string; onPick: (v: string) => void }) {
+  const [other, setOther] = useState("");
+  if (answer !== undefined)
+    return (
+      <div className="inline-flex max-w-full items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-[12.5px] text-ink-2">
+        <ListChecks size={13} /> <span className="truncate">{question}</span> <span className="font-medium text-ink">{answer}</span>
+      </div>
+    );
+  return (
+    <div className="max-w-[520px] rounded-xl border border-line bg-bg p-3.5 shadow-sm">
+      <div className="text-[14px] font-medium">{question}</div>
+      <div className="mt-2.5 space-y-1">
+        {options.map((o, i) => (
+          <button key={o} onClick={() => onPick(o)} className="flex w-full items-center gap-3 rounded-lg border border-line px-3 py-2 text-left text-[13.5px] transition hover:border-ink hover:bg-bg-2">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-bg-3 text-[11px] font-semibold text-ink-2">{i + 1}</span>
+            <span>{o}</span>
+          </button>
+        ))}
+      </div>
+      {allowOther && (
+        <form
+          className="mt-2 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (other.trim()) onPick(other.trim());
+          }}
+        >
+          <input value={other} onChange={(e) => setOther(e.target.value)} placeholder="Something else…" className="h-9 flex-1 rounded-lg border border-line bg-bg px-3 text-[13px] outline-none placeholder:text-ink-3 focus:border-ink-3" />
+          <button type="submit" disabled={!other.trim()} className="h-9 rounded-lg bg-ink px-3 text-[13px] font-medium text-bg disabled:opacity-40">Send</button>
+        </form>
+      )}
     </div>
   );
 }

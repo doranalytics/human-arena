@@ -6,6 +6,7 @@ import { Dialog, Button } from "../dialog";
 import { CHALLENGES, getChallenge, TOTAL_POINTS } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
 import { SkillPill } from "../skill-pill";
+import { SkillIcon } from "../skill-icon";
 import { LearnCard } from "../learn-card";
 import { useStore, startAttempt, newChat, totalPoints } from "@/lib/store";
 import { openDialog, closeDialog, toast } from "@/lib/ui";
@@ -21,7 +22,7 @@ export function ChallengesDialog({ open }: { open: boolean }) {
       <div className="mb-3 flex items-end justify-between gap-4">
         <div>
           <div className="font-serif text-[20px]">Learn by doing. Timed, graded, no consequences.</div>
-          <div className="mt-0.5 text-[12.5px] text-ink-2">Each card says what you will learn. Everything you need is in the brief.</div>
+          <div className="mt-0.5 text-[12.5px] text-ink-2">Pick one. Everything you need appears when the clock starts.</div>
         </div>
         <div className="shrink-0 text-right">
           <div className="text-[22px] font-medium tabular-nums">{pts}<span className="text-[13px] text-ink-3"> / {TOTAL_POINTS}</span></div>
@@ -33,21 +34,16 @@ export function ChallengesDialog({ open }: { open: boolean }) {
           const r = results[c.slug];
           const running = attempt?.slug === c.slug;
           return (
-            <button key={c.slug} onClick={() => openDialog({ kind: "brief", slug: c.slug })} className={cn("flex flex-col gap-1 rounded-xl border border-line bg-bg px-3 py-2.5 text-left transition hover:border-line-2 hover:bg-bg-2", r?.passed && "border-ok/50 bg-ok/[0.06] hover:bg-ok/10", running && "border-clay")}>
-              <div className="flex w-full items-baseline justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-1.5 truncate text-[13.5px] font-medium">
-                  {r?.passed ? <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-ok text-bg"><Check size={11} strokeWidth={3} /></span> : <span className="tabular-nums text-ink-3">{c.order}</span>}
-                  <span className="truncate">{c.title}</span>
-                </div>
-                {r?.passed ? <span className="flex shrink-0 items-center gap-1 rounded-md bg-ok px-1.5 py-0.5 text-[11px] font-semibold text-bg">Done · {r.points} pts</span> : running ? <span className="shrink-0 rounded-md bg-clay/10 px-1.5 py-0.5 text-[11px] font-medium text-clay-dark">Running</span> : <span className="shrink-0 text-[11.5px] tabular-nums text-ink-3">{c.points} pts</span>}
-              </div>
-              <div className="text-[12.5px] leading-snug text-ink-2">{c.hook}</div>
-              <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[11px] text-ink-3">
-                <span className="mr-1 flex shrink-0 items-center gap-1 whitespace-nowrap"><Clock size={10} /> {c.minutes} min</span>
-                {c.badges.map((b) => (
-                  <SkillPill key={b} id={b} />
-                ))}
-              </div>
+            <button key={c.slug} onClick={() => openDialog({ kind: "brief", slug: c.slug })} className={cn("flex items-center gap-3 rounded-xl border border-line bg-bg px-3.5 py-3 text-left transition hover:border-line-2 hover:bg-bg-2", r?.passed && "border-ok/50 bg-ok/[0.06] hover:bg-ok/10", running && "border-clay")}>
+              <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", r?.passed ? "bg-ok text-bg" : "bg-bg-3 text-ink-2")}>{r?.passed ? <Check size={16} strokeWidth={3} /> : <SkillIcon id={c.badges[0]} size={16} />}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-medium">{c.title}</span>
+                <span className="mt-0.5 flex items-center gap-2 text-[12px] text-ink-3">
+                  <span className="flex items-center gap-1"><Clock size={11} /> {c.minutes} min</span>
+                  <span className="flex items-center gap-1">{c.badges.map((b) => <SkillPill key={b} id={b} iconOnly />)}</span>
+                </span>
+              </span>
+              {r?.passed ? <span className="shrink-0 text-[12.5px] font-semibold text-ok">{r.points} pts</span> : running ? <span className="shrink-0 rounded-md bg-clay/10 px-1.5 py-0.5 text-[11px] font-medium text-clay-dark">Running</span> : <span className="shrink-0 text-[12.5px] tabular-nums text-ink-3">{c.points} pts</span>}
             </button>
           );
         })}
@@ -100,7 +96,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
           ) : attempt?.slug === slug ? (
             <Button onClick={closeDialog}>Back to it</Button>
           ) : (
-            <Button onClick={start} disabled={starting}>{starting ? "Starting…" : "Start the clock"}</Button>
+            <Button onClick={start} disabled={starting} className="bg-clay hover:bg-clay-dark">{starting ? "Starting…" : "Start the clock"}</Button>
           )}
         </>
       }
@@ -118,10 +114,10 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
           <span>once the clock starts</span>
         </div>
       )}
-      <div className="mt-4 grid grid-cols-3 gap-2 text-[12.5px]">
-        <Stat label="Time box" value={`${c.minutes} min`} />
-        <Stat label="Points" value={String(c.points)} />
-        <Stat label="Hints" value={`${c.hints.length}, ${Math.round(HINT_COST * 100)}% each`} />
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-ink-3">
+        <span className="flex items-center gap-1"><Clock size={12} /> {c.minutes} min</span>
+        <span>{c.points} pts</span>
+        <span>{c.hints.length} hint{c.hints.length === 1 ? "" : "s"}, {Math.round(HINT_COST * 100)}% each</span>
       </div>
       <div className="mt-3 flex items-baseline gap-2 rounded-lg bg-bg-2 px-3 py-2.5 text-[13px]">
         <span className="shrink-0 font-medium text-ink">Done when</span>
@@ -176,13 +172,4 @@ function Block({ text, lead }: { text: string; lead?: boolean }) {
   }
   if (/^Sample \d+:$/.test(text)) return <div className="text-[11.5px] font-medium uppercase tracking-wide text-ink-3">{text.replace(":", "")}</div>;
   return <div className={cn("prose-chat leading-relaxed", lead ? "text-[17px]" : "text-[15px]")}><ReactMarkdown>{text}</ReactMarkdown></div>;
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-line px-3 py-2">
-      <div className="text-ink-3">{label}</div>
-      <div className="font-medium">{value}</div>
-    </div>
-  );
 }

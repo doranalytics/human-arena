@@ -11,7 +11,7 @@ export type DialogKind =
   | { kind: "new-project" }
   | { kind: "quit" };
 
-export type SettingsSection = "general" | "account" | "progress" | "instructions" | "skills" | "connectors" | "memory";
+export type SettingsSection = "general" | "account" | "instructions" | "skills" | "connectors" | "memory";
 
 export interface Toast {
   id: number;

@@ -18,6 +18,7 @@ import { LeaderboardDialog } from "./dialogs/leaderboard";
 import { SettingsDialog } from "./dialogs/settings";
 import { NewProjectDialog } from "./dialogs/new-project";
 import { QuitDialog } from "./dialogs/quit";
+import { OnboardingDialog } from "./dialogs/onboarding";
 import type { ArenaResult } from "@/lib/types";
 
 export function Arena() {
@@ -28,6 +29,7 @@ export function Arena() {
   const project = useStore((s) => s.projects.find((p) => p.id === s.activeProjectId) ?? null);
   const dialog = useUI((s) => s.dialog);
   const product = useStore((s) => s.settings.product);
+  const onboarded = useStore((s) => s.settings.onboarded);
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const page = useUI((s) => s.page);
 
@@ -92,6 +94,7 @@ export function Arena() {
       {dialog?.kind === "settings" && <SettingsDialog key={dialog.section ?? "general"} section={dialog.section ?? "general"} />}
       <NewProjectDialog open={dialog?.kind === "new-project"} />
       {dialog?.kind === "quit" && <QuitDialog />}
+      {hydrated && !onboarded && !dialog && <OnboardingDialog />}
       <span hidden onClick={closeDialog} />
     </div>
   );

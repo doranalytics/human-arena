@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, PanelLeft, Trash2, Pin, PinOff } from "lucide-react";
+import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, PanelLeft, Trash2, Pin, PinOff, Swords } from "lucide-react";
 import { useStore, newChat, openChat, openProject, deleteChat, togglePin } from "@/lib/store";
 import { openDialog, toggleSidebar, setPage, useUI } from "@/lib/ui";
 import { useSession } from "@/lib/session";
@@ -54,7 +54,7 @@ export function Sidebar() {
   const avatar = session.me?.avatar || settings.avatar;
   const pts = totalPoints(results);
   const tier = tierFor(pts);
-  const list = chats.filter((c) => !q || c.title.toLowerCase().includes(q.toLowerCase()));
+  const list = chats.filter((c) => !c.draft && (!q || c.title.toLowerCase().includes(q.toLowerCase())));
   const pinned = list.filter((c) => c.pinned);
   const rest = list.filter((c) => !c.pinned);
   const open = (id: string) => {
@@ -65,11 +65,12 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-[272px] shrink-0 flex-col border-r border-line bg-side">
       <div className="flex h-12 items-center px-4">
-        <span className="font-serif text-[22px] font-medium tracking-tight">{settings.product === "chatgpt" ? "ChatGPT" : "Claude"}</span>
+        <span className="font-serif text-[22px] font-medium tracking-tight">Human Arena</span>
       </div>
 
       <div className="px-2.5 pt-1">
         <NavItem icon={<Plus size={16} />} label="New" onClick={() => { setPage(null); newChat(activeProjectId); }} active={!page && !activeChatId && !activeProjectId && !attempt} />
+        <NavItem icon={<Swords size={16} className="text-clay" />} label="Challenges" onClick={() => openDialog({ kind: "challenges" })} />
         <NavItem icon={<FolderOpen size={16} />} label="Projects" onClick={() => setPage("projects")} active={page === "projects"} />
         <NavItem icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings", section: "skills" })} />
       </div>

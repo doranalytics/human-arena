@@ -27,7 +27,7 @@ export function ProjectsPage() {
 
   const rows = useMemo(() => {
     const withDates = projects.map((p) => {
-      const latest = chats.filter((c) => c.projectId === p.id).reduce((m, c) => (c.updatedAt > m ? c.updatedAt : m), p.createdAt);
+      const latest = chats.filter((c) => c.projectId === p.id && !c.draft).reduce((m, c) => (c.updatedAt > m ? c.updatedAt : m), p.createdAt);
       return { ...p, updatedAt: latest };
     });
     const s = q.trim().toLowerCase();

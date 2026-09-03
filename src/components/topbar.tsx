@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useElapsed } from "@/lib/use-elapsed";
-import { PanelLeft, Swords, Trophy, Settings, Lightbulb, Flag, X, Medal } from "lucide-react";
+import { PanelLeft, Swords, Trophy, Settings, Lightbulb, Flag, X } from "lucide-react";
 import { useStore, useHint, endAttempt, attemptChats, getState, newChat } from "@/lib/store";
 import { openDialog, toggleSidebar, useUI, toast } from "@/lib/ui";
 import { getChallenge } from "@/lib/arena/challenges";
@@ -104,9 +104,6 @@ export function TopBar({ title }: { title: string }) {
         </div>
       ) : (
         <div className="flex items-center gap-1.5">
-          <button onClick={() => openDialog({ kind: "settings", section: "progress" })} className="flex h-8 items-center gap-1.5 rounded-lg border border-line-2 px-2.5 text-[13px] font-medium text-ink hover:bg-bg-2" title="Your progress">
-            <Medal size={14} className="text-clay" /> <span className="hidden sm:inline">Progress</span>
-          </button>
           <button onClick={() => openDialog({ kind: "leaderboard" })} className="flex h-8 items-center gap-1.5 rounded-lg border border-line-2 px-2.5 text-[13px] font-medium text-ink hover:bg-bg-2" title="Leaderboard">
             <Trophy size={14} className="text-clay" /> <span className="hidden sm:inline">Leaderboard</span>
           </button>

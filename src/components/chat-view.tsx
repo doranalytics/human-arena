@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage } from "ai";
+import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage, lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { ArrowUp, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
 import { useStore, saveMessages, track, getState, addMemory, newChat } from "@/lib/store";
@@ -47,7 +47,7 @@ export function ChatView({ chat }: { chat: Chat }) {
   const name = session.me?.name || settings.name;
 
   const transport = useMemo(() => new DefaultChatTransport<UIMessage>({ api: "/api/chat" }), []);
-  const { messages, sendMessage, status, stop, error } = useChat({ id: chat.id, messages: chat.messages, transport });
+  const { messages, sendMessage, status, stop, error, addToolOutput } = useChat({ id: chat.id, messages: chat.messages, transport, sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls });
   const busy = status === "submitted" || status === "streaming";
   const bottomRef = useRef<HTMLDivElement>(null);
   const trackedTools = useRef<Set<string>>(new Set());
@@ -68,6 +68,7 @@ export function ChatView({ chat }: { chat: Chat }) {
         const c = TOOL_CONNECTOR[name];
         if (c) track("connector_used", c);
         if (name === "read_link") track("link_read");
+        if (name === "ask_user") track("ask_user_used");
         if (name === "remember") {
           const out = (p as { output?: { saved?: boolean; fact?: string } }).output;
           if (out?.saved && out.fact) {
@@ -123,7 +124,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       <button onClick={() => newChat(null)} className="rounded-lg bg-ink px-3 py-1.5 text-[13px] font-medium text-bg hover:bg-black">New chat</button>
     </div>
   ) : (
-    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} projectName={project?.name ?? null} />
+    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} projectName={project?.name ?? null} locked={!attempt} />
   );
 
   if (empty && attempt && challenge)
@@ -139,14 +140,12 @@ export function ChatView({ chat }: { chat: Chat }) {
     return (
       <div className="flex h-full flex-col items-center justify-center px-6 pb-24">
         <div className="mb-8 flex items-center gap-3 text-clay">
-          <Spark size={30} />
+          <Spark size={30} className="spark-in" />
           <h1 className="font-serif text-[40px] font-normal tracking-tight text-ink">{greeting(name)}</h1>
         </div>
         <div className="w-full max-w-[760px]">{composer}</div>
         {project && <div className="mt-3 text-[12.5px] text-ink-3">In project {project.name}. Its instructions apply to this chat.</div>}
-        <div className="mt-6 text-[12.5px] text-ink-3">
-          Playing as yourself at Halden Outdoor Co. Press <span className="text-ink-2">/</span> for skills, <span className="text-ink-2">+</span> for files and tools.
-        </div>
+
       </div>
     );
 
@@ -156,7 +155,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-[760px] space-y-7 px-6 pb-8 pt-8">
           {messages.map((m, i) => (
-            <Message key={m.id} m={m} streaming={busy && i === messages.length - 1 && m.role === "assistant"} />
+            <Message key={m.id} m={m} onToolOutput={(toolCallId, output) => addToolOutput({ tool: "ask_user", toolCallId, output })} streaming={busy && i === messages.length - 1 && m.role === "assistant"} />
           ))}
           {busy && messages[messages.length - 1]?.role === "user" && <Message m={{ id: "pending", role: "assistant", parts: [] }} streaming />}
           {error && <div className="rounded-lg border border-bad/30 bg-red-50 px-3 py-2 text-[13px] text-bad">Something went wrong: {error.message}</div>}
@@ -165,7 +164,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       </div>
       <div className="mx-auto w-full max-w-[760px] px-6 pb-4">
         {composer}
-        <div className="pt-2 text-center text-[11.5px] text-ink-3">Human Arena is a training environment. Nothing here is real, so click anything.</div>
+        <div className="pt-2 text-center text-[11.5px] text-ink-3">Human Arena is a training environment. Nothing here is real.</div>
       </div>
     </div>
   );

@@ -72,6 +72,7 @@ export const SKILLS: Record<string, SkillDef> = {
   personalization: s("🏷️", "Personalization", "Setup and tools"),
   memory: s("🧠", "Memory", "Setup and tools"),
   "model-choice": s("🎛️", "Model choice", "Setup and tools"),
+  "ask-user": s("☑️", "Guided questions", "Prompting moves"),
   skills: s("⚡", "Skills", "Setup and tools"),
 };
 

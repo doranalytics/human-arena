@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { Trophy, Search, X, Lock } from "lucide-react";
+import { Trophy, Search, X, Lock, Medal } from "lucide-react";
+import { ProgressPanel } from "../progress-panel";
 import { Dialog } from "../dialog";
 import { Avatar } from "../avatar";
 import { TierBadge, IconLinkedIn, IconX, type BadgeTier } from "../icons";
@@ -101,7 +102,8 @@ function MemberCard({ row, onClose }: { row: Row; onClose: () => void }) {
 }
 
 export function LeaderboardDialog({ open }: { open: boolean }) {
-  const [board, setBoard] = useState<"all" | "week">("all");
+  const [board, setBoard] = useState<"all" | "week">("week");
+  const [tab, setTab] = useState<"board" | "progress">("board");
   const [q, setQ] = useState("");
   const [openRow, setOpenRow] = useState<Row | null>(null);
   const [data, setData] = useState<{ board: string; rows: Row[]; live: boolean; at: number } | null>(null);
@@ -136,12 +138,27 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
   }, [rows, q]);
 
   return (
-    <Dialog open={open} onClose={closeDialog} wide title={<span className="flex items-center gap-2"><Trophy size={16} className="text-clay" /> Leaderboard</span>}>
+    <Dialog
+      open={open}
+      onClose={closeDialog}
+      wide
+      title={
+        <span className="flex items-center gap-1">
+          {(["board", "progress"] as const).map((t) => (
+            <button key={t} onClick={() => setTab(t)} className={cn("flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[14px]", tab === t ? "bg-bg-3 font-medium" : "text-ink-2 hover:text-ink")}>
+              {t === "board" ? <Trophy size={15} className="text-clay" /> : <Medal size={15} className="text-clay" />} {t === "board" ? "Leaderboard" : "Your progress"}
+            </button>
+          ))}
+        </span>
+      }
+    >
+      {tab === "progress" ? <ProgressPanel /> : (<>
+      <div className="mb-3 rounded-lg bg-bg-2 px-3.5 py-2.5 text-[13px] text-ink-2"><span className="font-medium text-ink">Every week has a winner.</span> Top of the weekly board goes in front of a million people on Ruben&rsquo;s LinkedIn.</div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex rounded-full bg-bg-2 p-1">
-          {(["all", "week"] as const).map((b) => (
+          {(["week", "all"] as const).map((b) => (
             <button key={b} onClick={() => setBoard(b)} className={cn("rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors", board === b ? "bg-ink text-bg" : "text-ink-2 hover:text-ink")}>
-              {b === "all" ? "All time" : "This week"}
+              {b === "week" ? "This week" : "All time"}
             </button>
           ))}
         </div>
@@ -199,6 +216,7 @@ export function LeaderboardDialog({ open }: { open: boolean }) {
       )}
       <div className="mt-3 text-[12px] text-ink-3">{live ? "Sign in under Account to be ranked." : "Sample board."} Weeks run Monday to Sunday, UTC.</div>
       {openRow && <MemberCard row={openRow} onClose={() => setOpenRow(null)} />}
+      </>)}
     </Dialog>
   );
 }

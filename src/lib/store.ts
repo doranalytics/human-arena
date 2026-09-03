@@ -72,7 +72,7 @@ export function hydrate() {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const saved = JSON.parse(raw) as Partial<State>;
-      state = { ...initial, ...saved, settings: { ...initial.settings, ...(saved.settings ?? {}) }, hydrated: true };
+      state = { ...initial, ...saved, chats: (saved.chats ?? []).filter((c) => !c.draft), settings: { ...initial.settings, ...(saved.settings ?? {}) }, hydrated: true };
     } else state = { ...initial, hydrated: true };
   } catch {
     state = { ...initial, hydrated: true };
@@ -95,7 +95,7 @@ export function useStore<T>(sel: (s: State) => T): T {
 /* ------------------------------------------------------------------ chats */
 export function newChat(projectId: string | null = null, title = "New chat"): Chat {
   const now = new Date().toISOString();
-  const c: Chat = { id: uid("c"), title, projectId, messages: [], createdAt: now, updatedAt: now, attemptId: state.attempt?.id };
+  const c: Chat = { id: uid("c"), title, projectId, messages: [], createdAt: now, updatedAt: now, attemptId: state.attempt?.id, draft: true };
   setState((s) => ({ chats: [c, ...s.chats], activeChatId: c.id, activeProjectId: projectId }));
   if (projectId) track("chat_in_project", projectId);
   return c;
@@ -105,7 +105,7 @@ export function saveMessages(chatId: string, messages: UIMessage[]) {
     chats: s.chats.map((c) => {
       if (c.id !== chatId) return c;
       const title = c.title === "New chat" ? titleFrom(messages) : c.title;
-      return { ...c, messages, title, updatedAt: new Date().toISOString() };
+      return { ...c, messages, title, updatedAt: new Date().toISOString(), draft: messages.length === 0 ? c.draft : false };
     }),
   }));
 }

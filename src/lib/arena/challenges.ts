@@ -674,6 +674,21 @@ Then say: **"Read my newest unread email and pull the numbers it asks for from t
     checks: [{ id: "numbers", label: "The reply reports figures from the warehouse that the email asked for" }],
     hints: [{ text: "The Chat / Cowork switch is in the message box. Cowork keeps going through several steps without asking." }],
   },
+  {
+    slug: "choose-your-own",
+    order: 34,
+    title: "Pick from cards",
+    hook: "AI can interview you with multiple-choice cards instead of walls of questions.",
+    teaches: "Guided questions: make it ask with options you can click",
+    badges: ["ask-user", "interviewing"],
+    minutes: 5,
+    points: 45,
+    brief: `Ask the assistant to **write you a short bio** (for anything: a profile, a team page, a dating app) and to **ask you questions with clickable options, one at a time**, before writing it.`,
+    deliverable: "A few question cards you clicked through, then a bio built from your picks.",
+    behaviors: [{ id: "cards", label: "Answered a question card", event: "ask_user_used" }],
+    checks: [{ id: "bio", label: "The bio reflects the options you picked" }],
+    hints: [{ text: "Say: 'Write my bio. Interview me first with multiple-choice questions, one at a time.'" }],
+  },
 ];
 
 export const TOTAL_POINTS = CHALLENGES.reduce((s, c) => s + c.points, 0);

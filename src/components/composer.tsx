@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type DragEvent } from "react";
 import { useDictation } from "@/lib/dictation";
 import { MATERIAL_MIME, materialFile, materialText } from "@/lib/materials";
 import type { Material } from "@/lib/arena/types";
-import { Plus, Paperclip, Image as ImageIcon, Globe, Telescope, Zap, Cable, ChevronDown, X, FileText, Check, Mic, Loader2 } from "lucide-react";
+import { Plus, Paperclip, Image as ImageIcon, Globe, Telescope, Zap, Cable, ChevronDown, X, FileText, Check, Mic, Loader2, Lock } from "lucide-react";
 import { useStore, updateSettings } from "@/lib/store";
 import { openDialog } from "@/lib/ui";
 import { BUILTIN_SKILLS } from "@/lib/skills";
@@ -24,9 +24,11 @@ interface Props {
   cowork: boolean;
   setCowork: (v: boolean) => void;
   projectName: string | null;
+  /** no challenge running: chatting is locked until one starts */
+  locked?: boolean;
 }
 
-export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, projectName }: Props) {
+export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, projectName, locked }: Props) {
   const [text, setText] = useState("");
   const dictated = useRef(false);
   const dictation = useDictation((t) => { dictated.current = true; setText((cur) => (cur ? cur.replace(/\s*$/, " ") : "") + t); });
@@ -46,6 +48,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
   const slashMatch = /^\/(\S*)$/.exec(text);
   const slashList = slashMatch ? skills.filter((s) => s.name.startsWith(slashMatch[1].toLowerCase())) : [];
   const showSlash = slashMatch !== null && slashList.length > 0;
+  const activeSkill = (() => { const m = /^\/([a-z0-9-]+)\s/.exec(text); return m && skills.some((k) => k.name === m[1]) ? m[1] : null; })();
 
   useEffect(() => {
     const close = () => {
@@ -143,7 +146,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        className={cn("rounded-2xl border bg-white/70 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition", dragging ? "border-clay bg-[#fff6f1]" : "border-line-2 focus-within:border-ink-3")}
+        className={cn("relative rounded-2xl border bg-white/70 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition", dragging ? "border-clay bg-[#fff6f1]" : "border-line-2 focus-within:border-ink-3")}
       >
         {(files.length > 0 || projectName) && (
           <div className="flex flex-wrap gap-1.5 px-3 pt-3">
@@ -212,40 +215,51 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
             <button type="button" onClick={() => setCowork(false)} className={cn("rounded-md px-2.5 py-1", !cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Chat</button>
             <button type="button" onClick={() => setCowork(true)} title="Hand it a task. It plans the steps and works through them with your connectors." className={cn("rounded-md px-2.5 py-1", cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Cowork</button>
           </div>
+          {activeSkill && <span className="inline-flex h-7 items-center gap-1 rounded-md bg-[#e8f0fe] px-2 text-[12.5px] font-medium text-[#1a56db]"><Zap size={12} /> /{activeSkill}</span>}
           {webSearch && !research && <Chip icon={<Globe size={12} />} label="Web search" onRemove={() => setWebSearch(false)} />}
           {research && <Chip icon={<Telescope size={12} />} label="Research" onRemove={() => setResearch(false)} />}
           <div className="flex-1" />
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => setModelOpen((v) => !v)} className="flex h-8 items-center gap-1 rounded-lg border border-line px-2.5 text-[13px] hover:bg-bg-2" title="Model and effort">
-              <span className="font-medium">{MODELS[settings.model].label}</span>
-              <span className="text-ink-3">{EFFORTS[settings.effort].label}</span>
-              <ChevronDown size={13} className="text-ink-3" />
-            </button>
-            {modelOpen && (
-              <div className="fade-up absolute bottom-10 right-0 z-30 w-72 rounded-xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10">
-                <div className="px-2 py-1 text-[11.5px] font-medium text-ink-3">Model</div>
-                {(Object.keys(MODELS) as ModelChoice[]).map((k) => (
-                  <MenuItem key={k} label={MODELS[k].label} hint={MODELS[k].blurb} checked={settings.model === k} onClick={() => updateSettings({ model: k })} keep />
-                ))}
-                <div className="my-1 border-t border-line" />
-                <div className="px-2 py-1 text-[11.5px] font-medium text-ink-3">Effort</div>
-                {(Object.keys(EFFORTS) as Effort[]).map((k) => (
-                  <MenuItem key={k} label={EFFORTS[k].label} hint={EFFORTS[k].blurb} checked={settings.effort === k} onClick={() => updateSettings({ effort: k })} keep />
-                ))}
-              </div>
-            )}
+          <div className="flex items-center gap-1">
+            <div className="flex items-center rounded-lg border border-line p-0.5 text-[13px]">
+              {(Object.keys(MODELS) as ModelChoice[]).map((k) => (
+                <button key={k} type="button" onClick={() => updateSettings({ model: k })} title={MODELS[k].blurb} className={cn("rounded-md px-2.5 py-1", settings.model === k ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>{MODELS[k].label}</button>
+              ))}
+            </div>
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button type="button" onClick={() => setModelOpen((v) => !v)} className="flex h-8 items-center gap-1 rounded-lg border border-line px-2.5 text-[13px] hover:bg-bg-2" title="Effort">
+                <span className="text-ink-2">{EFFORTS[settings.effort].label}</span>
+                <ChevronDown size={13} className="text-ink-3" />
+              </button>
+              {modelOpen && (
+                <div className="fade-up absolute bottom-10 right-0 z-30 w-60 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10">
+                  <div className="px-2 py-1 text-[11.5px] font-medium text-ink-3">Effort</div>
+                  {(Object.keys(EFFORTS) as Effort[]).map((k) => (
+                    <MenuItem key={k} label={EFFORTS[k].label} hint={EFFORTS[k].blurb} checked={settings.effort === k} onClick={() => updateSettings({ effort: k })} keep />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <button
             type="button"
             onClick={() => (dictation.listening ? dictation.stop() : dictation.start())}
             disabled={!dictation.supported || dictation.transcribing}
             title={!dictation.supported ? "Dictation needs a microphone" : dictation.transcribing ? "Transcribing…" : dictation.listening ? "Stop and transcribe" : "Dictate"}
-            className={cn("flex h-8 w-8 items-center justify-center rounded-lg transition", dictation.listening ? "bg-bad/10 text-bad animate-pulse" : dictation.transcribing ? "text-clay" : "text-ink-3 hover:bg-bg-3 hover:text-ink disabled:opacity-40")}
+            className={cn("flex h-8 items-center justify-center gap-1.5 rounded-lg transition", dictation.listening ? "bg-[#1a56db] px-2.5 text-white" : dictation.transcribing ? "w-8 text-clay" : "w-8 text-ink-3 hover:bg-bg-3 hover:text-ink disabled:opacity-40")}
           >
-            {dictation.transcribing ? <Loader2 size={17} className="animate-spin" /> : <Mic size={17} />}
+            {dictation.transcribing ? <Loader2 size={17} className="animate-spin" /> : dictation.listening ? <><span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70" /><span className="relative inline-flex h-2 w-2 rounded-full bg-white" /></span><span className="text-[12.5px] font-medium">Stop</span></> : <Mic size={17} />}
           </button>
           <StopOrSend busy={busy} canSend={canSend} onStop={onStop} />
         </div>
+        {locked && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-bg/85 backdrop-blur-[1px]">
+            <div className="flex items-center gap-3 rounded-xl border border-line bg-bg px-4 py-2.5 text-[13.5px] shadow-sm">
+              <Lock size={15} className="text-ink-3" />
+              <span className="text-ink-2">Chat opens with a challenge.</span>
+              <button type="button" onClick={() => openDialog({ kind: "challenges" })} className="rounded-lg bg-clay px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-clay-dark">Pick a challenge</button>
+            </div>
+          </div>
+        )}
         <input ref={fileInput} type="file" multiple hidden accept=".txt,.md,.csv,.json,.pdf,image/*" onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
         <input ref={imageInput} type="file" multiple hidden accept="image/*" onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
       </form>

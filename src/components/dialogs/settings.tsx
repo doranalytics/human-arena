@@ -1,18 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Camera, Check, Trash2, X, Search, Settings as Gear, CircleUser, Trophy, Zap, Cable, Brain, Plus, SlidersHorizontal } from "lucide-react";
+import { Camera, Check, Trash2, X, Settings as Gear, CircleUser, Zap, Cable, Brain, Plus, SlidersHorizontal } from "lucide-react";
 import { Button, inputCls } from "../dialog";
 import { Avatar } from "../avatar";
 import { ConnectorLogo } from "../connector-logos";
-import { TierBadge, TIER_STYLE, IconLinkedIn, IconX, type BadgeTier } from "../icons";
+import { IconLinkedIn, IconX } from "../icons";
 import { closeDialog, openDialog, toast, type SettingsSection } from "@/lib/ui";
-import { useStore, updateSettings, setState, totalPoints, removeMemory, track, createSkill, deleteSkill, setConnector } from "@/lib/store";
+import { useStore, updateSettings, setState, removeMemory, track, createSkill, deleteSkill, setConnector } from "@/lib/store";
 import { useSession, setSession } from "@/lib/session";
-import { SKILLS, SKILL_GROUPS, TOOL_SENSE_THRESHOLD } from "@/lib/arena/skills";
-import { FEATURE_SLUGS } from "@/lib/arena/challenges";
 import { BUILTIN_SKILLS } from "@/lib/skills";
 import { CONNECTORS } from "@/lib/connectors";
-import { TIERS, tierFor } from "@/lib/tiers";
 import { xHandle, linkedinSlug, xUrl, linkedinUrl } from "@/lib/social";
 import { cn } from "@/lib/utils";
 
@@ -34,32 +31,25 @@ const NAV: { group: string; items: { id: SettingsSection; label: string; icon: R
       { id: "memory", label: "Memory", icon: <Brain size={16} /> },
     ],
   },
-  { group: "Progress", items: [{ id: "progress", label: "Progress", icon: <Trophy size={16} /> }] },
 ];
 const groupOf = (section: SettingsSection) => NAV.find((g) => g.items.some((i) => i.id === section)) ?? NAV[0];
-const TITLE: Record<SettingsSection, string> = { general: "General", account: "Account", progress: "Progress", instructions: "Instructions", skills: "Skills", connectors: "Connectors", memory: "Memory" };
+const TITLE: Record<SettingsSection, string> = { general: "General", account: "Account", instructions: "Instructions", skills: "Skills", connectors: "Connectors", memory: "Memory" };
 
 /** Two-pane settings window in the desktop-app style: Settings on top, Customize below. */
 export function SettingsDialog({ section }: { section: SettingsSection }) {
-  const [q, setQ] = useState("");
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeDialog();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-  const s = q.trim().toLowerCase();
   const group = groupOf(section);
-  const items = group.items.filter((i) => !s || i.label.toLowerCase().includes(s));
+  const items = group.items;
   const single = group.items.length === 1;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]" onMouseDown={(e) => e.target === e.currentTarget && closeDialog()}>
       <div role="dialog" aria-modal className={cn("fade-up flex h-[86vh] w-full overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl shadow-black/10", single ? "max-w-2xl" : "max-w-4xl")}>
         {!single && (
           <aside className="flex w-[220px] shrink-0 flex-col border-r border-line bg-side p-3">
-            <label className="relative mb-3 block">
-              <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="h-9 w-full rounded-lg border border-line bg-bg pl-8 pr-2 text-[13px] outline-none placeholder:text-ink-3 focus:border-line-2" />
-            </label>
             <div className="mb-1 px-2 text-[11.5px] font-medium text-ink-3">{group.group}</div>
             {items.map((i) => (
               <button key={i.id} onClick={() => openDialog({ kind: "settings", section: i.id })} className={cn("flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] hover:bg-bg-3", section === i.id && "bg-bg-3 font-medium")}>
@@ -77,7 +67,6 @@ export function SettingsDialog({ section }: { section: SettingsSection }) {
             {section === "general" && <General />}
             {section === "instructions" && <Instructions />}
             {section === "account" && <Account />}
-            {section === "progress" && <Progress />}
             {section === "skills" && <Skills />}
             {section === "connectors" && <Connectors />}
             {section === "memory" && <Memory />}
@@ -285,75 +274,6 @@ function Account() {
   );
 }
 
-/* ----------------------------------------------------------------- progress */
-function Progress() {
-  const results = useStore((s) => s.results);
-  const earned = new Set(Object.values(results).filter((r) => r.passed).flatMap((r) => r.badges));
-  const featurePasses = Object.values(results).filter((r) => r.passed && FEATURE_SLUGS.has(r.slug)).length;
-  if (featurePasses >= TOOL_SENSE_THRESHOLD) earned.add("tool-choice");
-  const pts = totalPoints(results);
-  const tier = tierFor(pts);
-  const current = TIERS.find((t) => t.tier === tier) ?? null;
-  const next = TIERS.find((t) => t.min > pts) ?? null;
-  const floor = current?.min ?? 0;
-  const progress = next ? Math.min(1, Math.max(0, (pts - floor) / (next.min - floor))) : 1;
-  const gradable = Object.values(SKILLS).filter((s) => s.status === "ready").length;
-  return (
-    <div className="space-y-7">
-      <section>
-        <Label>Level</Label>
-        <div className="rounded-xl border border-line bg-bg-2/60 p-4">
-          <div className="flex items-center gap-3">
-            {tier === "Analog" ? <TierBadge tier="Tourist" locked size={44} /> : <TierBadge tier={tier as BadgeTier} size={44} />}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline gap-2"><span className="font-serif text-[20px] font-semibold leading-none">{tier}</span><span className="text-[13px] tabular-nums text-ink-2">{pts} pts</span></div>
-              <div className="mt-1 text-[12.5px] text-ink-3">{tier === "Analog" ? "Finish one challenge to become a Tourist." : current?.blurb}</div>
-            </div>
-            {next && <div className="shrink-0 text-right"><div className="text-[17px] font-semibold tabular-nums leading-none">{next.min - pts}</div><div className="mt-0.5 text-[11.5px] text-ink-3">to {next.tier}</div></div>}
-          </div>
-          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-line"><div className="h-full rounded-full transition-all" style={{ width: `${Math.round(progress * 100)}%`, background: TIER_STYLE[(next?.tier ?? "AI-Native") as BadgeTier].fill }} /></div>
-          <ol className="mt-4 grid grid-cols-5 gap-1">
-            {TIERS.map((t) => {
-              const unlocked = pts >= t.min;
-              return (
-                <li key={t.tier} className="flex flex-col items-center text-center" title={t.blurb}>
-                  <span className={cn("rounded-full bg-bg p-0.5", t.tier === tier && "ring-2 ring-clay ring-offset-2 ring-offset-bg-2")}><TierBadge tier={t.tier} locked={!unlocked} size={34} /></span>
-                  <span className={cn("mt-1.5 text-[11.5px] font-medium leading-tight", !unlocked && "text-ink-3")}>{t.tier}</span>
-                  <span className={cn("text-[10.5px] tabular-nums", unlocked ? "text-ink-2" : "text-ink-3")}>{t.min === 1 ? "1st pt" : `${t.min}`}</span>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </section>
-      <section>
-        <Label>Skills earned <span className="font-normal">· {[...earned].filter((id) => id in SKILLS).length} of {gradable} · {Object.keys(SKILLS).length - gradable} coming</span></Label>
-        <div className="space-y-3">
-          {SKILL_GROUPS.map((g) => (
-            <div key={g}>
-              <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-ink-3">{g}</div>
-              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                {Object.entries(SKILLS).filter(([, s]) => s.group === g).map(([id, s]) => {
-                  const has = earned.has(id);
-                  const later = s.status === "later";
-                  return (
-                    <div key={id} title={later ? "The arena cannot grade this yet" : id === "tool-choice" ? `Earned after ${TOOL_SENSE_THRESHOLD} feature challenges` : undefined} className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[12.5px]", has ? "border-ok/50 bg-ok/10 font-medium text-ink shadow-sm shadow-ok/10" : "border-dashed border-line text-ink-3", later && "opacity-60")}>
-                      <span className={cn("text-[15px]", !has && "opacity-40 grayscale")}>{s.emoji}</span>
-                      <span className="min-w-0 flex-1 truncate">{s.name}</span>
-                      {has && <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-ok text-bg"><Check size={10} strokeWidth={3} /></span>}
-                      {later && <span className="shrink-0 text-[10px] uppercase tracking-wide text-ink-3">soon</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------- skills */
 function fmtShort(iso?: string) {
   if (!iso) return "";
@@ -456,7 +376,7 @@ function Memory() {
     <div>
       <div className="mb-3 text-[13px] text-ink-2">Facts the assistant has been told to remember. Every new chat starts knowing them.</div>
       {memories.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-line px-3 py-3 text-[13px] text-ink-3">Nothing yet. In a chat, say &ldquo;remember that…&rdquo; and it lands here.</div>
+        <div className="rounded-xl border border-dashed border-line px-4 py-5 text-center"><Brain size={22} className="mx-auto text-ink-3" /><div className="mt-2 text-[14px] font-medium">Nothing remembered yet</div><div className="mx-auto mt-1 max-w-[36ch] text-[13px] text-ink-2">In any chat, say &ldquo;remember that my favourite trail is the Timberline Trail.&rdquo; It lands here, and every new chat knows it.</div></div>
       ) : (
         <ul className="divide-y divide-line rounded-lg border border-line">
           {memories.map((m) => (
