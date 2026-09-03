@@ -72,7 +72,9 @@ export function hydrate() {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const saved = JSON.parse(raw) as Partial<State>;
-      state = { ...initial, ...saved, chats: (saved.chats ?? []).filter((c) => !c.draft), settings: { ...initial.settings, ...(saved.settings ?? {}) }, hydrated: true };
+      const chats = (saved.chats ?? []).filter((c) => !c.draft);
+      const activeChatId = saved.activeChatId && chats.some((c) => c.id === saved.activeChatId) ? saved.activeChatId : null;
+      state = { ...initial, ...saved, chats, activeChatId, settings: { ...initial.settings, ...(saved.settings ?? {}) }, hydrated: true };
     } else state = { ...initial, hydrated: true };
   } catch {
     state = { ...initial, hydrated: true };

@@ -50,8 +50,9 @@ export function Arena() {
 
   // A fresh visit lands on a blank chat, like the desktop app.
   useEffect(() => {
-    if (hydrated && !activeChatId && !activeProjectId) newChat(null);
-  }, [hydrated, activeChatId, activeProjectId]);
+    if (!hydrated) return;
+    if ((!activeChatId && !activeProjectId) || (activeChatId && !chat)) newChat(null);
+  }, [hydrated, activeChatId, activeProjectId, chat]);
 
   const title = page === "projects" ? "Projects" : chat ? (chat.projectId ? `${project?.name ?? "Project"} / ${chat.title}` : chat.title) : project ? project.name : "";
 
