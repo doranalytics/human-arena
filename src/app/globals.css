@@ -195,6 +195,7 @@
 }
 
 /* Bigger by default on desktop. "People are old." */
+html, body { height: 100%; width: 100%; }
 @media (min-width: 1024px) {
   html { zoom: 1.12; }
 }

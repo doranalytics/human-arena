@@ -56,7 +56,7 @@ export function Arena() {
   const title = page === "projects" ? "Projects" : chat ? (chat.projectId ? `${project?.name ?? "Project"} / ${chat.title}` : chat.title) : project ? project.name : "";
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-bg">
       <div className="relative flex h-8 shrink-0 items-center justify-center gap-2 bg-[#2c2b28] px-3 text-[12px] text-bg">
         <Logo size={17} />
         <span className="font-serif text-[13px] font-semibold tracking-tight">Human Arena</span>

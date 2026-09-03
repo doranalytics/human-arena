@@ -47,7 +47,7 @@ export function SettingsDialog({ section }: { section: SettingsSection }) {
   const single = group.items.length === 1;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]" onMouseDown={(e) => e.target === e.currentTarget && closeDialog()}>
-      <div role="dialog" aria-modal className={cn("fade-up flex h-[86vh] w-full overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl shadow-black/10", single ? "max-w-2xl" : "max-w-4xl")}>
+      <div role="dialog" aria-modal className={cn("fade-up flex h-[84%] w-full overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl shadow-black/10", single ? "max-w-2xl" : "max-w-4xl")}>
         {!single && (
           <aside className="flex w-[220px] shrink-0 flex-col border-r border-line bg-side p-3">
             <div className="mb-1 px-2 text-[11.5px] font-medium text-ink-3">{group.group}</div>

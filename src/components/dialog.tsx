@@ -14,7 +14,7 @@ export function Dialog({ open, onClose, title, children, wide, footer }: { open:
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-modal className={cn("fade-up flex max-h-[88vh] w-full flex-col overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl shadow-black/10", wide ? "max-w-3xl" : "max-w-xl")}>
+      <div role="dialog" aria-modal className={cn("fade-up flex max-h-[86%] w-full flex-col overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl shadow-black/10", wide ? "max-w-3xl" : "max-w-xl")}>
         {title !== undefined && (
           <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5">
             <div className="text-[15px] font-medium">{title}</div>
