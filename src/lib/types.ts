@@ -56,6 +56,8 @@ export interface Settings {
   model: ModelChoice;
   effort: Effort;
   onboarded?: boolean;
+  /** free (non-challenge) messages used today */
+  freeTurns?: { day: string; used: number };
 }
 
 /** Everything the environment can observe. Challenges are graded against these. */

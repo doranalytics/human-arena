@@ -177,6 +177,20 @@ export function updateSettings(patch: Partial<Settings>) {
   if (patch.model) track("model_selected", patch.model);
   if (patch.effort) track("effort_selected", patch.effort);
 }
+export const FREE_TURNS_PER_DAY = 5;
+const today = () => new Date().toISOString().slice(0, 10);
+/** Messages left outside a challenge today. */
+export function freeTurnsLeft(s: State = state): number {
+  const f = s.settings.freeTurns;
+  return Math.max(0, FREE_TURNS_PER_DAY - (f && f.day === today() ? f.used : 0));
+}
+export function useFreeTurn() {
+  setState((s) => {
+    const f = s.settings.freeTurns;
+    const used = f && f.day === today() ? f.used : 0;
+    return { settings: { ...s.settings, freeTurns: { day: today(), used: used + 1 } } };
+  });
+}
 export function addMemory(fact: string) {
   const f = fact.trim();
   if (!f) return;

@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage, lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { ArrowUp, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
-import { useStore, saveMessages, track, getState, addMemory, newChat } from "@/lib/store";
+import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, useFreeTurn, FREE_TURNS_PER_DAY } from "@/lib/store";
 import { Message } from "./message";
 import { Composer, type ComposerSubmit } from "./composer";
 import { Spark } from "./icons";
@@ -44,6 +44,7 @@ export function ChatView({ chat }: { chat: Chat }) {
   const session = useSession();
   const attempt = useStore((s) => s.attempt);
   const challenge = attempt ? getChallenge(attempt.slug) : null;
+  const freeLeft = useStore((s) => freeTurnsLeft(s));
   const name = session.me?.name || settings.name;
 
   const transport = useMemo(() => new DefaultChatTransport<UIMessage>({ api: "/api/chat" }), []);
@@ -94,6 +95,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       if (skill) track("skill_invoked", skill);
       if (dictated) track("dictation_used");
       track("message_sent");
+      if (!st.attempt) useFreeTurn();
       const sk = skill ? (BUILTIN_SKILLS.find((s) => s.name === skill) ?? customSkills.find((s) => s.name === skill)) : null;
       await sendMessage(
         { text, files: fileParts },
@@ -124,7 +126,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       <button onClick={() => newChat(null)} className="rounded-lg bg-ink px-3 py-1.5 text-[13px] font-medium text-bg hover:bg-black">New chat</button>
     </div>
   ) : (
-    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} projectName={project?.name ?? null} locked={!attempt} />
+    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} projectName={project?.name ?? null} locked={!attempt && freeLeft <= 0} freeLeft={attempt ? null : freeLeft} />
   );
 
   if (empty && attempt && challenge)

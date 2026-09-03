@@ -26,9 +26,11 @@ interface Props {
   projectName: string | null;
   /** no challenge running: chatting is locked until one starts */
   locked?: boolean;
+  /** free messages left today outside a challenge; null while a challenge runs */
+  freeLeft?: number | null;
 }
 
-export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, projectName, locked }: Props) {
+export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, projectName, locked, freeLeft }: Props) {
   const [text, setText] = useState("");
   const dictated = useRef(false);
   const dictation = useDictation((t) => { dictated.current = true; setText((cur) => (cur ? cur.replace(/\s*$/, " ") : "") + t); });
@@ -255,7 +257,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
           <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-bg/85 backdrop-blur-[1px]">
             <div className="flex items-center gap-3 rounded-xl border border-line bg-bg px-4 py-2.5 text-[13.5px] shadow-sm">
               <Lock size={15} className="text-ink-3" />
-              <span className="text-ink-2">Chat opens with a challenge.</span>
+              <span className="text-ink-2">Free messages are used up for today. Challenges are unlimited.</span>
               <button type="button" onClick={() => openDialog({ kind: "challenges" })} className="rounded-lg bg-clay px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-clay-dark">Pick a challenge</button>
             </div>
           </div>
@@ -263,6 +265,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
         <input ref={fileInput} type="file" multiple hidden accept=".txt,.md,.csv,.json,.pdf,image/*" onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
         <input ref={imageInput} type="file" multiple hidden accept="image/*" onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
       </form>
+      {typeof freeLeft === "number" && !locked && <div className="mt-1.5 text-center text-[12px] text-ink-3">{freeLeft} free message{freeLeft === 1 ? "" : "s"} left today outside challenges. Challenges are unlimited.</div>}
       <span className="sr-only">{modelLabel}</span>
     </div>
   );

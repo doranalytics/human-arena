@@ -29,7 +29,7 @@ Brian's notes folded in: more than two skills per challenge where natural; brief
 | 1 | Ten words | chat, constraints | Constraints: tell it exactly how long, and it obeys | 3 | 25 |
 | 2 | Interview me | interviewing | Make it ask first: get the questions before the plan | 5 | 40 |
 | 3 | Grade yourself | iteration, verification | Iteration and verification: make it critique and redo its own work | 6 | 45 |
-| 4 | Two audiences | audience | Audience switching: change the reader, change the writing | 5 | 40 |
+| 4 | Three audiences | audience | Audience switching: change the reader, change the writing | 5 | 40 |
 | 5 | The other side | steelman | Steelman: get the strongest case against your view | 5 | 45 |
 | 6 | Rehearsal | roleplay, iteration | Roleplay: make it play the other person, then coach you | 6 | 50 |
 | 7 | Twenty then three | brainstorming, constraints | Brainstorming with constraints: go wide, then cut by a rule | 5 | 40 |
