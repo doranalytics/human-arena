@@ -59,7 +59,6 @@ export function ChallengesDialog({ open }: { open: boolean }) {
 export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
   const c = getChallenge(slug);
   const attempt = useStore((s) => s.attempt);
-  const result = useStore((s) => s.results[slug]);
   const [starting, setStarting] = useState(false);
   if (!c) return null;
   const blocked = attempt && attempt.slug !== slug;
