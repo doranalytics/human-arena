@@ -4,8 +4,8 @@ import { useStore, totalPoints } from "@/lib/store";
 import { openDialog } from "@/lib/ui";
 import { TierBadge, TIER_STYLE, type BadgeTier } from "./icons";
 import { SkillIcon } from "./skill-icon";
-import { SKILLS, SKILL_GROUPS, TOOL_SENSE_THRESHOLD } from "@/lib/arena/skills";
-import { FEATURE_SLUGS, CHALLENGES } from "@/lib/arena/challenges";
+import { SKILLS, SKILL_GROUPS } from "@/lib/arena/skills";
+import { CHALLENGES } from "@/lib/arena/challenges";
 import { TIERS, tierFor } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +17,6 @@ function Label({ children }: { children: React.ReactNode }) {
 export function ProgressPanel() {
   const results = useStore((s) => s.results);
   const earned = new Set(Object.values(results).filter((r) => r.passed).flatMap((r) => r.badges));
-  const featurePasses = Object.values(results).filter((r) => r.passed && FEATURE_SLUGS.has(r.slug)).length;
-  if (featurePasses >= TOOL_SENSE_THRESHOLD) earned.add("tool-choice");
   const pts = totalPoints(results);
   const tier = tierFor(pts);
   const current = TIERS.find((t) => t.tier === tier) ?? null;
@@ -65,7 +63,7 @@ export function ProgressPanel() {
                   const has = earned.has(id);
                   const later = s.status === "later";
                   return (
-                    <button key={id} onClick={() => { const c = CHALLENGES.find((x) => x.badges.includes(id)); if (c) openDialog({ kind: "brief", slug: c.slug }); }} title={later ? "The arena cannot grade this yet" : id === "tool-choice" ? `Earned after ${TOOL_SENSE_THRESHOLD} feature challenges` : "Open the challenge that teaches it"} className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[12.5px] transition hover:border-line-2", has ? "border-ok/50 bg-ok/10 font-medium text-ink shadow-sm shadow-ok/10" : "border-dashed border-line text-ink-3", later && "opacity-60")}>
+                    <button key={id} onClick={() => { const c = CHALLENGES.find((x) => x.badges.includes(id)); if (c) openDialog({ kind: "brief", slug: c.slug }); }} title={later ? "The arena cannot grade this yet" : "Open the challenge that teaches it"} className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[12.5px] transition hover:border-line-2", has ? "border-ok/50 bg-ok/10 font-medium text-ink shadow-sm shadow-ok/10" : "border-dashed border-line text-ink-3", later && "opacity-60")}>
                       <SkillIcon id={id} size={15} className={has ? "text-ok" : "text-ink-3"} />
                       <span className="min-w-0 flex-1 truncate">{s.name}</span>
                       {has && <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-ok text-bg"><Check size={10} strokeWidth={3} /></span>}

@@ -35,7 +35,6 @@ export const SKILLS: Record<string, SkillDef> = {
   drafting: s("💬", "Drafting", "Prompting moves"),
   summarizing: s("📝", "Summarizing", "Prompting moves"),
   extraction: s("⛏️", "Data extraction", "Prompting moves"),
-  "tool-choice": s("🧰", "Tool sense", "Prompting moves"),
   // input
   "file-upload": s("📎", "File upload", "Input"),
   pdf: s("📕", "PDF reading", "Input"),
@@ -82,5 +81,3 @@ export function skillFor(id: string): SkillDef {
   return SKILLS[id] ?? { emoji: "🏅", name: id, group: "Setup and tools", status: "ready" };
 }
 
-/** Tool sense is earned by passing five feature challenges rather than one of its own. */
-export const TOOL_SENSE_THRESHOLD = 5;

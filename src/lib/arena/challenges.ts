@@ -696,8 +696,6 @@ Then say: **"Read my newest unread email and pull the numbers it asks for from t
 
 export const TOTAL_POINTS = CHALLENGES.reduce((s, c) => s + c.points, 0);
 
-/** Feature challenges count toward Tool sense. */
-export const FEATURE_SLUGS = new Set(["one-page", "pull-the-table", "read-the-pdf", "show-dont-tell", "picture-to-text", "picture-math", "fresh-news", "check-it", "deep-dive", "read-the-link", "pick-the-brain", "connect-and-ask", "inbox-to-reply", "skill-up", "make-a-skill", "set-up-shop", "call-me", "remember-this", "say-it", "hand-it-off"]);
 
 export function getChallenge(slug: string) {
   return CHALLENGES.find((c) => c.slug === slug) ?? null;
