@@ -185,7 +185,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       </div>
       <div className="mx-auto w-full max-w-[760px] px-6 pb-4">
         {composer}
-        <div className="pt-2 text-center text-[11.5px] text-ink-3">Human Arena is a training environment. Nothing here is real.</div>
+        <div className="pt-2 text-center text-[11.5px] text-ink-3">How to AI Games is a training environment. Nothing here is real.</div>
       </div>
     </div>
   );

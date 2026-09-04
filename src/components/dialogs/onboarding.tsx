@@ -9,7 +9,7 @@ import { Logo } from "../icons";
 const SCREENS = [
   {
     icon: <Logo size={44} tile />,
-    title: "Welcome to Human Arena",
+    title: "Welcome to How to AI Games",
     body: "A safe copy of a modern AI assistant where you learn by doing. Nothing here is real, so you can click anything, break nothing, and find out what these tools can actually do.",
   },
   {

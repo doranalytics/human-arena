@@ -29,7 +29,7 @@ export function UpdateBar() {
   if (!stale) return null;
   return (
     <div className="flex h-8 shrink-0 items-center justify-center gap-3 bg-clay px-3 text-[12.5px] text-white">
-      <span>Human Arena has been updated.</span>
+      <span>How to AI Games has been updated.</span>
       <button onClick={() => window.location.reload()} className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 font-medium hover:bg-white/25"><RefreshCw size={12} /> Refresh</button>
     </div>
   );

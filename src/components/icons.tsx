@@ -59,18 +59,26 @@ export function IconX({ size = 14 }: { size?: number }) {
   );
 }
 
-/** The Human Arena mark: crossed swords. Bare (clay strokes) for light or dark grounds; tile for icons. */
+/** The How to AI Games mark: the twelve-lobe rosette. Bare for the bar, tile for icons. */
 export function Logo({ size = 18, className = "", tile = false }: { size?: number; className?: string; tile?: boolean }) {
   if (tile)
     return (
       <svg width={size} height={size} viewBox="0 0 64 64" className={`shrink-0 ${className}`} aria-hidden>
         <rect width="64" height="64" rx="14" fill="#d97757" />
-        <g transform="translate(10 10) scale(1.8333)" fill="none" stroke="#faf9f5" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="m13 19 6-6" /><path d="M14.5 17.5 3.586 6.586A2 2 0 0 1 3 5.172V3h2.172a2 2 0 0 1 1.414.586L17.5 14.5" /><path d="m14.828 6.172 2.586-2.586A2 2 0 0 1 18.828 3H21v2.172a2 2 0 0 1-.586 1.414l-2.586 2.586" /><path d="m16 16 4 4" /><path d="m19 21 2-2" /><path d="m5 14 4 4" /><path d="m5 21-2-2" /><path d="M7.5 16.5 4 20" /></g>
+        <g transform="translate(7 7) scale(0.5)">
+          <path d={ROSETTE_PATH} fill="#faf9f5" />
+          <circle cx="50" cy="50" r="27" fill="#d97757" />
+          <circle cx="50" cy="50" r="21" fill="#faf9f5" />
+          <circle cx="50" cy="50" r="15" fill="#d97757" />
+        </g>
       </svg>
     );
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={`shrink-0 ${className}`} fill="none" stroke="#d97757" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="m13 19 6-6" /><path d="M14.5 17.5 3.586 6.586A2 2 0 0 1 3 5.172V3h2.172a2 2 0 0 1 1.414.586L17.5 14.5" /><path d="m14.828 6.172 2.586-2.586A2 2 0 0 1 18.828 3H21v2.172a2 2 0 0 1-.586 1.414l-2.586 2.586" /><path d="m16 16 4 4" /><path d="m19 21 2-2" /><path d="m5 14 4 4" /><path d="m5 21-2-2" /><path d="M7.5 16.5 4 20" />
+    <svg width={size} height={size} viewBox="0 0 100 100" className={`shrink-0 ${className}`} aria-hidden>
+      <path d={ROSETTE_PATH} fill="#d97757" />
+      <circle cx="50" cy="50" r="27" fill="#2c2b28" />
+      <circle cx="50" cy="50" r="21" fill="#d97757" />
+      <circle cx="50" cy="50" r="15" fill="#2c2b28" />
     </svg>
   );
 }

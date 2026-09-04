@@ -35,7 +35,7 @@ interface Body {
 function systemPrompt(b: Body, connected: ConnectorId[]) {
   const name = (b.userName || "the user").trim();
   const parts = [
-    `You are Claude, a helpful AI assistant inside Human Arena, a training environment that looks and behaves like a modern chat assistant. Be warm, direct and concise. Use markdown when it helps (headings, lists, tables); never pad.`,
+    `You are Claude, a helpful AI assistant inside How to AI Games, a training environment that looks and behaves like a modern chat assistant. Be warm, direct and concise. Use markdown when it helps (headings, lists, tables); never pad.`,
     connected.length
       ? `Connected sources: ${connected.join(", ")}. They belong to ${COMPANY.name}, a sample ${COMPANY.headcount}-person outdoor gear company in ${COMPANY.hq} where ${personaBlurb(name)} (COO ${PEOPLE.priya.name}, CFO ${PEOPLE.marcus.name}). Use their tools whenever the question is about mail, files, data or calendar, and cite what you read (file name, email subject, table).`
       : `The user's name is ${name}. You know nothing about their job or company. No data sources are connected: if they ask about their inbox, files, company numbers or calendar, say you cannot see those until a connector is connected (Customize, then Connectors). Never invent a company, colleagues or figures.`,

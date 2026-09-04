@@ -10,11 +10,11 @@ const DESCRIPTION = "Learn AI by doing. 32 timed challenges inside a chat that w
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
-  title: { default: "Human Arena", template: "%s · Human Arena" },
+  title: { default: "How to AI Games", template: "%s · How to AI Games" },
   description: DESCRIPTION,
   icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/favicon-32.png", sizes: "32x32", type: "image/png" }], apple: "/apple-touch-icon.png" },
-  openGraph: { title: "Human Arena", description: DESCRIPTION, siteName: "Human Arena", type: "website", url: SITE },
-  twitter: { card: "summary_large_image", title: "Human Arena", description: DESCRIPTION },
+  openGraph: { title: "How to AI Games", description: DESCRIPTION, siteName: "How to AI Games", type: "website", url: SITE },
+  twitter: { card: "summary_large_image", title: "How to AI Games", description: DESCRIPTION },
 };
 
 export const viewport: Viewport = { themeColor: "#faf9f5" };

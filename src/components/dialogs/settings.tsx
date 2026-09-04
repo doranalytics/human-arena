@@ -293,7 +293,7 @@ function Skills() {
   const taken = [...BUILTIN_SKILLS, ...custom].some((s) => s.name === slug);
   const rows = [
     ...custom.map((s) => ({ id: s.id, name: s.name, desc: s.description, prompt: s.prompt, date: fmtShort(s.createdAt), author: "You", custom: true })),
-    ...BUILTIN_SKILLS.map((s) => ({ id: s.id, name: s.name, desc: s.description, prompt: s.prompt, date: "9/2/26", author: "Human Arena", custom: false })),
+    ...BUILTIN_SKILLS.map((s) => ({ id: s.id, name: s.name, desc: s.description, prompt: s.prompt, date: "9/2/26", author: "How to AI Games", custom: false })),
   ];
   return (
     <div>

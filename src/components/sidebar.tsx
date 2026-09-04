@@ -138,7 +138,7 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-[272px] shrink-0 flex-col border-r border-line bg-side">
       <div className="flex h-12 items-center px-4">
-        <button onClick={() => { setPage(null); newChat(activeProjectId); }} className="font-serif text-[22px] font-medium tracking-tight hover:text-clay-dark" title="Home">Human Arena</button>
+        <button onClick={() => { setPage(null); newChat(activeProjectId); }} className="font-serif text-[19px] font-medium tracking-tight hover:text-clay-dark" title="Home">How to AI Games</button>
       </div>
 
       <div className="px-2.5 pt-1">
