@@ -37,6 +37,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
   const [files, setFiles] = useState<File[]>([]);
   const [plusOpen, setPlusOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
+  const [effortOpen, setEffortOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [slashIdx, setSlashIdx] = useState(0);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -221,26 +222,42 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
           {webSearch && !research && <Chip icon={<Globe size={12} />} label="Web search" onRemove={() => setWebSearch(false)} />}
           {research && <Chip icon={<Telescope size={12} />} label="Research" onRemove={() => setResearch(false)} />}
           <div className="flex-1" />
-          <div className="flex items-center gap-1">
-            <div className="flex items-center rounded-lg border border-line p-0.5 text-[13px]">
-              {(Object.keys(MODELS) as ModelChoice[]).map((k) => (
-                <button key={k} type="button" onClick={() => updateSettings({ model: k })} title={MODELS[k].blurb} className={cn("rounded-md px-2.5 py-1", settings.model === k ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>{MODELS[k].label}</button>
-              ))}
-            </div>
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button type="button" onClick={() => setModelOpen((v) => !v)} className="flex h-8 items-center gap-1 rounded-lg border border-line px-2.5 text-[13px] hover:bg-bg-2" title="Effort">
-                <span className="text-ink-2">{EFFORTS[settings.effort].label}</span>
-                <ChevronDown size={13} className="text-ink-3" />
-              </button>
-              {modelOpen && (
-                <div className="fade-up absolute bottom-10 right-0 z-30 w-60 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10">
-                  <div className="px-2 py-1 text-[11.5px] font-medium text-ink-3">Effort</div>
-                  {(Object.keys(EFFORTS) as Effort[]).map((k) => (
-                    <MenuItem key={k} label={EFFORTS[k].label} hint={EFFORTS[k].blurb} checked={settings.effort === k} onClick={() => updateSettings({ effort: k })} keep />
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => { setModelOpen((v) => !v); setEffortOpen(false); }} className={cn("flex h-9 items-center gap-1.5 rounded-lg px-3 text-[14px] hover:bg-bg-2", modelOpen && "bg-bg-2")} title="Model and effort">
+              <span className="font-medium">{MODELS[settings.model].label}</span>
+              <span className="text-ink-3">{EFFORTS[settings.effort].label}</span>
+            </button>
+            {modelOpen && (
+              <div className="fade-up absolute bottom-11 right-0 z-30 w-72 rounded-2xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10">
+                {(Object.keys(MODELS) as ModelChoice[]).map((k) => (
+                  <button key={k} type="button" onClick={() => { updateSettings({ model: k }); setModelOpen(false); }} className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-bg-2">
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[15px] font-medium">{MODELS[k].label}</span>
+                      <span className="block text-[13px] text-ink-3">{MODELS[k].blurb}</span>
+                    </span>
+                    {settings.model === k && <Check size={16} className="mt-1 shrink-0 text-[#1a56db]" />}
+                  </button>
+                ))}
+                <div className="my-1.5 border-t border-line" />
+                <button type="button" onClick={() => setEffortOpen((v) => !v)} className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-[15px] hover:bg-bg-2">
+                  <span>Effort</span>
+                  <span className="flex items-center gap-1 text-ink-3">{EFFORTS[settings.effort].label} <ChevronDown size={15} className={cn("transition", effortOpen && "rotate-180")} /></span>
+                </button>
+                {effortOpen && (
+                  <div className="pb-1">
+                    {(Object.keys(EFFORTS) as Effort[]).map((k) => (
+                      <button key={k} type="button" onClick={() => { updateSettings({ effort: k }); setModelOpen(false); setEffortOpen(false); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-bg-2">
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[14px] font-medium">{EFFORTS[k].label}</span>
+                          <span className="block text-[12.5px] text-ink-3">{EFFORTS[k].blurb}</span>
+                        </span>
+                        {settings.effort === k && <Check size={15} className="shrink-0 text-[#1a56db]" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <button
             type="button"
