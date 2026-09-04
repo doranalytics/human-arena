@@ -90,7 +90,6 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
       footer={
         <>
           <Button variant="ghost" onClick={() => openDialog({ kind: "challenges" })}>All challenges</Button>
-          {result?.passed && <span className="mr-auto text-[12.5px] text-ink-3">Best: {result.points} pts. A better run replaces it.</span>}
           {blocked ? (
             <span className="text-[12.5px] text-ink-3"><Lock size={12} className="mr-1 inline" /> Finish the running challenge first</span>
           ) : attempt?.slug === slug ? (
@@ -114,17 +113,11 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
           <span>once the clock starts</span>
         </div>
       )}
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-ink-3">
+      <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12.5px] text-ink-3">
         <span className="flex items-center gap-1"><Clock size={12} /> {c.minutes} min</span>
+        <span>·</span>
         <span>{c.points} pts</span>
-        <span>{c.hints.length} hint{c.hints.length === 1 ? "" : "s"}, {Math.round(HINT_COST * 100)}% each</span>
-      </div>
-      <div className="mt-3 flex items-baseline gap-2 rounded-lg bg-bg-2 px-3 py-2.5 text-[13px]">
-        <span className="shrink-0 font-medium text-ink">Done when</span>
-        <span className="text-ink-2">{c.deliverable.replace(/\.$/, "")}</span>
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12px] text-ink-3">
-        <span>Unlocks</span>
+        <span>·</span>
         {c.badges.map((b) => (
           <SkillPill key={b} id={b} size="md" />
         ))}
