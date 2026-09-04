@@ -54,7 +54,7 @@ export function ChallengeStage({ c }: { c: ChallengeDef; attempt: Attempt }) {
         <div className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">Your move</div>
         <div className="prose-chat mt-0.5 text-[16px]">{c.brief.split(/\n\s*\n/).map((p, i) => <p key={i} className="my-1" dangerouslySetInnerHTML={{ __html: p.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>") }} />)}</div>
       </div>
-      <div className="mt-3 px-1"><LearnCard text={c.hook} /></div>
+      <LearnCard text={c.hook} className="mt-3 px-1" />
       {materials.length > 0 && (
         <div className="mt-4">
           <div className="mb-2 text-[11.5px] font-medium uppercase tracking-wide text-ink-3">What you have</div>

@@ -100,7 +100,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
       }
     >
       <BriefBody brief={c.brief} />
-      <div className="mt-4"><LearnCard text={c.hook} /></div>
+      <LearnCard text={c.hook} className="mt-4 border-t border-line pt-4" />
       {c.materials && c.materials.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12px] text-ink-3">
           <span>You get</span>
@@ -112,7 +112,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
           <span>once the clock starts</span>
         </div>
       )}
-      <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12.5px] text-ink-3">
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12.5px] text-ink-3">
         <span className="flex items-center gap-1"><Clock size={12} /> {c.minutes} min</span>
         <span>·</span>
         <span>{c.points} pts</span>
