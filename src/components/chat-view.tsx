@@ -145,7 +145,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       <button onClick={() => newChat(null)} className="rounded-lg bg-ink px-3 py-1.5 text-[13px] font-medium text-bg hover:bg-black">New chat</button>
     </div>
   ) : (
-    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} memoryOn={memoryOn} setMemoryOn={(v) => { setMemoryOn(v); if (!v) track("memory_off"); }} projectName={project?.name ?? null} locked={!attempt && freeLeft <= 0} freeLeft={attempt ? null : freeLeft} clearOn={attempt?.id ?? "none"} />
+    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} memoryOn={memoryOn} setMemoryOn={(v) => { setMemoryOn(v); if (!v) track("memory_off"); }} projectName={project?.name ?? null} locked={!attempt && freeLeft <= 0} freeLeft={attempt ? null : freeLeft} clearOn={attempt?.id ?? "none"} menusDown={messages.length === 0} />
   );
 
   if (empty && attempt && challenge)

@@ -34,9 +34,11 @@ interface Props {
   freeLeft?: number | null;
   /** changes when an attempt starts or ends; the draft is cleared */
   clearOn?: string;
+  /** menus open downward when the composer sits mid-screen (empty chat) */
+  menusDown?: boolean;
 }
 
-export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, memoryOn, setMemoryOn, projectName, locked, freeLeft, clearOn }: Props) {
+export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, memoryOn, setMemoryOn, projectName, locked, freeLeft, clearOn, menusDown }: Props) {
   const [text, setText] = useState("");
   const dictated = useRef(false);
   const dictation = useDictation((t) => { dictated.current = true; setText((cur) => (cur ? cur.replace(/\s*$/, " ") : "") + t); });
@@ -215,7 +217,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
               <Plus size={18} />
             </button>
             {plusOpen && (
-              <div className="fade-up absolute bottom-10 left-0 z-30 w-64 rounded-xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10">
+              <div className={cn("fade-up absolute left-0 z-30 w-64 rounded-xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10", menusDown ? "top-10" : "bottom-10")}>
                 <MenuItem icon={<Paperclip size={15} />} label="Upload a file" onClick={() => fileInput.current?.click()} />
                 <MenuItem icon={<ImageIcon size={15} />} label="Add a photo or screenshot" onClick={() => imageInput.current?.click()} />
                 <div className="my-1 border-t border-line" />
@@ -247,7 +249,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
               <span className="text-ink-3">{EFFORTS[settings.effort].label}</span>
             </button>
             {modelOpen && (
-              <div className="fade-up absolute bottom-11 right-0 z-30 w-72 rounded-2xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10">
+              <div className={cn("fade-up absolute right-0 z-30 w-72 rounded-2xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10", menusDown ? "top-11" : "bottom-11")}>
                 {(Object.keys(MODELS) as ModelChoice[]).map((k) => (
                   <button key={k} type="button" onClick={() => { updateSettings({ model: k }); setModelOpen(false); }} className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-bg-2">
                     <span className="min-w-0 flex-1">
