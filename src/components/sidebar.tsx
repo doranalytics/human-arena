@@ -38,8 +38,8 @@ function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () =
           <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEditing(false); }} className="mx-1 h-6 min-w-0 flex-1 rounded border border-line bg-bg px-1.5 text-[13px] outline-none" />
         ) : (
           <button onClick={onOpen} onDoubleClick={() => { setName(c.title); setEditing(true); }} className="flex min-w-0 flex-1 items-center gap-2.5 px-2 text-left text-[13.5px]">
-            <MessageSquare size={14} className="shrink-0 text-ink-3" />
-            <span className="truncate">{c.title}</span>
+            {c.closed ? <Check size={14} className="shrink-0 text-ok" /> : <MessageSquare size={14} className="shrink-0 text-ink-3" />}
+            <span className={cn("truncate", c.closed && "text-ink-2")}>{c.title}</span>
           </button>
         )}
         {!editing && (

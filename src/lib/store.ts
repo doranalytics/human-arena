@@ -276,8 +276,8 @@ export function useHint() {
 export function endAttempt(result?: ArenaResult) {
   setState((s) => {
     const a = s.attempt;
-    // A passed challenge closes the threads it ran in.
-    const chats = result?.passed && a ? s.chats.map((c) => (c.attemptId === a.id ? { ...c, closed: true } : c)) : s.chats;
+    // Any graded challenge closes the threads it ran in; they stay in the sidebar.
+    const chats = result && a ? s.chats.map((c) => (c.attemptId === a.id && !c.draft ? { ...c, closed: true } : c)) : s.chats;
     return { attempt: null, chats, results: result ? { ...s.results, [result.slug]: bestOf(s.results[result.slug], result) } : s.results };
   });
 }

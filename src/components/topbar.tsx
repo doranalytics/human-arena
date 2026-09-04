@@ -38,7 +38,7 @@ export function TopBar({ title }: { title: string }) {
         return;
       }
       endAttempt(j.result);
-      if (j.result.passed) newChat(null);
+      newChat(null);
       toast({ title: j.result.passed ? `Challenge complete: +${j.result.points} points` : "Not quite", body: j.result.passed ? c.title : "See what the arena saw.", tone: j.result.passed ? "ok" : "bad" }, 6000);
       openDialog({ kind: "result", slug: attempt.slug });
     } catch {

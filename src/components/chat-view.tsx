@@ -141,7 +141,7 @@ export function ChatView({ chat }: { chat: Chat }) {
   const empty = messages.length === 0;
   const composer = chat.closed ? (
     <div className="flex items-center justify-between gap-3 rounded-2xl border border-ok/40 bg-ok/[0.06] px-4 py-3 text-[13.5px]">
-      <span><span className="font-medium text-ok">Challenge complete.</span> This thread is closed.</span>
+      <span><span className="font-medium text-ok">Challenge graded.</span> This thread is closed.</span>
       <button onClick={() => newChat(null)} className="rounded-lg bg-ink px-3 py-1.5 text-[13px] font-medium text-bg hover:bg-black">New chat</button>
     </div>
   ) : (
