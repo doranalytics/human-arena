@@ -53,7 +53,7 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
             <div className="mt-3 flex flex-wrap gap-1.5">
               <span className="text-[12.5px] text-ink-3">Unlocked</span>
               {r.badges.map((b) => (
-                <SkillPill key={b} id={b} size="md" earned />
+                <SkillPill key={b} id={b} size="md" earned onClick={() => openDialog({ kind: "leaderboard", tab: "progress" })} />
               ))}
             </div>
           )}

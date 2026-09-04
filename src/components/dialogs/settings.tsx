@@ -284,14 +284,15 @@ function fmtShort(iso?: string) {
 function Skills() {
   const custom = useStore((s) => s.skills);
   const [creating, setCreating] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [prompt, setPrompt] = useState("");
   const slug = name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "");
   const taken = [...BUILTIN_SKILLS, ...custom].some((s) => s.name === slug);
   const rows = [
-    ...custom.map((s) => ({ id: s.id, name: s.name, desc: s.description, date: fmtShort(s.createdAt), author: "You", custom: true })),
-    ...BUILTIN_SKILLS.map((s) => ({ id: s.id, name: s.name, desc: s.description, date: "9/2/26", author: "Human Arena", custom: false })),
+    ...custom.map((s) => ({ id: s.id, name: s.name, desc: s.description, prompt: s.prompt, date: fmtShort(s.createdAt), author: "You", custom: true })),
+    ...BUILTIN_SKILLS.map((s) => ({ id: s.id, name: s.name, desc: s.description, prompt: s.prompt, date: "9/2/26", author: "Human Arena", custom: false })),
   ];
   return (
     <div>
@@ -325,11 +326,20 @@ function Skills() {
         <span>Skill</span><span>Last updated</span><span>Author</span><span />
       </div>
       {rows.map((r) => (
-        <div key={r.id} className="grid grid-cols-[1fr_110px_120px_32px] items-center gap-2 border-b border-line py-3 text-[14px]">
-          <div className="min-w-0"><div className="truncate font-medium">{r.name}</div><div className="truncate text-[12.5px] text-ink-3">{r.desc}</div></div>
-          <span className="text-ink-2 tabular-nums">{r.date}</span>
-          <span className="text-ink-2">{r.author}</span>
-          {r.custom ? <button onClick={() => deleteSkill(r.id)} className="justify-self-end rounded p-1 text-ink-3 hover:bg-bg-3 hover:text-bad" title="Delete"><Trash2 size={14} /></button> : <span />}
+        <div key={r.id} className="border-b border-line">
+          <div role="button" tabIndex={0} onClick={() => setOpenId(openId === r.id ? null : r.id)} onKeyDown={(e) => e.key === "Enter" && setOpenId(openId === r.id ? null : r.id)} className="grid cursor-pointer grid-cols-[1fr_110px_120px_32px] items-center gap-2 py-3 text-[14px] hover:bg-bg-2/60">
+            <div className="min-w-0"><div className="truncate font-medium">/{r.name}</div><div className="truncate text-[12.5px] text-ink-3">{r.desc}</div></div>
+            <span className="text-ink-2 tabular-nums">{r.date}</span>
+            <span className="text-ink-2">{r.author}</span>
+            {r.custom ? <button onClick={(e) => { e.stopPropagation(); deleteSkill(r.id); }} className="justify-self-end rounded p-1 text-ink-3 hover:bg-bg-3 hover:text-bad" title="Delete"><Trash2 size={14} /></button> : <span />}
+          </div>
+          {openId === r.id && (
+            <div className="mb-3 rounded-lg bg-bg-2 px-3.5 py-3 text-[13px] leading-relaxed text-ink-2">
+              <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-ink-3">What it tells the assistant</div>
+              {r.prompt}
+              <div className="mt-2 text-[12px] text-ink-3">Use it by typing <span className="rounded bg-bg-3 px-1 font-mono">/{r.name}</span> in the message box.</div>
+            </div>
+          )}
         </div>
       ))}
     </div>

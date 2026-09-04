@@ -91,7 +91,7 @@ export function Arena() {
       <ChallengesDialog open={dialog?.kind === "challenges"} />
       {dialog?.kind === "brief" && <BriefDialog open slug={dialog.slug} />}
       {dialog?.kind === "result" && <ResultDialog open slug={dialog.slug} />}
-      <LeaderboardDialog open={dialog?.kind === "leaderboard"} />
+      {dialog?.kind === "leaderboard" && <LeaderboardDialog open initialTab={dialog.tab} />}
       {dialog?.kind === "settings" && <SettingsDialog key={dialog.section ?? "general"} section={dialog.section ?? "general"} />}
       <NewProjectDialog open={dialog?.kind === "new-project"} />
       {dialog?.kind === "quit" && <QuitDialog />}

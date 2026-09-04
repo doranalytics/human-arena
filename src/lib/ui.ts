@@ -6,7 +6,7 @@ export type DialogKind =
   | { kind: "challenges" }
   | { kind: "brief"; slug: string }
   | { kind: "result"; slug: string }
-  | { kind: "leaderboard" }
+  | { kind: "leaderboard"; tab?: "board" | "progress" }
   | { kind: "settings"; section?: SettingsSection }
   | { kind: "new-project" }
   | { kind: "quit" };

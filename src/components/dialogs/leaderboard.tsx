@@ -101,9 +101,9 @@ function MemberCard({ row, onClose }: { row: Row; onClose: () => void }) {
   );
 }
 
-export function LeaderboardDialog({ open }: { open: boolean }) {
+export function LeaderboardDialog({ open, initialTab }: { open: boolean; initialTab?: "board" | "progress" }) {
   const [board, setBoard] = useState<"all" | "week">("week");
-  const [tab, setTab] = useState<"board" | "progress">("board");
+  const [tab, setTab] = useState<"board" | "progress">(initialTab ?? "board");
   const [q, setQ] = useState("");
   const [openRow, setOpenRow] = useState<Row | null>(null);
   const [data, setData] = useState<{ board: string; rows: Row[]; live: boolean; at: number } | null>(null);
