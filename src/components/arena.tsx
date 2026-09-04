@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { useStore, hydrate, importResults, newChat, updateSettings } from "@/lib/store";
+import { useStore, hydrate, importResults, newChat } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Logo } from "./icons";
 import { UpdateBar } from "./update-bar";
@@ -28,7 +28,6 @@ export function Arena() {
   const chat = useStore((s) => s.chats.find((c) => c.id === s.activeChatId) ?? null);
   const project = useStore((s) => s.projects.find((p) => p.id === s.activeProjectId) ?? null);
   const dialog = useUI((s) => s.dialog);
-  const product = useStore((s) => s.settings.product);
   const onboarded = useStore((s) => s.settings.onboarded);
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const page = useUI((s) => s.page);
@@ -63,19 +62,6 @@ export function Arena() {
         <span className="font-serif text-[13px] font-semibold tracking-tight">Human Arena</span>
         <span className="text-bg/40">·</span>
         <span className="text-bg/80">Safe training environment</span>
-        <div className="absolute right-2 top-1 flex items-center gap-1 rounded-md bg-white/10 p-0.5 text-[11.5px]" title="Which assistant the arena looks like">
-          {(["claude", "chatgpt"] as const).map((p) => (
-            <button
-              key={p}
-              disabled={p === "chatgpt"}
-              onClick={() => updateSettings({ product: p })}
-              title={p === "chatgpt" ? "ChatGPT skin coming next" : undefined}
-              className={cn("rounded px-2 py-0.5 font-medium transition disabled:cursor-not-allowed disabled:opacity-40", product === p ? "bg-bg text-ink" : "text-bg/80 hover:text-bg")}
-            >
-              {p === "claude" ? "Claude" : "ChatGPT"}
-            </button>
-          ))}
-        </div>
       </div>
       <UpdateBar />
       <div className="flex min-h-0 flex-1">
