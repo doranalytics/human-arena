@@ -1,7 +1,6 @@
 "use client";
 import { useEffect } from "react";
 import { useStore, hydrate, importResults, newChat } from "@/lib/store";
-import { cn } from "@/lib/utils";
 import { Logo } from "./icons";
 import { UpdateBar } from "./update-bar";
 import { useUI, closeDialog, toast } from "@/lib/ui";
