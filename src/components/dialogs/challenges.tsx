@@ -94,7 +94,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
           ) : attempt?.slug === slug ? (
             <Button onClick={closeDialog}>Back to it</Button>
           ) : (
-            <Button onClick={start} disabled={starting} className="bg-clay hover:bg-clay-dark">{starting ? "Starting…" : "Start the clock"}</Button>
+            <Button onClick={start} disabled={starting} className="bg-clay hover:bg-clay-dark">{starting ? "Starting…" : <>Start <span className="ml-1 font-normal text-white/75">· {c.points} pts</span></>}</Button>
           )}
         </>
       }
@@ -112,13 +112,6 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
           <span>once the clock starts</span>
         </div>
       )}
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12.5px] text-ink-3">
-        <span>{c.points} pts</span>
-        <span>·</span>
-        {c.badges.map((b) => (
-          <SkillPill key={b} id={b} size="md" />
-        ))}
-      </div>
     </Dialog>
   );
 }
