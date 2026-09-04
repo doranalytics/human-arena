@@ -99,8 +99,8 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
         </>
       }
     >
-      <div className="mb-4"><LearnCard text={c.hook} /></div>
       <BriefBody brief={c.brief} />
+      <div className="mt-4"><LearnCard text={c.hook} /></div>
       {c.materials && c.materials.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12px] text-ink-3">
           <span>You get</span>
