@@ -82,7 +82,7 @@ export function ChatView({ chat }: { chat: Chat }) {
         }
       }
     }
-  }, [messages, chat.id]);
+  }, [messages, chat.id, chat.projectId]);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages, status]);

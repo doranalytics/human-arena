@@ -39,13 +39,6 @@ interface Props {
 export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, memoryOn, setMemoryOn, projectName, locked, freeLeft, clearOn }: Props) {
   const [text, setText] = useState("");
   const dictated = useRef(false);
-  const lastClear = useRef(clearOn);
-  useEffect(() => {
-    if (lastClear.current === clearOn) return;
-    lastClear.current = clearOn;
-    setText("");
-    setFiles([]);
-  }, [clearOn]);
   const dictation = useDictation((t) => { dictated.current = true; setText((cur) => (cur ? cur.replace(/\s*$/, " ") : "") + t); });
   const [files, setFiles] = useState<File[]>([]);
   const [plusOpen, setPlusOpen] = useState(false);
@@ -53,6 +46,13 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
   const [effortOpen, setEffortOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [slashIdx, setSlashIdx] = useState(0);
+  const lastClear = useRef(clearOn);
+  useEffect(() => {
+    if (lastClear.current === clearOn) return;
+    lastClear.current = clearOn;
+    setText("");
+    setFiles([]);
+  }, [clearOn]);
   const fileInput = useRef<HTMLInputElement>(null);
   const imageInput = useRef<HTMLInputElement>(null);
   const ta = useRef<HTMLTextAreaElement>(null);
