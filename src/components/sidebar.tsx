@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, PanelLeft, Trash2, Pin, PinOff, Swords, Pencil, FolderInput, Clock, Check } from "lucide-react";
-import { useStore, newChat, openChat, openProject, deleteChat, togglePin, renameChat, moveChatToGroup, createGroup } from "@/lib/store";
+import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, ChevronRight, PanelLeft, Trash2, Pin, PinOff, Swords, Pencil, Folder, Clock, Check, MoreHorizontal, Archive, ArchiveRestore } from "lucide-react";
+import { useStore, newChat, openChat, openProject, deleteChat, togglePin, renameChat, moveChatToGroup, createGroup, setChatProject, setArchived, track } from "@/lib/store";
 import { openDialog, toggleSidebar, setPage, useUI } from "@/lib/ui";
 import { useSession } from "@/lib/session";
 import { tierFor } from "@/lib/tiers";
@@ -20,11 +20,22 @@ function NavItem({ icon, label, onClick, active }: { icon: React.ReactNode; labe
   );
 }
 
+function Item({ icon, label, onClick, danger, more, right }: { icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean; more?: boolean; right?: string }) {
+  return (
+    <button onClick={onClick} className={cn("flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-[13.5px] hover:bg-bg-2", danger ? "text-[#a33a1e]" : "text-ink")}>
+      <span className={danger ? "text-[#a33a1e]" : "text-ink-2"}>{icon}</span>
+      <span className="flex-1">{label}</span>
+      {more ? <ChevronRight size={14} className="text-ink-3" /> : right ? <span className="text-[12px] text-ink-3">{right}</span> : null}
+    </button>
+  );
+}
+
 function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () => void }) {
   const groups = useStore((s) => s.groups);
+  const projects = useStore((s) => s.projects);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(c.title);
-  const [grouping, setGrouping] = useState(false);
+  const [menu, setMenu] = useState<null | "root" | "project" | "group">(null);
   const [newGroup, setNewGroup] = useState("");
   function commit() {
     const t = name.trim();
@@ -33,7 +44,7 @@ function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () =
   }
   return (
     <div className="relative">
-      <div className={cn("group flex h-8 items-center rounded-lg pr-1 hover:bg-bg-3", active && "bg-bg-3")}>
+      <div className={cn("group flex h-8 items-center rounded-lg pr-1 hover:bg-bg-3", (active || menu) && "bg-bg-3")}>
         {editing ? (
           <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEditing(false); }} className="mx-1 h-6 min-w-0 flex-1 rounded border border-line bg-bg px-1.5 text-[13px] outline-none" />
         ) : (
@@ -43,26 +54,53 @@ function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () =
           </button>
         )}
         {!editing && (
-          <>
-            <button onClick={() => { setName(c.title); setEditing(true); }} className="hidden rounded p-1 text-ink-3 hover:text-ink group-hover:block" title="Rename"><Pencil size={13} /></button>
-            <button onClick={() => togglePin(c.id)} className="hidden rounded p-1 text-ink-3 hover:text-ink group-hover:block" title={c.pinned ? "Unpin" : "Pin"}>{c.pinned ? <PinOff size={13} /> : <Pin size={13} />}</button>
-            <button onClick={() => setGrouping((v) => !v)} className="hidden rounded p-1 text-ink-3 hover:text-ink group-hover:block" title="Move to group"><FolderInput size={13} /></button>
-            <button onClick={() => deleteChat(c.id)} className="hidden rounded p-1 text-ink-3 hover:text-bad group-hover:block" title="Delete chat"><Trash2 size={13} /></button>
-          </>
+          <button onClick={() => setMenu(menu ? null : "root")} className={cn("rounded p-1 text-ink-3 hover:bg-bg-2 hover:text-ink", menu ? "block" : "hidden group-hover:block")} title="More">
+            <MoreHorizontal size={14} />
+          </button>
         )}
       </div>
-      {grouping && (
-        <div className="fade-up absolute left-2 right-2 top-8 z-30 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10">
-          <div className="px-2 py-1 text-[11px] font-medium text-ink-3">Move to group</div>
-          {groups.map((g) => (
-            <button key={g.id} onClick={() => { moveChatToGroup(c.id, g.id); setGrouping(false); }} className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-[13px] hover:bg-bg-2">{g.name} {c.groupId === g.id && <Check size={13} />}</button>
-          ))}
-          {c.groupId && <button onClick={() => { moveChatToGroup(c.id, null); setGrouping(false); }} className="w-full rounded-lg px-2 py-1.5 text-left text-[13px] text-ink-2 hover:bg-bg-2">No group</button>}
-          <form className="mt-1 flex gap-1 border-t border-line pt-1" onSubmit={(e) => { e.preventDefault(); if (!newGroup.trim()) return; const g = createGroup(newGroup); moveChatToGroup(c.id, g.id); setNewGroup(""); setGrouping(false); }}>
-            <input value={newGroup} onChange={(e) => setNewGroup(e.target.value)} placeholder="New group…" className="h-7 min-w-0 flex-1 rounded border border-line bg-bg px-1.5 text-[12.5px] outline-none" />
-            <button type="submit" className="h-7 rounded bg-ink px-2 text-[12px] text-bg">Add</button>
-          </form>
-        </div>
+      {menu && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setMenu(null)} />
+          <div className="fade-up absolute right-1 top-8 z-40 w-60 rounded-xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10">
+            {menu === "root" && (
+              <>
+                <Item icon={c.pinned ? <PinOff size={15} /> : <Pin size={15} />} label={c.pinned ? "Unpin" : "Pin"} onClick={() => { togglePin(c.id); setMenu(null); }} />
+                <Item icon={<Pencil size={15} />} label="Rename" onClick={() => { setName(c.title); setEditing(true); setMenu(null); }} />
+                <Item icon={<FolderOpen size={15} />} label="Add to project" more onClick={() => setMenu("project")} />
+                <Item icon={<Folder size={15} />} label="Move to group" more onClick={() => setMenu("group")} />
+                <div className="my-1 border-t border-line" />
+                <Item icon={c.archived ? <ArchiveRestore size={15} /> : <Archive size={15} />} label={c.archived ? "Unarchive" : "Archive"} onClick={() => { setArchived(c.id, !c.archived); setMenu(null); }} />
+                <Item icon={<Trash2 size={15} />} label="Delete" danger onClick={() => { deleteChat(c.id); setMenu(null); }} />
+              </>
+            )}
+            {menu === "project" && (
+              <>
+                <button onClick={() => setMenu("root")} className="mb-1 flex w-full items-center gap-1 px-2 py-1 text-[12px] text-ink-3 hover:text-ink"><ChevronRight size={12} className="rotate-180" /> Add to project</button>
+                {projects.length === 0 && <div className="px-2.5 py-1.5 text-[12.5px] text-ink-3">No projects yet.</div>}
+                {projects.map((p) => (
+                  <Item key={p.id} icon={<FolderOpen size={15} />} label={p.name} right={c.projectId === p.id ? "current" : undefined} onClick={() => { setChatProject(c.id, p.id); track("added_to_project", p.id); setMenu(null); }} />
+                ))}
+                {c.projectId && <Item icon={<MessageSquare size={15} />} label="Remove from project" onClick={() => { setChatProject(c.id, null); setMenu(null); }} />}
+                <div className="my-1 border-t border-line" />
+                <Item icon={<Plus size={15} />} label="New project…" onClick={() => { setMenu(null); openDialog({ kind: "new-project" }); }} />
+              </>
+            )}
+            {menu === "group" && (
+              <>
+                <button onClick={() => setMenu("root")} className="mb-1 flex w-full items-center gap-1 px-2 py-1 text-[12px] text-ink-3 hover:text-ink"><ChevronRight size={12} className="rotate-180" /> Move to group</button>
+                {groups.map((g) => (
+                  <Item key={g.id} icon={<Folder size={15} />} label={g.name} right={c.groupId === g.id ? "current" : undefined} onClick={() => { moveChatToGroup(c.id, g.id); setMenu(null); }} />
+                ))}
+                {c.groupId && <Item icon={<MessageSquare size={15} />} label="No group" onClick={() => { moveChatToGroup(c.id, null); setMenu(null); }} />}
+                <form className="mt-1 flex gap-1 border-t border-line pt-1.5" onSubmit={(e) => { e.preventDefault(); if (!newGroup.trim()) return; const g = createGroup(newGroup); moveChatToGroup(c.id, g.id); setNewGroup(""); setMenu(null); }}>
+                  <input value={newGroup} onChange={(e) => setNewGroup(e.target.value)} placeholder="New group…" className="h-7 min-w-0 flex-1 rounded border border-line bg-bg px-1.5 text-[12.5px] outline-none" />
+                  <button type="submit" className="h-7 rounded bg-ink px-2 text-[12px] text-bg">Add</button>
+                </form>
+              </>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
@@ -85,7 +123,9 @@ export function Sidebar() {
   const avatar = session.me?.avatar || settings.avatar;
   const pts = totalPoints(results);
   const tier = tierFor(pts);
-  const list = chats.filter((c) => !c.draft && (!q || c.title.toLowerCase().includes(q.toLowerCase())));
+  const list = chats.filter((c) => !c.draft && !c.archived && (!q || c.title.toLowerCase().includes(q.toLowerCase())));
+  const archived = chats.filter((c) => c.archived && !c.draft);
+  const [showArchived, setShowArchived] = useState(false);
   const groups = useStore((s) => s.groups);
   const pinned = list.filter((c) => c.pinned);
   const rest = list.filter((c) => !c.pinned && !c.groupId);
@@ -153,6 +193,12 @@ export function Sidebar() {
         {rest.map((c) => (
           <ChatRow key={c.id} c={c} active={!page && activeChatId === c.id} onOpen={() => open(c.id)} />
         ))}
+        {archived.length > 0 && (
+          <div className="mt-5">
+            <button onClick={() => setShowArchived((v) => !v)} className="flex w-full items-center gap-1 px-2 text-[12px] font-medium text-ink-3 hover:text-ink"><ChevronRight size={12} className={cn("transition", showArchived && "rotate-90")} /> Archived · {archived.length}</button>
+            {showArchived && archived.map((c) => <ChatRow key={c.id} c={c} active={!page && activeChatId === c.id} onOpen={() => open(c.id)} />)}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-1 border-t border-line px-2.5 py-2">

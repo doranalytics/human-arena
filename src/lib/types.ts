@@ -37,6 +37,7 @@ export interface Chat {
   /** ran in Cowork mode */
   cowork?: boolean;
   groupId?: string | null;
+  archived?: boolean;
   /** a prompt to send automatically when the chat opens (scheduled runs) */
   pendingPrompt?: string;
 }

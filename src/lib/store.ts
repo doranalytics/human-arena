@@ -139,6 +139,9 @@ export function togglePin(id: string) {
   setState((s) => ({ chats: s.chats.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)) }));
   if (!was) track("chat_pinned", id);
 }
+export function setArchived(id: string, archived: boolean) {
+  setState((s) => ({ chats: s.chats.map((c) => (c.id === id ? { ...c, archived, pinned: archived ? false : c.pinned } : c)), activeChatId: archived && s.activeChatId === id ? null : s.activeChatId }));
+}
 export function createGroup(name: string): ChatGroup {
   const g: ChatGroup = { id: uid("g"), name: name.trim() || "Group" };
   setState((s) => ({ groups: [...s.groups, g] }));

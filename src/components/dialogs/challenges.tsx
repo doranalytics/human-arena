@@ -3,31 +3,24 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Check, Clock, Lock, Swords, Trophy, FileText, Quote, Table2 } from "lucide-react";
 import { Dialog, Button } from "../dialog";
-import { CHALLENGES, getChallenge, TOTAL_POINTS } from "@/lib/arena/challenges";
+import { CHALLENGES, getChallenge } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
 import { SkillPill } from "../skill-pill";
 import { SkillIcon } from "../skill-icon";
 import { LearnCard } from "../learn-card";
-import { useStore, startAttempt, newChat, totalPoints } from "@/lib/store";
+import { useStore, startAttempt, newChat } from "@/lib/store";
 import { openDialog, closeDialog, toast } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 
 export function ChallengesDialog({ open }: { open: boolean }) {
   const results = useStore((s) => s.results);
   const attempt = useStore((s) => s.attempt);
-  const pts = totalPoints(results);
   const done = Object.values(results).filter((r) => r.passed).length;
   return (
     <Dialog open={open} onClose={closeDialog} wide title={<span className="flex items-center gap-2"><Swords size={16} className="text-clay" /> Challenges</span>}>
       <div className="mb-3 flex items-end justify-between gap-4">
-        <div>
-          <div className="font-serif text-[20px]">Learn by doing. Timed, graded, no consequences.</div>
-          <div className="mt-0.5 text-[12.5px] text-ink-2">Pick one. Everything you need appears when the clock starts.</div>
-        </div>
-        <div className="shrink-0 text-right">
-          <div className="text-[22px] font-medium tabular-nums">{pts}<span className="text-[13px] text-ink-3"> / {TOTAL_POINTS}</span></div>
-          <div className="text-[12px] text-ink-3">{done} of {CHALLENGES.length} done</div>
-        </div>
+        <div className="font-serif text-[20px]">Learn by doing.</div>
+        <div className="text-[13px] text-ink-3">{done} of {CHALLENGES.length} done</div>
       </div>
       <div className="grid gap-1.5 sm:grid-cols-2">
         {[...CHALLENGES].sort((a, b) => a.order - b.order).map((c) => {
