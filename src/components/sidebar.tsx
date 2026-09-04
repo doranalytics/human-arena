@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, PanelLeft, Trash2, Pin, PinOff, Swords } from "lucide-react";
-import { useStore, newChat, openChat, openProject, deleteChat, togglePin } from "@/lib/store";
+import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, PanelLeft, Trash2, Pin, PinOff, Swords, Pencil, FolderInput, Clock, Check } from "lucide-react";
+import { useStore, newChat, openChat, openProject, deleteChat, togglePin, renameChat, moveChatToGroup, createGroup } from "@/lib/store";
 import { openDialog, toggleSidebar, setPage, useUI } from "@/lib/ui";
 import { useSession } from "@/lib/session";
 import { tierFor } from "@/lib/tiers";
@@ -21,18 +21,49 @@ function NavItem({ icon, label, onClick, active }: { icon: React.ReactNode; labe
 }
 
 function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () => void }) {
+  const groups = useStore((s) => s.groups);
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(c.title);
+  const [grouping, setGrouping] = useState(false);
+  const [newGroup, setNewGroup] = useState("");
+  function commit() {
+    const t = name.trim();
+    if (t && t !== c.title) renameChat(c.id, t);
+    setEditing(false);
+  }
   return (
-    <div className={cn("group flex h-8 items-center rounded-lg pr-1 hover:bg-bg-3", active && "bg-bg-3")}>
-      <button onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-2.5 px-2 text-left text-[13.5px]">
-        <MessageSquare size={14} className="shrink-0 text-ink-3" />
-        <span className="truncate">{c.title}</span>
-      </button>
-      <button onClick={() => togglePin(c.id)} className="hidden rounded p-1 text-ink-3 hover:text-ink group-hover:block" title={c.pinned ? "Unpin" : "Pin"}>
-        {c.pinned ? <PinOff size={13} /> : <Pin size={13} />}
-      </button>
-      <button onClick={() => deleteChat(c.id)} className="hidden rounded p-1 text-ink-3 hover:text-bad group-hover:block" title="Delete chat">
-        <Trash2 size={13} />
-      </button>
+    <div className="relative">
+      <div className={cn("group flex h-8 items-center rounded-lg pr-1 hover:bg-bg-3", active && "bg-bg-3")}>
+        {editing ? (
+          <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEditing(false); }} className="mx-1 h-6 min-w-0 flex-1 rounded border border-line bg-bg px-1.5 text-[13px] outline-none" />
+        ) : (
+          <button onClick={onOpen} onDoubleClick={() => { setName(c.title); setEditing(true); }} className="flex min-w-0 flex-1 items-center gap-2.5 px-2 text-left text-[13.5px]">
+            <MessageSquare size={14} className="shrink-0 text-ink-3" />
+            <span className="truncate">{c.title}</span>
+          </button>
+        )}
+        {!editing && (
+          <>
+            <button onClick={() => { setName(c.title); setEditing(true); }} className="hidden rounded p-1 text-ink-3 hover:text-ink group-hover:block" title="Rename"><Pencil size={13} /></button>
+            <button onClick={() => togglePin(c.id)} className="hidden rounded p-1 text-ink-3 hover:text-ink group-hover:block" title={c.pinned ? "Unpin" : "Pin"}>{c.pinned ? <PinOff size={13} /> : <Pin size={13} />}</button>
+            <button onClick={() => setGrouping((v) => !v)} className="hidden rounded p-1 text-ink-3 hover:text-ink group-hover:block" title="Move to group"><FolderInput size={13} /></button>
+            <button onClick={() => deleteChat(c.id)} className="hidden rounded p-1 text-ink-3 hover:text-bad group-hover:block" title="Delete chat"><Trash2 size={13} /></button>
+          </>
+        )}
+      </div>
+      {grouping && (
+        <div className="fade-up absolute left-2 right-2 top-8 z-30 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10">
+          <div className="px-2 py-1 text-[11px] font-medium text-ink-3">Move to group</div>
+          {groups.map((g) => (
+            <button key={g.id} onClick={() => { moveChatToGroup(c.id, g.id); setGrouping(false); }} className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-[13px] hover:bg-bg-2">{g.name} {c.groupId === g.id && <Check size={13} />}</button>
+          ))}
+          {c.groupId && <button onClick={() => { moveChatToGroup(c.id, null); setGrouping(false); }} className="w-full rounded-lg px-2 py-1.5 text-left text-[13px] text-ink-2 hover:bg-bg-2">No group</button>}
+          <form className="mt-1 flex gap-1 border-t border-line pt-1" onSubmit={(e) => { e.preventDefault(); if (!newGroup.trim()) return; const g = createGroup(newGroup); moveChatToGroup(c.id, g.id); setNewGroup(""); setGrouping(false); }}>
+            <input value={newGroup} onChange={(e) => setNewGroup(e.target.value)} placeholder="New group…" className="h-7 min-w-0 flex-1 rounded border border-line bg-bg px-1.5 text-[12.5px] outline-none" />
+            <button type="submit" className="h-7 rounded bg-ink px-2 text-[12px] text-bg">Add</button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
@@ -55,8 +86,10 @@ export function Sidebar() {
   const pts = totalPoints(results);
   const tier = tierFor(pts);
   const list = chats.filter((c) => !c.draft && (!q || c.title.toLowerCase().includes(q.toLowerCase())));
+  const groups = useStore((s) => s.groups);
   const pinned = list.filter((c) => c.pinned);
-  const rest = list.filter((c) => !c.pinned);
+  const rest = list.filter((c) => !c.pinned && !c.groupId);
+  const grouped = groups.map((g) => ({ g, chats: list.filter((c) => !c.pinned && c.groupId === g.id) })).filter((x) => x.chats.length);
   const open = (id: string) => {
     setPage(null);
     openChat(id);
@@ -72,6 +105,7 @@ export function Sidebar() {
         <NavItem icon={<Plus size={16} />} label="New" onClick={() => { setPage(null); newChat(activeProjectId); }} active={!page && !activeChatId && !activeProjectId && !attempt} />
         <NavItem icon={<Swords size={16} className="text-clay" />} label="Challenges" onClick={() => openDialog({ kind: "challenges" })} />
         <NavItem icon={<FolderOpen size={16} />} label="Projects" onClick={() => setPage("projects")} active={page === "projects"} />
+        <NavItem icon={<Clock size={16} />} label="Scheduled" onClick={() => setPage("scheduled")} active={page === "scheduled"} />
         <NavItem icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings", section: "skills" })} />
       </div>
 
@@ -98,6 +132,15 @@ export function Sidebar() {
             ))}
           </>
         )}
+
+        {grouped.map(({ g, chats: gc }) => (
+          <div key={g.id}>
+            <div className="mb-1 mt-5 px-2 text-[12px] font-medium text-ink-3">{g.name}</div>
+            {gc.map((c) => (
+              <ChatRow key={c.id} c={c} active={!page && activeChatId === c.id} onOpen={() => open(c.id)} />
+            ))}
+          </div>
+        ))}
 
         <div className="mb-1 mt-5 flex items-center justify-between px-2">
           <span className="text-[12px] font-medium text-ink-3">Chats and tasks</span>

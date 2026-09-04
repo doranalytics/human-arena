@@ -13,9 +13,9 @@ export interface ConnectorDef {
 export type ConnectorId = "gmail" | "drive" | "warehouse" | "calendar";
 
 export const CONNECTORS: ConnectorDef[] = [
-  { id: "gmail", name: "Gmail", vendor: "Google", blurb: "Search and read your Halden inbox.", tools: ["search_gmail", "read_email"] },
+  { id: "gmail", name: "Gmail", vendor: "Google", blurb: "Search and read your inbox.", tools: ["search_gmail", "read_email"] },
   { id: "drive", name: "Google Drive", vendor: "Google", blurb: "Find and read documents, sheets and decks.", tools: ["search_drive", "read_drive_file"] },
-  { id: "warehouse", name: "Halden Data Warehouse", vendor: "Halden IT", blurb: "Query the company's financial and sales tables.", tools: ["list_tables", "read_table"] },
+  { id: "warehouse", name: "Data warehouse", vendor: "", blurb: "Query the company's financial and sales tables.", tools: ["list_tables", "read_table"] },
   { id: "calendar", name: "Google Calendar", vendor: "Google", blurb: "See upcoming meetings and deadlines.", tools: ["list_events"] },
 ];
 

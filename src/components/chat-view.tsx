@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage, lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { ArrowUp, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
-import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn, markCowork } from "@/lib/store";
+import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn, markCowork, clearPendingPrompt } from "@/lib/store";
 import { Message } from "./message";
 import { Composer, type ComposerSubmit } from "./composer";
 import { Spark } from "./icons";
@@ -55,7 +55,8 @@ export function ChatView({ chat }: { chat: Chat }) {
   const trackedTools = useRef<Set<string>>(new Set());
   const [webSearch, setWebSearch] = useState(false);
   const [research, setResearch] = useState(false);
-  const [cowork, setCowork] = useState(false);
+  const [cowork, setCowork] = useState(!!chat.cowork);
+  const [memoryOn, setMemoryOn] = useState(true);
 
   // Persist and observe. Connector use is read off the assistant's tool parts.
   useEffect(() => {
@@ -71,10 +72,11 @@ export function ChatView({ chat }: { chat: Chat }) {
         if (c) track("connector_used", c);
         if (name === "read_link") track("link_read");
         if (name === "ask_user") track("ask_user_used");
+        if (name === "send_email") track("email_sent");
         if (name === "remember") {
           const out = (p as { output?: { saved?: boolean; fact?: string } }).output;
           if (out?.saved && out.fact) {
-            addMemory(out.fact);
+            addMemory(out.fact, chat.projectId);
             track("memory_saved");
           }
         }
@@ -116,13 +118,25 @@ export function ChatView({ chat }: { chat: Chat }) {
             project: project ? { name: project.name, instructions: project.instructions, files: project.files.map((f) => ({ name: f.name, text: f.text })) } : null,
             userName: name,
             instructions: st.settings.instructions ?? "",
-            memories: st.settings.memories ?? [],
+            memories: memoryOn ? [...(st.settings.memories ?? []), ...(project?.memories ?? [])] : [],
+            memoryOff: !memoryOn,
           },
         },
       );
     },
-    [sendMessage, webSearch, research, cowork, project, customSkills, name, chat.id],
+    [sendMessage, webSearch, research, cowork, memoryOn, project, customSkills, name, chat.id],
   );
+
+  // Scheduled runs open with a prompt to send on their own.
+  const pendingSent = useRef(false);
+  useEffect(() => {
+    if (!chat.pendingPrompt || pendingSent.current) return;
+    pendingSent.current = true;
+    const prompt = chat.pendingPrompt;
+    clearPendingPrompt(chat.id);
+    void onSubmit({ text: prompt, files: [], skill: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat.id, chat.pendingPrompt]);
 
   const empty = messages.length === 0;
   const composer = chat.closed ? (
@@ -131,7 +145,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       <button onClick={() => newChat(null)} className="rounded-lg bg-ink px-3 py-1.5 text-[13px] font-medium text-bg hover:bg-black">New chat</button>
     </div>
   ) : (
-    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} projectName={project?.name ?? null} locked={!attempt && freeLeft <= 0} freeLeft={attempt ? null : freeLeft} />
+    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} memoryOn={memoryOn} setMemoryOn={(v) => { setMemoryOn(v); if (!v) track("memory_off"); }} projectName={project?.name ?? null} locked={!attempt && freeLeft <= 0} freeLeft={attempt ? null : freeLeft} clearOn={attempt?.id ?? "none"} />
   );
 
   if (empty && attempt && challenge)
@@ -162,7 +176,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-[760px] space-y-7 px-6 pb-8 pt-8">
           {messages.map((m, i) => (
-            <Message key={m.id} m={m} onToolOutput={(toolCallId, output) => addToolOutput({ tool: "ask_user", toolCallId, output })} streaming={busy && i === messages.length - 1 && m.role === "assistant"} />
+            <Message key={m.id} m={m} onExport={() => track("exported")} onToolOutput={(toolCallId, output) => addToolOutput({ tool: "ask_user", toolCallId, output })} streaming={busy && i === messages.length - 1 && m.role === "assistant"} />
           ))}
           {busy && messages[messages.length - 1]?.role === "user" && <Message m={{ id: "pending", role: "assistant", parts: [] }} streaming />}
           {error && <div className="rounded-lg border border-bad/30 bg-red-50 px-3 py-2 text-[13px] text-bad">Something went wrong: {error.message}</div>}

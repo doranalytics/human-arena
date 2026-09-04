@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useElapsed } from "@/lib/use-elapsed";
-import { PanelLeft, Swords, Trophy, Settings, Lightbulb, Flag, X } from "lucide-react";
-import { useStore, useHint, endAttempt, attemptChats, getState, newChat } from "@/lib/store";
+import { PanelLeft, Swords, Trophy, Settings, Lightbulb, Flag, X, FolderPlus, Zap, ChevronDown } from "lucide-react";
+import { useStore, useHint, endAttempt, attemptChats, getState, newChat, setChatProject, createSkill, track } from "@/lib/store";
 import { openDialog, toggleSidebar, useUI, toast } from "@/lib/ui";
 import { getChallenge } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
@@ -56,6 +56,7 @@ export function TopBar({ title }: { title: string }) {
         </button>
       )}
       <div className="min-w-0 flex-1 truncate text-[13.5px] text-ink-2">{title}</div>
+      <ThreadActions />
 
       {attempt && c ? (
         <div className="flex items-center gap-1.5">
@@ -63,7 +64,7 @@ export function TopBar({ title }: { title: string }) {
             <Swords size={14} className="text-clay" />
             <span className="max-w-[180px] truncate font-medium">{c.title}</span>
             <span className="tabular-nums text-ink-2">
-              {fmtClock(elapsed)} <span className="text-ink-3">/ {c.minutes}:00</span>
+              {fmtClock(elapsed)}
             </span>
           </button>
           <div className="relative">
@@ -116,5 +117,55 @@ export function TopBar({ title }: { title: string }) {
         </div>
       )}
     </header>
+  );
+}
+
+
+/** Add to project (any thread) and Save as skill (a Cowork thread that has run). */
+function ThreadActions() {
+  const chat = useStore((s) => s.chats.find((c) => c.id === s.activeChatId) ?? null);
+  const projects = useStore((s) => s.projects);
+  const skills = useStore((s) => s.skills);
+  const [open, setOpen] = useState(false);
+  if (!chat || chat.messages.length === 0) return null;
+  const firstPrompt = chat.messages.find((m) => m.role === "user")?.parts.filter((p) => p.type === "text").map((p) => (p as { text: string }).text).join(" ") ?? "";
+  const canSkill = !!chat.cowork && firstPrompt.trim().length > 0;
+  return (
+    <div className="mr-1 flex items-center gap-1">
+      {!chat.projectId && (
+        <div className="relative">
+          <button onClick={() => setOpen((v) => !v)} className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-[12.5px] text-ink-2 hover:bg-bg-3" title="Add this chat to a project">
+            <FolderPlus size={14} /> Add to project <ChevronDown size={12} className="text-ink-3" />
+          </button>
+          {open && (
+            <div className="fade-up absolute right-0 top-9 z-40 w-60 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10" onMouseLeave={() => setOpen(false)}>
+              {projects.length === 0 && <div className="px-2.5 py-2 text-[12.5px] text-ink-3">No projects yet.</div>}
+              {projects.map((p) => (
+                <button key={p.id} onClick={() => { setChatProject(chat.id, p.id); track("added_to_project", p.id); toast({ title: `Added to ${p.name}`, tone: "ok" }, 2500); setOpen(false); }} className="w-full truncate rounded-lg px-2.5 py-1.5 text-left text-[13px] hover:bg-bg-2">{p.name}</button>
+              ))}
+              <div className="my-1 border-t border-line" />
+              <button onClick={() => { setOpen(false); openDialog({ kind: "new-project" }); }} className="w-full rounded-lg px-2.5 py-1.5 text-left text-[13px] text-ink-2 hover:bg-bg-2">New project…</button>
+            </div>
+          )}
+        </div>
+      )}
+      {canSkill && (
+        <button
+          onClick={() => {
+            const base = chat.title.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "task";
+            let name = base;
+            let n = 2;
+            while (skills.some((s) => s.name === name)) name = `${base}-${n++}`;
+            createSkill({ name, description: `From a Cowork task: ${chat.title}`, prompt: firstPrompt });
+            track("skill_from_cowork", name);
+            toast({ title: `/${name} saved`, body: "Type it in any chat to run this task again.", tone: "ok" }, 4000);
+          }}
+          className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-[12.5px] text-ink-2 hover:bg-bg-3"
+          title="Turn this Cowork task into a slash command"
+        >
+          <Zap size={14} /> Save as skill
+        </button>
+      )}
+    </div>
   );
 }

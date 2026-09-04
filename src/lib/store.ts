@@ -6,7 +6,7 @@
  */
 import { useSyncExternalStore } from "react";
 import type { UIMessage } from "ai";
-import type { ArenaEvent, ArenaEventType, ArenaResult, Attempt, Chat, CustomSkill, Project, Settings } from "./types";
+import type { ChatGroup, Schedule, ArenaEvent, ArenaEventType, ArenaResult, Attempt, Chat, CustomSkill, Project, Settings } from "./types";
 import { uid } from "./utils";
 import type { ConnectorId } from "./connectors";
 
@@ -15,6 +15,8 @@ export interface State {
   projects: Project[];
   skills: CustomSkill[];
   connectors: ConnectorId[];
+  groups: ChatGroup[];
+  schedules: Schedule[];
   settings: Settings;
   attempt: Attempt | null;
   results: Record<string, ArenaResult>;
@@ -27,6 +29,8 @@ const KEY = "human-arena:v1";
 
 const initial: State = {
   chats: [],
+  groups: [],
+  schedules: [],
   projects: [],
   skills: [],
   connectors: [],
@@ -74,7 +78,7 @@ export function hydrate() {
       const saved = JSON.parse(raw) as Partial<State>;
       const chats = (saved.chats ?? []).filter((c) => !c.draft);
       const activeChatId = saved.activeChatId && chats.some((c) => c.id === saved.activeChatId) ? saved.activeChatId : null;
-      state = { ...initial, ...saved, chats, activeChatId, settings: { ...initial.settings, ...(saved.settings ?? {}) }, hydrated: true };
+      state = { ...initial, ...saved, chats, activeChatId, groups: saved.groups ?? [], schedules: saved.schedules ?? [], settings: { ...initial.settings, ...(saved.settings ?? {}) }, hydrated: true };
     } else state = { ...initial, hydrated: true };
   } catch {
     state = { ...initial, hydrated: true };
@@ -122,6 +126,7 @@ export function deleteChat(id: string) {
 }
 export function renameChat(id: string, title: string) {
   setState((s) => ({ chats: s.chats.map((c) => (c.id === id ? { ...c, title } : c)) }));
+  track("chat_renamed", id);
 }
 export function setChatProject(id: string, projectId: string | null) {
   setState((s) => ({ chats: s.chats.map((c) => (c.id === id ? { ...c, projectId } : c)), activeProjectId: projectId }));
@@ -130,7 +135,42 @@ export function markCowork(id: string) {
   setState((s) => ({ chats: s.chats.map((c) => (c.id === id && !c.cowork ? { ...c, cowork: true } : c)) }));
 }
 export function togglePin(id: string) {
+  const was = state.chats.find((c) => c.id === id)?.pinned;
   setState((s) => ({ chats: s.chats.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)) }));
+  if (!was) track("chat_pinned", id);
+}
+export function createGroup(name: string): ChatGroup {
+  const g: ChatGroup = { id: uid("g"), name: name.trim() || "Group" };
+  setState((s) => ({ groups: [...s.groups, g] }));
+  return g;
+}
+export function moveChatToGroup(chatId: string, groupId: string | null) {
+  setState((s) => ({ chats: s.chats.map((c) => (c.id === chatId ? { ...c, groupId } : c)) }));
+  if (groupId) track("chat_grouped", groupId);
+}
+export function createSchedule(sc: Omit<Schedule, "id" | "createdAt" | "runs">): Schedule {
+  const x: Schedule = { id: uid("sch"), createdAt: new Date().toISOString(), runs: [], ...sc };
+  setState((s) => ({ schedules: [x, ...s.schedules] }));
+  track("schedule_created", x.id);
+  return x;
+}
+export function deleteSchedule(id: string) {
+  setState((s) => ({ schedules: s.schedules.filter((x) => x.id !== id) }));
+}
+/** Runs a schedule now: opens a Cowork chat that sends the prompt itself. */
+export function runSchedule(id: string): Chat | null {
+  const sc = state.schedules.find((x) => x.id === id);
+  if (!sc) return null;
+  const c = newChat(sc.projectId, sc.name);
+  setState((s) => ({
+    chats: s.chats.map((x) => (x.id === c.id ? { ...x, cowork: true, pendingPrompt: sc.prompt, draft: false } : x)),
+    schedules: s.schedules.map((x) => (x.id === id ? { ...x, runs: [{ at: new Date().toISOString(), chatId: c.id }, ...x.runs] } : x)),
+  }));
+  track("schedule_run", id);
+  return c;
+}
+export function clearPendingPrompt(chatId: string) {
+  setState((s) => ({ chats: s.chats.map((c) => (c.id === chatId ? { ...c, pendingPrompt: undefined } : c)) }));
 }
 export function openChat(id: string | null) {
   const c = id ? state.chats.find((x) => x.id === id) : null;
@@ -199,14 +239,20 @@ export function consumeFreeTurn() {
     return { settings: { ...s.settings, freeTurns: { day: today(), used: used + 1 } } };
   });
 }
-export function addMemory(fact: string) {
+export function addMemory(fact: string, projectId?: string | null) {
   const f = fact.trim();
   if (!f) return;
   setState((s) => {
+    if (projectId) {
+      return { projects: s.projects.map((p) => (p.id === projectId && !(p.memories ?? []).includes(f) ? { ...p, memories: [...(p.memories ?? []), f].slice(-50) } : p)) };
+    }
     const cur = s.settings.memories ?? [];
     if (cur.includes(f)) return {};
     return { settings: { ...s.settings, memories: [...cur, f].slice(-50) } };
   });
+}
+export function removeProjectMemory(projectId: string, fact: string) {
+  setState((s) => ({ projects: s.projects.map((p) => (p.id === projectId ? { ...p, memories: (p.memories ?? []).filter((m) => m !== fact) } : p)) }));
 }
 export function removeMemory(fact: string) {
   setState((s) => ({ settings: { ...s.settings, memories: (s.settings.memories ?? []).filter((m) => m !== fact) } }));

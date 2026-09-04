@@ -20,7 +20,7 @@ export interface Toast {
   tone?: "ok" | "info" | "bad";
 }
 
-export type Page = "projects" | null;
+export type Page = "projects" | "scheduled" | null;
 
 interface UIState {
   dialog: DialogKind | null;

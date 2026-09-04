@@ -1,8 +1,8 @@
 "use client";
 import { useMemo, useRef, useState } from "react";
-import { FolderOpen, Plus, FileText, Trash2, MessageSquare } from "lucide-react";
+import { FolderOpen, Plus, FileText, Trash2, MessageSquare, Brain, X } from "lucide-react";
 import type { Project } from "@/lib/types";
-import { useStore, updateProject, addProjectFile, newChat, openChat, deleteProject } from "@/lib/store";
+import { useStore, updateProject, addProjectFile, newChat, openChat, deleteProject, removeProjectMemory } from "@/lib/store";
 import { Button, inputCls } from "./dialog";
 import { toast } from "@/lib/ui";
 import { relTime } from "@/lib/utils";
@@ -86,6 +86,18 @@ export function ProjectView({ project }: { project: Project }) {
                   </div>
                 ))}
               </div>
+            )}
+          </section>
+          <section>
+            <div className="mb-1.5 text-[12px] font-medium text-ink-3">Memory</div>
+            {(project.memories ?? []).length === 0 ? (
+              <div className="rounded-lg border border-dashed border-line-2 px-3 py-3 text-[12.5px] text-ink-3"><Brain size={13} className="mr-1 inline" /> Facts remembered inside this project only. In a chat here, say &ldquo;remember that…&rdquo;.</div>
+            ) : (
+              <ul className="divide-y divide-line rounded-lg border border-line">
+                {(project.memories ?? []).map((m) => (
+                  <li key={m} className="flex items-center gap-2 px-2.5 py-1.5 text-[12.5px]"><span className="min-w-0 flex-1">{m}</span><button onClick={() => removeProjectMemory(project.id, m)} className="text-ink-3 hover:text-bad" title="Forget"><X size={12} /></button></li>
+                ))}
+              </ul>
             )}
           </section>
         </div>

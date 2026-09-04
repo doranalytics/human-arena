@@ -58,7 +58,7 @@ export function connectorTools(connected: ConnectorId[]): ToolSet {
   }
   if (connected.includes("warehouse")) {
     t.list_tables = tool({
-      description: "List the tables in Halden's data warehouse with their columns.",
+      description: "List the tables in the data warehouse with their columns.",
       inputSchema: z.object({}),
       execute: async () => ({ tables: TABLES.map((x) => ({ name: x.name, description: x.description, columns: x.columns, rows: x.rows.length })) }),
     });
@@ -68,7 +68,12 @@ export function connectorTools(connected: ConnectorId[]): ToolSet {
       execute: async ({ table, contains }) => {
         const x = TABLES.find((z) => z.name === table);
         if (!x) return { error: `No table named ${table}. Call list_tables first.` };
-        const rows = contains ? x.rows.filter((r) => r.some((c) => String(c).toLowerCase().includes(contains.toLowerCase()))) : x.rows;
+        // "FY24", "FY 2024", "2024" all mean the year 2024 in the month column.
+        let needle = (contains ?? "").trim().toLowerCase();
+        const fy = /^fy\s?'?(\d{2}|\d{4})$/.exec(needle);
+        if (fy) needle = fy[1].length === 2 ? `20${fy[1]}` : fy[1];
+        const rows = needle ? x.rows.filter((r) => r.some((c) => String(c).toLowerCase().includes(needle))) : x.rows;
+        if (needle && rows.length === 0) return { table: x.name, csv: tableToCsv({ ...x, rows: [] }), note: `No rows contain "${contains}". Call read_table again without a filter to see all ${x.rows.length} rows, then pick what you need.` };
         return { table: x.name, csv: tableToCsv({ ...x, rows }) };
       },
     });

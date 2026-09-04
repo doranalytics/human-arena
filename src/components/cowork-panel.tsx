@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
-import { ChevronDown, Hand, FastForward, TriangleAlert, ListChecks, Check, FolderOpen } from "lucide-react";
-import { useStore, updateSettings, setChatProject, openChat } from "@/lib/store";
+import { ChevronDown, Hand, FastForward, TriangleAlert, ListChecks, Check, FolderOpen, Clock } from "lucide-react";
+import { useStore, updateSettings, setChatProject, openChat, createSchedule } from "@/lib/store";
+import { toast } from "@/lib/ui";
 import { openDialog, setPage } from "@/lib/ui";
 import { relTime, cn } from "@/lib/utils";
 import type { Chat } from "@/lib/types";
@@ -17,7 +18,9 @@ export function CoworkPanel({ chat }: { chat: Chat }) {
   const projects = useStore((s) => s.projects);
   const chats = useStore((s) => s.chats);
   const mode = useStore((s) => s.settings.coworkApproval ?? "auto");
-  const [open, setOpen] = useState<"project" | "mode" | null>(null);
+  const [open, setOpen] = useState<"project" | "mode" | "schedule" | null>(null);
+  const [schedPrompt, setSchedPrompt] = useState("");
+  const [cadence, setCadence] = useState<"hourly" | "daily" | "weekly">("daily");
   const [more, setMore] = useState(false);
   const project = projects.find((p) => p.id === chat.projectId) ?? null;
   const active = chats.filter((c) => c.cowork && !c.draft && c.id !== chat.id).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
@@ -54,6 +57,35 @@ export function CoworkPanel({ chat }: { chat: Chat }) {
                   <span className="text-ink-2">{m.icon}</span> <span className="flex-1">{m.label}</span> {mode === m.id && <Check size={15} className="text-[#1a56db]" />}
                 </button>
               ))}
+            </div>
+          )}
+        </div>
+        <div className="relative" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => setOpen(open === "schedule" ? null : "schedule")} className={cn("flex items-center gap-1 rounded-md px-2 py-1 hover:bg-bg-3", open === "schedule" && "bg-bg-3")}>
+            <Clock size={14} className="text-ink-3" /> Schedule <ChevronDown size={13} className="text-ink-3" />
+          </button>
+          {open === "schedule" && (
+            <div className="fade-up absolute left-0 top-9 z-30 w-80 rounded-xl border border-line bg-bg p-3 shadow-lg shadow-black/10">
+              <div className="text-[13px] font-medium">Run a task on a schedule</div>
+              <textarea value={schedPrompt} onChange={(e) => setSchedPrompt(e.target.value)} rows={3} placeholder="What should it do each time? e.g. find three new electric bike deals" className="mt-2 w-full resize-none rounded-lg border border-line bg-bg px-2.5 py-2 text-[13px] outline-none placeholder:text-ink-3 focus:border-ink-3" />
+              <div className="mt-2 flex items-center gap-1">
+                {(["hourly", "daily", "weekly"] as const).map((c) => (
+                  <button key={c} onClick={() => setCadence(c)} className={cn("rounded-md px-2 py-1 text-[12.5px]", cadence === c ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>{c[0].toUpperCase() + c.slice(1)}</button>
+                ))}
+                <button
+                  disabled={!schedPrompt.trim()}
+                  onClick={() => {
+                    const name = schedPrompt.trim().slice(0, 48);
+                    createSchedule({ name, prompt: schedPrompt.trim(), cadence, projectId: chat.projectId });
+                    toast({ title: "Scheduled", body: "Open Scheduled in the sidebar to run it now.", tone: "ok" }, 4000);
+                    setSchedPrompt("");
+                    setOpen(null);
+                  }}
+                  className="ml-auto h-8 rounded-lg bg-ink px-3 text-[12.5px] font-medium text-bg disabled:opacity-40"
+                >
+                  Schedule
+                </button>
+              </div>
             </div>
           )}
         </div>

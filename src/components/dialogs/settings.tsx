@@ -8,7 +8,7 @@ import { IconLinkedIn, IconX } from "../icons";
 import { closeDialog, openDialog, toast, type SettingsSection } from "@/lib/ui";
 import { useStore, updateSettings, setState, removeMemory, track, createSkill, deleteSkill, setConnector } from "@/lib/store";
 import { useSession, setSession } from "@/lib/session";
-import { BUILTIN_SKILLS } from "@/lib/skills";
+import { BUILTIN_SKILLS, SKILL_CATALOGUE } from "@/lib/skills";
 import { CONNECTORS } from "@/lib/connectors";
 import { xHandle, linkedinSlug, xUrl, linkedinUrl } from "@/lib/social";
 import { cn } from "@/lib/utils";
@@ -284,6 +284,7 @@ function fmtShort(iso?: string) {
 function Skills() {
   const custom = useStore((s) => s.skills);
   const [creating, setCreating] = useState(false);
+  const [browsing, setBrowsing] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -298,8 +299,27 @@ function Skills() {
     <div>
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="text-[13px] text-ink-2">Type <span className="rounded bg-bg-3 px-1 font-mono text-[12px]">/name</span> in the message box to use one.</div>
-        <Button variant="outline" onClick={() => setCreating((v) => !v)}><Plus size={14} /> Add</Button>
+        <div className="flex items-center gap-1.5">
+          <Button variant="outline" onClick={() => { setBrowsing((v) => !v); setCreating(false); }}>Browse</Button>
+          <Button variant="outline" onClick={() => { setCreating((v) => !v); setBrowsing(false); }}><Plus size={14} /> Add</Button>
+        </div>
       </div>
+      {browsing && (
+        <div className="mb-4 rounded-xl border border-line p-3">
+          <div className="mb-2 text-[13px] font-medium">Catalogue</div>
+          <div className="grid gap-1.5 sm:grid-cols-2">
+            {SKILL_CATALOGUE.map((k) => {
+              const have = [...BUILTIN_SKILLS, ...custom].some((s) => s.name === k.name);
+              return (
+                <div key={k.name} className="flex items-center gap-2 rounded-lg border border-line px-2.5 py-2">
+                  <div className="min-w-0 flex-1"><div className="truncate text-[13.5px] font-medium">/{k.name}</div><div className="truncate text-[12px] text-ink-3">{k.description}</div></div>
+                  <Button variant={have ? "ghost" : "outline"} className="h-7 px-2.5 text-[12px]" disabled={have} onClick={() => { createSkill({ name: k.name, description: k.description, prompt: k.prompt }); track("skill_added", k.name); toast({ title: `/${k.name} added`, body: "Type it in the message box to use it.", tone: "ok" }, 3000); }}>{have ? "Added" : "Add"}</Button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {creating && (
         <div className="mb-4 space-y-2 rounded-xl border border-line p-3">
           <div className="text-[13px] font-medium">New skill</div>
@@ -359,7 +379,7 @@ function Connectors() {
             <div key={c.id} className="flex items-center gap-3 rounded-xl border border-line px-3.5 py-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white"><ConnectorLogo id={c.id} size={24} /></span>
               <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-medium">{c.name} <span className="text-[12px] font-normal text-ink-3">· {c.vendor}</span></div>
+                <div className="text-[14px] font-medium">{c.name}{c.vendor && <span className="text-[12px] font-normal text-ink-3"> · {c.vendor}</span>}</div>
                 <div className="text-[12.5px] text-ink-2">{c.blurb}</div>
               </div>
               <Button
@@ -381,7 +401,7 @@ function Connectors() {
 
 /* ------------------------------------------------------------------- memory */
 function Memory() {
-  const memories = useStore((s) => s.settings.memories ?? []);
+  const memories = useStore((s) => s.settings.memories) ?? [];
   return (
     <div>
       <div className="mb-3 text-[13px] text-ink-2">Facts the assistant has been told to remember. Every new chat starts knowing them.</div>

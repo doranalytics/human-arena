@@ -28,6 +28,8 @@ interface Body {
   instructions?: string;
   /** facts saved with the remember tool */
   memories?: string[];
+  /** memory switched off for this chat */
+  memoryOff?: boolean;
 }
 
 function systemPrompt(b: Body, connected: ConnectorId[]) {
@@ -61,7 +63,8 @@ function systemPrompt(b: Body, connected: ConnectorId[]) {
   }
   if (b.skill) parts.push(`SKILL /${b.skill.name} is active for this reply. Follow it exactly:\n${b.skill.prompt}`);
   if (b.instructions?.trim()) parts.push(`CUSTOM INSTRUCTIONS from the user's settings (follow them in every reply):\n${b.instructions.trim().slice(0, 2000)}`);
-  if (b.memories?.length) parts.push(`MEMORY. Facts the user asked you to remember in earlier chats:\n` + b.memories.slice(-30).map((m) => `- ${m}`).join("\n"));
+  if (b.memoryOff) parts.push(`MEMORY IS OFF for this chat: you have no remembered facts about the user and cannot save any. If asked what you remember, say memory is off for this chat.`);
+  else if (b.memories?.length) parts.push(`MEMORY. Facts the user asked you to remember in earlier chats:\n` + b.memories.slice(-30).map((m) => `- ${m}`).join("\n"));
   parts.push(`Tools always available: read_link fetches a web page the user pastes a URL for (use it whenever a message contains a URL and the user wants something from that page); remember saves a fact the user explicitly asks you to remember (call it, then confirm in one short sentence); ask_user shows a multiple-choice card and waits for the answer (one question per call, ask the next only after the answer comes back, never list the options in text as well).`);
   return parts.join("\n\n");
 }
@@ -104,6 +107,8 @@ export async function POST(req: Request) {
   const wanted = MODELS[model];
   const useOpenAI = wanted.provider === "openai" && !!openaiKey;
   const tools: ToolSet = { ...connectorTools(connected), ...baseTools() };
+  if (b.memoryOff) delete tools.remember;
+  if (connected.includes("gmail")) tools.send_email = sendEmailTool();
   const search = b.webSearch || b.research;
   let languageModel;
   let providerOptions: Parameters<typeof streamText>[0]["providerOptions"];
@@ -132,6 +137,15 @@ export async function POST(req: Request) {
     onError: ({ error }) => console.error("[chat]", error instanceof Error ? error.message : error),
   });
   return result.toUIMessageStreamResponse({ sendReasoning: false, sendSources: true });
+}
+
+/** Simulated send. Nothing leaves the arena; the transcript records it. */
+function sendEmailTool() {
+  return tool({
+    description: "Send an email from the user's connected inbox. Use when the user asks you to email, send, or forward something. To 'me' or 'myself' means the user's own address.",
+    inputSchema: z.object({ to: z.string().describe("Recipient, or 'me'"), subject: z.string().max(120), body: z.string().max(4000) }),
+    execute: async ({ to, subject, body }) => ({ sent: true, to: to === "me" || to === "myself" ? "you" : to, subject, chars: body.length }),
+  });
 }
 
 /** Tools every chat has: link reading and memory. */

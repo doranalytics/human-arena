@@ -3,6 +3,7 @@ import type { ConnectorId } from "./connectors";
 export const TOOL_CONNECTOR: Record<string, ConnectorId> = {
   search_gmail: "gmail",
   read_email: "gmail",
+  send_email: "gmail",
   search_drive: "drive",
   read_drive_file: "drive",
   list_tables: "warehouse",

@@ -3,7 +3,7 @@ import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getToolName, isToolUIPart, type UIMessage } from "ai";
-import { FileText, Globe, Loader2, ListChecks } from "lucide-react";
+import { FileText, Globe, Loader2, ListChecks, Copy, Download } from "lucide-react";
 import { useState } from "react";
 import { Spark } from "./icons";
 import { TOOL_CONNECTOR } from "@/lib/tool-connector";
@@ -29,6 +29,7 @@ const TOOL_LABEL: Record<string, string> = {
   read_table: "Read a warehouse table",
   list_events: "Checked the calendar",
   read_link: "Read a link",
+  send_email: "Sent an email",
   ask_user: "Asked you",
   remember: "Saved to memory",
 };
@@ -45,12 +46,13 @@ function toolSummary(name: string, input: unknown): string {
   if (typeof i.query === "string" && i.query) return `“${i.query}”`;
   if (typeof i.url === "string") return i.url.replace(/^https?:\/\//, "").slice(0, 60);
   if (typeof i.fact === "string") return `“${i.fact.slice(0, 60)}”`;
+  if (typeof i.subject === "string") return `“${i.subject.slice(0, 60)}”`;
   if (typeof i.table === "string") return i.table + (i.contains ? ` · ${i.contains}` : "");
   if (typeof i.id === "string") return i.id;
   return "";
 }
 
-export function Message({ m, streaming, onToolOutput }: { m: UIMessage; streaming?: boolean; onToolOutput?: (toolCallId: string, output: string) => void }) {
+export function Message({ m, streaming, onToolOutput, onExport }: { m: UIMessage; streaming?: boolean; onToolOutput?: (toolCallId: string, output: string) => void; onExport?: () => void }) {
   if (m.role === "user") {
     const files = m.parts.filter((p) => p.type === "file");
     const text = m.parts.filter((p) => p.type === "text").map((p) => p.text).join("\n");
@@ -78,7 +80,7 @@ export function Message({ m, streaming, onToolOutput }: { m: UIMessage; streamin
   }
   const hasText = m.parts.some((p) => p.type === "text" && p.text.trim());
   return (
-    <div className="fade-up flex gap-3">
+    <div className="group fade-up flex gap-3">
       <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center text-clay">
         <Spark size={18} />
       </div>
@@ -105,6 +107,36 @@ export function Message({ m, streaming, onToolOutput }: { m: UIMessage; streamin
           }
           return null;
         })}
+        {!streaming && hasText && (
+          <div className="flex items-center gap-1 pt-0.5 opacity-0 transition group-hover:opacity-100">
+            <button
+              onClick={() => {
+                const md = m.parts.filter((p) => p.type === "text").map((p) => p.text).join("\n\n");
+                void navigator.clipboard?.writeText(md);
+                onExport?.();
+              }}
+              className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11.5px] text-ink-3 hover:bg-bg-3 hover:text-ink"
+              title="Copy as Markdown"
+            >
+              <Copy size={12} /> Copy
+            </button>
+            <button
+              onClick={() => {
+                const md = m.parts.filter((p) => p.type === "text").map((p) => p.text).join("\n\n");
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
+                a.download = "reply.md";
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+                onExport?.();
+              }}
+              className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11.5px] text-ink-3 hover:bg-bg-3 hover:text-ink"
+              title="Download as a Markdown file"
+            >
+              <Download size={12} /> Export
+            </button>
+          </div>
+        )}
         {streaming && !hasText && (
           <div className="flex items-center gap-1 py-1 text-ink-3">
             <span className="dot h-1.5 w-1.5 rounded-full bg-current" />

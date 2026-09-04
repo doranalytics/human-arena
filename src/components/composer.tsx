@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { useDictation } from "@/lib/dictation";
+import { ConnectorLogo } from "./connector-logos";
+import { CONNECTORS } from "@/lib/connectors";
 import { MATERIAL_MIME, materialFile, materialText } from "@/lib/materials";
 import type { Material } from "@/lib/arena/types";
-import { Plus, Paperclip, Image as ImageIcon, Globe, Telescope, Zap, Cable, ChevronDown, X, FileText, Check, Mic, Loader2, Lock } from "lucide-react";
-import { useStore, updateSettings } from "@/lib/store";
+import { Plus, Paperclip, Image as ImageIcon, Globe, Telescope, Zap, Cable, ChevronDown, X, FileText, Check, Mic, Loader2, Lock, Brain } from "lucide-react";
+import { useStore, updateSettings, setConnector } from "@/lib/store";
 import { openDialog } from "@/lib/ui";
 import { BUILTIN_SKILLS } from "@/lib/skills";
 import { MODELS, EFFORTS, type ModelChoice, type Effort } from "@/lib/models";
@@ -23,16 +25,27 @@ interface Props {
   setResearch: (v: boolean) => void;
   cowork: boolean;
   setCowork: (v: boolean) => void;
+  memoryOn: boolean;
+  setMemoryOn: (v: boolean) => void;
   projectName: string | null;
   /** no challenge running: chatting is locked until one starts */
   locked?: boolean;
   /** free messages left today outside a challenge; null while a challenge runs */
   freeLeft?: number | null;
+  /** changes when an attempt starts or ends; the draft is cleared */
+  clearOn?: string;
 }
 
-export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, projectName, locked, freeLeft }: Props) {
+export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, memoryOn, setMemoryOn, projectName, locked, freeLeft, clearOn }: Props) {
   const [text, setText] = useState("");
   const dictated = useRef(false);
+  const lastClear = useRef(clearOn);
+  useEffect(() => {
+    if (lastClear.current === clearOn) return;
+    lastClear.current = clearOn;
+    setText("");
+    setFiles([]);
+  }, [clearOn]);
   const dictation = useDictation((t) => { dictated.current = true; setText((cur) => (cur ? cur.replace(/\s*$/, " ") : "") + t); });
   const [files, setFiles] = useState<File[]>([]);
   const [plusOpen, setPlusOpen] = useState(false);
@@ -210,7 +223,13 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
                 <MenuItem icon={<Telescope size={15} />} label="Research" hint="Longer, sourced report" checked={research} onClick={() => setResearch(!research)} />
                 <div className="my-1 border-t border-line" />
                 <MenuItem icon={<Zap size={15} />} label="Use a skill" hint="or type /" onClick={() => { setText("/"); ta.current?.focus(); }} />
-                <MenuItem icon={<Cable size={15} />} label={connectors.length ? `Connectors (${connectors.length} on)` : "Connectors"} onClick={() => openDialog({ kind: "settings", section: "connectors" })} />
+                <MenuItem icon={<Brain size={15} />} label="Memory" hint={memoryOn ? "on" : "off for this chat"} checked={memoryOn} onClick={() => setMemoryOn(!memoryOn)} keep />
+                <div className="my-1 border-t border-line" />
+                <div className="px-2 py-1 text-[11.5px] font-medium text-ink-3">Connectors</div>
+                {CONNECTORS.map((c) => (
+                  <MenuItem key={c.id} icon={<ConnectorLogo id={c.id} size={15} />} label={c.name} checked={connectors.includes(c.id)} onClick={() => setConnector(c.id, !connectors.includes(c.id))} keep />
+                ))}
+                <MenuItem icon={<Cable size={15} />} label="Manage connectors" onClick={() => openDialog({ kind: "settings", section: "connectors" })} />
               </div>
             )}
           </div>

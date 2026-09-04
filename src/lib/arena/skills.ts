@@ -35,6 +35,8 @@ export const SKILLS: Record<string, SkillDef> = {
   drafting: s("💬", "Drafting", "Prompting moves"),
   summarizing: s("📝", "Summarizing", "Prompting moves"),
   extraction: s("⛏️", "Data extraction", "Prompting moves"),
+  organise: s("📌", "Organising chats", "Setup and tools"),
+  export: s("📤", "Export", "Creation"),
   // input
   "file-upload": s("📎", "File upload", "Input"),
   pdf: s("📕", "PDF reading", "Input"),
@@ -50,7 +52,7 @@ export const SKILLS: Record<string, SkillDef> = {
   "deep-research": s("🔬", "Deep research", "Retrieval and agents"),
   connectors: s("📬", "Connectors", "Retrieval and agents"),
   cowork: s("🧑‍💻", "Cowork mode", "Retrieval and agents"),
-  automations: s("⏰", "Automations", "Retrieval and agents", "later"),
+  automations: s("⏰", "Automations", "Retrieval and agents"),
   "browser-agent": s("🤖", "Browser agent", "Retrieval and agents", "later"),
   "computer-files": s("🧹", "File agent", "Retrieval and agents", "later"),
   extension: s("🌐", "Browser extension", "Retrieval and agents", "later"),

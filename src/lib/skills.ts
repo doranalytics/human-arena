@@ -47,3 +47,15 @@ export const BUILTIN_SKILLS: Skill[] = [
     prompt: `Explain the topic to someone intelligent who is new to the field. Start with a one-line definition, give one concrete example, then the two things people most often get wrong. Under 200 words.`,
   },
 ];
+
+/** Ready-made skills people can add from Browse. Adding one copies it into their own list. */
+export const SKILL_CATALOGUE: Omit<Skill, "id" | "builtin">[] = [
+  { name: "tweet-thread", description: "Turn any text into a five-tweet thread", prompt: "Turn the material into a thread of five tweets, each under 240 characters, first one a hook, last one a takeaway. No hashtags. Number them 1/5 to 5/5." },
+  { name: "eli5", description: "Explain it like I'm five", prompt: "Explain the topic to a five-year-old: everyday words, one analogy, no jargon, under 120 words." },
+  { name: "pros-cons", description: "Two columns, then a verdict", prompt: "Lay out the pros and cons of the decision as two short lists, then give a one-line verdict and the single biggest risk." },
+  { name: "checklist", description: "Any plan as a tickable list", prompt: "Turn the plan or instructions into a numbered checklist of concrete actions, each starting with a verb, each doable in one sitting." },
+  { name: "polite-no", description: "Decline anything, warmly", prompt: "Write a short reply that declines the request, thanks them, gives one honest reason, and offers one alternative. Under 80 words." },
+  { name: "devils-advocate", description: "Argue the other side", prompt: "Argue against the user's position as strongly as you can. Three concrete points, no hedging, no 'on the other hand'. End with the single strongest objection." },
+  { name: "week-plan", description: "Goals into a Monday-to-Friday plan", prompt: "Turn the goals into a Monday to Friday plan: one focus per day, two tasks per day at most, and one thing to drop." },
+  { name: "plain-english", description: "Rewrite anything without jargon", prompt: "Rewrite the text in plain English for a general reader: short sentences, no jargon, no acronyms without expansion, same meaning." },
+];

@@ -16,6 +16,8 @@ export interface Project {
   instructions: string;
   files: ProjectFile[];
   createdAt: string;
+  /** facts remembered inside this project only */
+  memories?: string[];
 }
 
 export interface Chat {
@@ -34,6 +36,24 @@ export interface Chat {
   draft?: boolean;
   /** ran in Cowork mode */
   cowork?: boolean;
+  groupId?: string | null;
+  /** a prompt to send automatically when the chat opens (scheduled runs) */
+  pendingPrompt?: string;
+}
+
+export interface ChatGroup {
+  id: string;
+  name: string;
+}
+
+export interface Schedule {
+  id: string;
+  name: string;
+  prompt: string;
+  cadence: "hourly" | "daily" | "weekly";
+  projectId: string | null;
+  createdAt: string;
+  runs: { at: string; chatId: string }[];
 }
 
 export interface CustomSkill {
@@ -86,7 +106,18 @@ export type ArenaEventType =
   | "instructions_set"
   | "dictation_used"
   | "cowork_on"
-  | "ask_user_used";
+  | "ask_user_used"
+  | "email_sent"
+  | "memory_off"
+  | "chat_pinned"
+  | "chat_renamed"
+  | "chat_grouped"
+  | "added_to_project"
+  | "exported"
+  | "skill_added"
+  | "schedule_created"
+  | "schedule_run"
+  | "skill_from_cowork";
 
 export interface ArenaEvent {
   type: ArenaEventType;

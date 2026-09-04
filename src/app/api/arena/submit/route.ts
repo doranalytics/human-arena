@@ -52,15 +52,22 @@ export async function POST(req: Request) {
   let feedback = "";
   let model = "none";
   try {
+    if (c.checks.length === 0) throw new Error("no-checks");
     const g = await gradeAttempt(c, transcript, startedAt.toISOString().slice(0, 10));
     checks = g.checks;
     feedback = g.feedback;
     model = g.model;
   } catch (e) {
+    if (e instanceof Error && e.message === "no-checks") {
+      checks = [];
+      feedback = behaviors.every((x) => x.pass) ? "Done. The arena saw you do it." : "";
+      model = "none";
+    } else {
     console.error("[submit] grader failed", e instanceof Error ? e.message : e);
     checks = c.checks.map((k) => ({ id: k.id, verdict: "fail", evidence: "The grader was unavailable. Try submitting again." }));
     feedback = "The grader could not run. Nothing was recorded; try again in a moment.";
     return NextResponse.json({ error: "grader", result: null, detail: feedback }, { status: 503 });
+    }
   }
 
   const passed = behaviors.every((x) => x.pass) && checks.every((k) => k.verdict === "pass");
