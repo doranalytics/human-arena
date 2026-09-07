@@ -1,7 +1,7 @@
 /**
  * Model and effort selection, in learner terms. Behind the labels we pick whatever
  * has the best price/performance today, from whichever provider.
- * Fast = OpenAI GPT-5.6 Luna (cheap, quick). Smart = Claude. Grading always runs on Claude.
+ * Fast = OpenAI GPT-5.6 Luna (cheap, quick). Smart = Claude. Grading uses Luna, with the same Claude fallback when no OpenAI key is configured.
  */
 export type ModelChoice = "fast" | "smart";
 export type Effort = "low" | "medium" | "high";

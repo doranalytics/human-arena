@@ -3,9 +3,9 @@ import { useState } from "react";
 import { FolderOpen } from "lucide-react";
 import { Dialog, Button, inputCls } from "../dialog";
 import { closeDialog } from "@/lib/ui";
-import { createProject } from "@/lib/store";
+import { createProject, setChatProject, openChat, track } from "@/lib/store";
 
-export function NewProjectDialog({ open }: { open: boolean }) {
+export function NewProjectDialog({ open, chatId }: { open: boolean; chatId?: string }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
@@ -20,7 +20,8 @@ export function NewProjectDialog({ open }: { open: boolean }) {
           <Button
             disabled={!name.trim()}
             onClick={() => {
-              createProject({ name: name.trim(), description: description.trim(), instructions: instructions.trim() });
+              const project = createProject({ name: name.trim(), description: description.trim(), instructions: instructions.trim() });
+              if (chatId) { setChatProject(chatId, project.id); track("added_to_project", project.id, chatId); openChat(chatId); }
               setName(""); setDescription(""); setInstructions("");
               closeDialog();
             }}

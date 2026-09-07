@@ -1,0 +1,35 @@
+"use client";
+import { useState } from "react";
+import { ExternalLink, Check, RefreshCw } from "lucide-react";
+import { useSession, setSession } from "@/lib/session";
+import { SUBSCRIBE_URL, SUBSCRIPTION_SETTINGS_URL, type SubscriptionStatus } from "@/lib/subscription";
+import { openDialog } from "@/lib/ui";
+
+export function SubscriptionCard({ compact = false }: { compact?: boolean }) {
+  const session = useSession();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const paid = session.subscription?.paid;
+  async function recheck() {
+    if (!session.me) { openDialog({ kind: "settings", section: "account" }); return; }
+    setBusy(true); setMessage("");
+    try {
+      const r = await fetch("/api/subscription", { cache: "no-store" });
+      const j = await r.json() as { subscription?: SubscriptionStatus; error?: string };
+      if (!r.ok || !j.subscription) throw new Error(j.error ?? "Could not check your subscription.");
+      setSession({ subscription: j.subscription });
+      setMessage(j.subscription.paid ? "Paid membership confirmed." : j.subscription.available ? "Not confirmed yet. Subscriber imports are periodic; a new subscription may take a day or more to appear. Use the same email here and on Substack." : "Subscriber verification is temporarily unavailable. Please check again later.");
+    } catch (e) { setMessage(e instanceof Error ? e.message : "Please try again."); }
+    finally { setBusy(false); }
+  }
+  return <div className={compact ? "rounded-lg border border-line bg-bg-2/70 px-3.5 py-3" : "rounded-xl border border-line bg-bg-2/70 p-4"}>
+    <div className="flex items-center gap-2 text-[15px] font-medium">{paid && <Check size={16} className="text-ok" />}{paid ? "Paid How to AI subscriber" : "Keep learning with How to AI"}</div>
+    <p className="mt-1 text-[13px] leading-relaxed text-ink-2">{paid ? "Your subscription is confirmed for weekly winner eligibility. Manage your plan on Substack." : "Play the challenges for free. Paid subscribers can qualify for the weekly winner feature in front of a million people on Ruben’s LinkedIn."}</p>
+    <div className="mt-3 flex flex-wrap items-center gap-3 text-[13px]">
+      <a href={paid ? SUBSCRIPTION_SETTINGS_URL : SUBSCRIBE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 font-medium text-bg">{paid ? "Manage on Substack" : "Subscribe on Substack"}<ExternalLink size={13} /></a>
+      <button disabled={busy || !session.loaded} onClick={recheck} className="inline-flex items-center gap-1.5 rounded py-1 text-ink-2 hover:text-ink disabled:opacity-50"><RefreshCw size={13} className={busy ? "animate-spin" : ""} />{busy ? "Checking…" : session.me ? "Check subscriber status" : "Already subscribed? Sign in"}</button>
+    </div>
+    {message && <p role="status" className="mt-2 text-[12.5px] leading-relaxed text-ink-2">{message}</p>}
+    {!compact && !paid && <p className="mt-2 text-[12px] text-ink-3">Use your Substack email to sign in. Paid status updates after subscriber imports.</p>}
+  </div>;
+}

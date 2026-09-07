@@ -110,9 +110,9 @@ export function Message({ m, streaming, onToolOutput, onExport }: { m: UIMessage
         {!streaming && hasText && (
           <div className="flex items-center gap-1 pt-0.5 opacity-0 transition group-hover:opacity-100">
             <button
-              onClick={() => {
+              onClick={async () => {
                 const md = m.parts.filter((p) => p.type === "text").map((p) => p.text).join("\n\n");
-                void navigator.clipboard?.writeText(md);
+                try { await navigator.clipboard.writeText(md); } catch { return; }
                 onExport?.();
               }}
               className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11.5px] text-ink-3 hover:bg-bg-3 hover:text-ink"
@@ -121,7 +121,7 @@ export function Message({ m, streaming, onToolOutput, onExport }: { m: UIMessage
               <Copy size={12} /> Copy
             </button>
             <button
-              onClick={() => {
+              onClick={async () => {
                 const md = m.parts.filter((p) => p.type === "text").map((p) => p.text).join("\n\n");
                 const a = document.createElement("a");
                 a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));

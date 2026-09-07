@@ -1,4 +1,5 @@
 "use client";
+import { SubscriptionCard } from "../subscription-card";
 import { useEffect, useMemo, useState } from "react";
 import { Trophy, Search, X, Lock, Medal } from "lucide-react";
 import { ProgressPanel } from "../progress-panel";
@@ -61,7 +62,7 @@ function MemberCard({ row, onClose }: { row: Row; onClose: () => void }) {
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, [onClose]);
-  const tier = tierFor(row.points);
+  const tier = tierFor(row.points, row.challenges);
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div role="dialog" aria-modal className="fade-up relative w-full max-w-sm rounded-2xl border border-line bg-bg p-6 text-center shadow-2xl shadow-black/10">
@@ -127,9 +128,9 @@ export function LeaderboardDialog({ open, initialTab }: { open: boolean; initial
     const mine = Object.values(results).filter((r) => board === "all" || data.at - new Date(r.at).getTime() < 7 * 86400000);
     const pts = totalPoints(Object.fromEntries(mine.map((r) => [r.slug, r])));
     if (pts <= 0) return data.rows;
-    const you: Omit<Row, "rank"> = { id: "you", name: session.me?.name || settings.name || "You", avatar: session.me?.avatar || settings.avatar, linkedin: session.me?.linkedin || settings.linkedin, x: session.me?.x || settings.x, paid: true, points: pts, challenges: mine.filter((r) => r.passed).length, you: true };
+    const you: Omit<Row, "rank"> = { id: "you", name: session.me?.name || settings.name || "You", avatar: session.me?.avatar || settings.avatar, linkedin: session.me?.linkedin || settings.linkedin, x: session.me?.x || settings.x, paid: session.subscription?.paid ?? false, points: pts, challenges: mine.filter((r) => r.passed).length, you: true };
     return rankRows([...data.rows.filter((r) => !r.you), you]);
-  }, [data, board, results, settings.name, settings.avatar, settings.linkedin, settings.x, session.me]);
+  }, [data, board, results, settings.name, settings.avatar, settings.linkedin, settings.x, session.me, session.subscription?.paid]);
 
   const filtered = useMemo(() => {
     if (!rows) return null;
@@ -153,7 +154,7 @@ export function LeaderboardDialog({ open, initialTab }: { open: boolean; initial
       }
     >
       {tab === "progress" ? <ProgressPanel /> : (<>
-      <div className="mb-3 rounded-lg bg-bg-2 px-3.5 py-2.5 text-[13px] text-ink-2"><span className="font-medium text-ink">Every week has a winner.</span> Top of the weekly board goes in front of a million people on Ruben&rsquo;s LinkedIn.</div>
+      <div className="mb-4"><SubscriptionCard compact /></div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex rounded-full bg-bg-2 p-1">
           {(["week", "all"] as const).map((b) => (
@@ -182,7 +183,7 @@ export function LeaderboardDialog({ open, initialTab }: { open: boolean; initial
       ) : (
         <ol className="divide-y divide-line">
           {filtered.map((row) => {
-            const tier = tierFor(row.points);
+            const tier = tierFor(row.points, row.challenges);
             return (
               <li
                 key={row.id}

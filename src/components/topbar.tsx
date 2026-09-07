@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useElapsed } from "@/lib/use-elapsed";
 import { PanelLeft, Swords, Trophy, Settings, Lightbulb, Flag, X, FolderPlus, Zap, ChevronDown } from "lucide-react";
-import { useStore, useHint, endAttempt, attemptChats, getState, newChat, setChatProject, createSkill, track } from "@/lib/store";
+import { useStore, useHint, endAttempt, attemptChats, getState, newChat, setChatProject, createSkill, track, setState } from "@/lib/store";
 import { openDialog, toggleSidebar, useUI, toast } from "@/lib/ui";
 import { getChallenge } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
@@ -12,32 +12,30 @@ import type { ArenaResult } from "@/lib/types";
 export function TopBar({ title }: { title: string }) {
   const attempt = useStore((s) => s.attempt);
   const sidebarOpen = useUI((s) => s.sidebarOpen);
-  const c = attempt ? getChallenge(attempt.slug) : null;
+  const c = attempt ? attempt.definition ?? getChallenge(attempt.slug) : null;
   const elapsed = useElapsed(attempt?.startedAt);
   const [hintOpen, setHintOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const over = c ? elapsed > c.minutes * 60 : false;
+  const busy = useStore((s) => s.busyChatIds.length > 0);
 
   async function submit() {
-    if (!attempt || !c || submitting) return;
+    if (!attempt || !c || submitting || busy) return;
     setSubmitting(true);
+    setState({ grading: true });
     const st = getState();
-    const chats = attemptChats().map((ch) => {
-      const p = ch.projectId ? st.projects.find((x) => x.id === ch.projectId) : null;
-      return { title: ch.title, projectName: p?.name, projectInstructions: p?.instructions, customInstructions: st.settings.instructions || undefined, memories: st.settings.memories, messages: ch.messages };
-    });
+    const chats = attemptChats();
     try {
       const r = await fetch("/api/arena/submit", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ slug: attempt.slug, serverId: attempt.serverId ?? null, startedAt: attempt.startedAt, hintsUsed: attempt.hintsUsed, events: attempt.events, chats }),
+        body: JSON.stringify({ slug: attempt.slug, serverId: attempt.serverId ?? null, startedAt: attempt.startedAt, hintsUsed: attempt.hintsUsed, events: attempt.events, chats, version: attempt.version, workspace: { projects: st.projects, skills: st.skills, groups: st.groups, schedules: st.schedules } }),
       });
       const j = (await r.json()) as { result?: ArenaResult; error?: string; detail?: string };
       if (!r.ok || !j.result) {
         toast({ title: "Could not grade that", body: j.detail ?? j.error ?? "Try again in a moment.", tone: "bad" });
         return;
       }
-      endAttempt(j.result);
+      if (!endAttempt(j.result, attempt.id)) return;
       newChat(null);
       toast({ title: j.result.passed ? `Challenge complete: +${j.result.points} points` : "Not quite", body: j.result.passed ? c.title : "See what the arena saw.", tone: j.result.passed ? "ok" : "bad" }, 6000);
       openDialog({ kind: "result", slug: attempt.slug });
@@ -45,6 +43,7 @@ export function TopBar({ title }: { title: string }) {
       toast({ title: "Network problem", body: "Your attempt is still running. Try Submit again.", tone: "bad" });
     } finally {
       setSubmitting(false);
+      if (getState().attempt?.id === attempt.id) setState({ grading: false });
     }
   }
 
@@ -60,7 +59,7 @@ export function TopBar({ title }: { title: string }) {
 
       {attempt && c ? (
         <div className="flex items-center gap-1.5">
-          <button onClick={() => openDialog({ kind: "brief", slug: attempt.slug })} title="Show the challenge brief" className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1 text-[13px] hover:bg-bg-2", over ? "border-bad/40 text-bad" : "border-line-2")}>
+          <button onClick={() => openDialog({ kind: "brief", slug: attempt.slug })} title="Show the challenge brief" className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1 text-[13px] hover:bg-bg-2", "border-line-2")}>
             <Swords size={14} className="text-clay" />
             <span className="max-w-[180px] truncate font-medium">{c.title}</span>
             <span className="tabular-nums text-ink-2">
@@ -96,10 +95,10 @@ export function TopBar({ title }: { title: string }) {
               </div>
             )}
           </div>
-          <button onClick={submit} disabled={submitting} className="flex h-8 items-center gap-1.5 rounded-lg bg-ink px-3 text-[13px] font-medium text-bg hover:bg-black disabled:opacity-60">
+          <button onClick={submit} disabled={submitting || busy} className="flex h-8 items-center gap-1.5 rounded-lg bg-ink px-3 text-[13px] font-medium text-bg hover:bg-black disabled:opacity-60">
             <Flag size={14} /> {submitting ? "Grading…" : "Submit"}
           </button>
-          <button onClick={() => openDialog({ kind: "quit" })} className="rounded-lg p-1.5 text-ink-3 hover:bg-bg-3 hover:text-ink" title="Quit challenge">
+          <button disabled={submitting} onClick={() => openDialog({ kind: "quit" })} className="rounded-lg p-1.5 text-ink-3 hover:bg-bg-3 hover:text-ink" title="Quit challenge">
             <X size={15} />
           </button>
         </div>
@@ -126,10 +125,11 @@ function ThreadActions() {
   const chat = useStore((s) => s.chats.find((c) => c.id === s.activeChatId) ?? null);
   const projects = useStore((s) => s.projects);
   const skills = useStore((s) => s.skills);
+  const busy = useStore((s) => s.busyChatIds.includes(chat?.id ?? ""));
   const [open, setOpen] = useState(false);
   if (!chat || chat.messages.length === 0) return null;
-  const firstPrompt = chat.messages.find((m) => m.role === "user")?.parts.filter((p) => p.type === "text").map((p) => (p as { text: string }).text).join(" ") ?? "";
-  const canSkill = !!chat.cowork && firstPrompt.trim().length > 0;
+  const firstPrompt = chat.messages.filter((m) => m.role === "user").flatMap((m) => m.parts.filter((p) => p.type === "text").map((p) => p.text)).join("\n\n");
+  const canSkill = !!chat.cowork && !busy && chat.messages.some((m) => m.role === "assistant") && firstPrompt.trim().length > 0;
   return (
     <div className="mr-1 flex items-center gap-1">
       {!chat.projectId && (
@@ -144,7 +144,7 @@ function ThreadActions() {
                 <button key={p.id} onClick={() => { setChatProject(chat.id, p.id); track("added_to_project", p.id); toast({ title: `Added to ${p.name}`, tone: "ok" }, 2500); setOpen(false); }} className="w-full truncate rounded-lg px-2.5 py-1.5 text-left text-[13px] hover:bg-bg-2">{p.name}</button>
               ))}
               <div className="my-1 border-t border-line" />
-              <button onClick={() => { setOpen(false); openDialog({ kind: "new-project" }); }} className="w-full rounded-lg px-2.5 py-1.5 text-left text-[13px] text-ink-2 hover:bg-bg-2">New project…</button>
+              <button onClick={() => { setOpen(false); openDialog({ kind: "new-project", chatId: chat.id }); }} className="w-full rounded-lg px-2.5 py-1.5 text-left text-[13px] text-ink-2 hover:bg-bg-2">New project…</button>
             </div>
           )}
         </div>

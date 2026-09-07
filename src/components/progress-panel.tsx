@@ -18,9 +18,9 @@ export function ProgressPanel() {
   const results = useStore((s) => s.results);
   const earned = new Set(Object.values(results).filter((r) => r.passed).flatMap((r) => r.badges));
   const pts = totalPoints(results);
-  const tier = tierFor(pts);
+  const tier = tierFor(pts, Object.values(results).filter((r) => r.passed).length);
   const current = TIERS.find((t) => t.tier === tier) ?? null;
-  const next = TIERS.find((t) => t.min > pts) ?? null;
+  const next = tier === "AI-Native" ? null : TIERS.find((t) => t.min > pts) ?? null;
   const floor = current?.min ?? 0;
   const progress = next ? Math.min(1, Math.max(0, (pts - floor) / (next.min - floor))) : 1;
   const gradable = Object.values(SKILLS).filter((s) => s.status === "ready").length;
@@ -69,7 +69,7 @@ export function ProgressPanel() {
                         <span className="shrink-0 text-[10px] uppercase tracking-wide text-ink-3">soon</span>
                       </div>
                     ) : (
-                      <button key={id} onClick={() => { const c = CHALLENGES.find((x) => x.badges.includes(id)); if (c) { closeDialog(); openDialog({ kind: "brief", slug: c.slug }); } }} title={has ? "Earned. Open the challenge again" : "Open the challenge that teaches it"} className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[12.5px] transition hover:border-line-2", has ? "border-ok/50 bg-ok/10 font-medium text-ink shadow-sm shadow-ok/10" : "border-dashed border-line text-ink-3")}>
+                      <button key={id} onClick={() => { const c = CHALLENGES.find((x) => x.badges.includes(id)); if (c) { closeDialog(); openDialog({ kind: "brief", slug: c.slug }); } }} title={has ? "Earned. Open the challenge again" : "Open the challenge that teaches it"} className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[12.5px] transition hover:border-line-2", has ? "border-ok/50 bg-ok/10 font-medium text-ink shadow-sm shadow-ok/10" : "border-line bg-bg text-ink-2 hover:bg-bg-2")}>
                         <SkillIcon id={id} size={15} className={has ? "text-ok" : "text-ink-3"} />
                         <span className="min-w-0 flex-1 truncate">{s.name}</span>
                         {has && <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-ok text-bg"><Check size={10} strokeWidth={3} /></span>}

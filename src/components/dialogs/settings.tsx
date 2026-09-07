@@ -1,4 +1,5 @@
 "use client";
+import { SubscriptionCard } from "../subscription-card";
 import { useEffect, useRef, useState } from "react";
 import { Camera, Check, Trash2, X, Settings as Gear, CircleUser, Zap, Cable, Brain, Plus, SlidersHorizontal } from "lucide-react";
 import { Button, inputCls } from "../dialog";
@@ -270,6 +271,7 @@ function Account() {
           </>
         )}
       </section>
+      <SubscriptionCard />
     </div>
   );
 }
@@ -313,7 +315,7 @@ function Skills() {
               return (
                 <div key={k.name} className="flex items-center gap-2 rounded-lg border border-line px-2.5 py-2">
                   <div className="min-w-0 flex-1"><div className="truncate text-[13.5px] font-medium">/{k.name}</div><div className="truncate text-[12px] text-ink-3">{k.description}</div></div>
-                  <Button variant={have ? "ghost" : "outline"} className="h-7 px-2.5 text-[12px]" disabled={have} onClick={() => { createSkill({ name: k.name, description: k.description, prompt: k.prompt }); track("skill_added", k.name); toast({ title: `/${k.name} added`, body: "Type it in the message box to use it.", tone: "ok" }, 3000); }}>{have ? "Added" : "Add"}</Button>
+                  <Button variant={have ? "ghost" : "outline"} className="h-7 px-2.5 text-[12px]" onClick={() => { if (!have) createSkill({ name: k.name, description: k.description, prompt: k.prompt }); track("skill_added", k.name); toast({ title: `/${k.name} added`, body: "Type it in the message box to use it.", tone: "ok" }, 3000); }}>{have ? "Use this skill" : "Add"}</Button>
                 </div>
               );
             })}
@@ -371,7 +373,7 @@ function Connectors() {
   const on = useStore((s) => s.connectors);
   return (
     <div>
-      <div className="mb-3 text-[13px] text-ink-2">Give the assistant access to your work at Halden. Everything here is simulated: connecting cannot email anyone, delete anything, or touch your real accounts.</div>
+      <div className="mb-3 text-[13px] text-ink-2">Practice connecting sample inboxes, files and data. These connectors use training data and never access your real accounts.</div>
       <div className="space-y-2">
         {CONNECTORS.map((c) => {
           const active = on.includes(c.id);

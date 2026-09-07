@@ -8,11 +8,13 @@ export interface Behavior {
   event: ArenaEventType;
   /** optional required detail (e.g. connector id, model choice) */
   detail?: string;
+  minCount?: number;
 }
 
 /** A check the grader judges from the transcript against the hidden key. */
 export interface Check {
   id: string;
+  measure?: "ten-words";
   label: string;
 }
 
@@ -58,12 +60,12 @@ export interface ChallengeKey {
 
 export { SKILLS as BADGES } from "./skills";
 
-/** Speed: full credit to 75% of the box, then linear to 0.7 at 100%, floor 0.6 after. */
+/** Speed: full credit to 75% of the box, then continuous decline to a 0.6 floor at 125%. */
 export function speedMultiplier(secondsUsed: number, minutes: number): number {
   const frac = secondsUsed / (minutes * 60);
   if (frac <= 0.75) return 1;
-  if (frac >= 1) return 0.6;
-  return 1 - (frac - 0.75) * 1.2;
+  if (frac >= 1.25) return 0.6;
+  return 1 - (frac - 0.75) * 0.8;
 }
 
 /** Each hint used costs 15% of the base. */

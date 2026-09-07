@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getMember } from "@/lib/auth";
 import { adminClient, adminConfigured } from "@/lib/supabase/admin";
 import { supabaseConfigured } from "@/lib/supabase/server";
+import { getChallenge } from "@/lib/arena/challenges";
+import { speedMultiplier } from "@/lib/arena/types";
+import { subscriberStatus } from "@/lib/subscriber-status";
 import type { ArenaResult } from "@/lib/types";
 
 /** Who am I, plus my scored results so a fresh browser can catch up. */
@@ -15,19 +18,20 @@ export async function GET() {
     return {
       slug: r.slug,
       points: r.points,
-      maxPoints: 0,
+      maxPoints: g.maxPoints ?? getChallenge(r.slug)?.points ?? 0,
+      version: g.version, checkLabels: g.checkLabels,
       passed: r.passed,
       seconds: r.seconds,
-      speedMult: 1,
+      speedMult: g.speedMult ?? speedMultiplier(r.seconds, getChallenge(r.slug)?.minutes ?? 5),
       hintsUsed: r.hints_used,
       behaviors: g.behaviors ?? [],
       checks: g.checks ?? [],
       feedback: g.feedback ?? "",
-      badges: [],
+      badges: r.passed ? g.badges ?? getChallenge(r.slug)?.badges ?? [] : [],
       at: r.submitted_at,
     };
   });
-  return NextResponse.json({ configured, member: { id: member.id, email: member.email, name: member.display_name || member.pseudonym, avatar: member.avatar_url, linkedin: member.linkedin_url, x: member.x_url }, results });
+  return NextResponse.json({ configured, member: { id: member.id, email: member.email, name: member.display_name || member.pseudonym, avatar: member.avatar_url, linkedin: member.linkedin_url, x: member.x_url }, results, subscription: await subscriberStatus(member), onboarding: member.onboarding, onboardedAt: member.onboarded_at }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PATCH(request: Request) {

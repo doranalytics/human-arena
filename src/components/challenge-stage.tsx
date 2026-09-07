@@ -1,10 +1,12 @@
 "use client";
-import { FileText, Image as ImageIcon, GripVertical, Table2, Quote, Swords, Flag } from "lucide-react";
+import { FileText, Image as ImageIcon, GripVertical, Table2, Quote, Swords } from "lucide-react";
 import { LearnCard } from "./learn-card";
 import type { ChallengeDef, Material } from "@/lib/arena/types";
 import type { Attempt } from "@/lib/types";
 import { MATERIAL_MIME, sendToComposer } from "@/lib/materials";
 import { cn } from "@/lib/utils";
+import { BriefBody } from "./dialogs/challenges";
+import { ChallengeCriteria } from "./challenge-criteria";
 import { SkillPill } from "./skill-pill";
 
 function Card({ m, compact }: { m: Material; compact?: boolean }) {
@@ -19,7 +21,7 @@ function Card({ m, compact }: { m: Material; compact?: boolean }) {
       }}
       onClick={() => sendToComposer(m)}
       title={hint}
-      className={cn("group flex cursor-grab select-none items-start gap-2.5 rounded-xl border border-line bg-bg text-left shadow-sm transition hover:border-clay/60 hover:shadow-md active:cursor-grabbing", compact ? "px-2.5 py-1.5" : "w-[260px] px-3.5 py-3")}
+      className={cn("group flex cursor-grab select-none items-start gap-2.5 rounded-xl border border-line bg-bg text-left shadow-sm transition hover:border-clay/60 hover:shadow-md active:cursor-grabbing", compact ? "px-2.5 py-1.5" : "w-[240px] max-w-full px-3 py-2.5")}
     >
       <span className={cn("flex shrink-0 items-center justify-center rounded-lg bg-bg-3 text-ink-2", compact ? "h-6 w-6" : "h-9 w-9")}>{icon}</span>
       <div className="min-w-0 flex-1">
@@ -51,10 +53,7 @@ export function ChallengeStage({ c }: { c: ChallengeDef; attempt: Attempt }) {
         <h1 className="mt-1 font-serif text-[34px] leading-tight tracking-tight text-ink">{c.title}</h1>
         <LearnCard text={c.hook} className="mt-2" />
       </div>
-      <div className="px-1">
-        <div className="text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">Your move</div>
-        <div className="prose-chat mt-0.5 text-[16px]">{c.brief.split(/\n\s*\n/).map((p, i) => <p key={i} className="my-1" dangerouslySetInnerHTML={{ __html: p.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>") }} />)}</div>
-      </div>
+      <div className="px-1"><BriefBody brief={c.brief} /><ChallengeCriteria challenge={c} /></div>
       {materials.length > 0 && (
         <div className="mt-4">
           <div className="mb-2 text-[11.5px] font-medium uppercase tracking-wide text-ink-3">What you have</div>
@@ -62,7 +61,7 @@ export function ChallengeStage({ c }: { c: ChallengeDef; attempt: Attempt }) {
         </div>
       )}
       <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[12px] text-ink-3">
-        <Flag size={12} /> Done when {c.deliverable.replace(/\.$/, "").toLowerCase()} · unlocks {c.badges.map((b) => <SkillPill key={b} id={b} />)}
+        Skills practiced: {c.badges.map((b) => <SkillPill key={b} id={b} />)}
       </div>
     </div>
   );

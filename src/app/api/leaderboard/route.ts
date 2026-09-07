@@ -37,14 +37,16 @@ export async function GET(req: Request) {
   const member = await getMember();
   const { data, error } = await adminClient().rpc("leaderboard", { p_board: board });
   if (error) return NextResponse.json({ rows: rank(seedRows(board)), live: true, me: member?.id ?? null, error: error.message });
+  const ids = (data as { id: string }[]).map((r) => r.id);
+  const { data: subscriptions } = ids.length ? await adminClient().from("members").select("id,is_paid").in("id", ids) : { data: [] };
+  const paidMembers = new Set((subscriptions ?? []).filter((m) => m.is_paid).map((m) => m.id));
   const live: Omit<BoardRow, "rank">[] = (data as { id: string; display_name: string | null; pseudonym: string; avatar_url: string | null; linkedin_url: string | null; x_url: string | null; points: number; challenges: number }[]).map((r) => ({
     id: r.id,
     name: r.display_name || r.pseudonym,
     avatar: r.avatar_url,
     linkedin: r.linkedin_url,
     x: r.x_url,
-    // Real members are shown in full once they have set a name.
-    paid: !!r.display_name,
+    paid: paidMembers.has(r.id),
     points: Number(r.points),
     challenges: Number(r.challenges),
     you: member?.id === r.id,

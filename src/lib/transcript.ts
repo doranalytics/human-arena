@@ -1,3 +1,4 @@
+import type { TurnContext } from "./types";
 import type { UIMessage } from "ai";
 import { getToolName, isToolUIPart } from "ai";
 
@@ -8,6 +9,7 @@ export interface ChatForGrading {
   customInstructions?: string;
   memories?: string[];
   messages: UIMessage[];
+  contexts?: TurnContext[];
 }
 
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n) + " …[truncated]" : s);
@@ -17,24 +19,29 @@ export function transcriptOf(chats: ChatForGrading[]): string {
   return chats
     .map((c) => {
       const head = [`=== CHAT: ${c.title} ===`];
-      if (c.projectName) head.push(`Project: ${c.projectName}`);
-      if (c.projectInstructions) head.push(`Project instructions in force:\n${c.projectInstructions}`);
-      if (c.customInstructions) head.push(`Custom instructions in force:\n${c.customInstructions}`);
-      if (c.memories?.length) head.push(`Memories in force:\n${c.memories.map((m) => `- ${m}`).join("\n")}`);
       const body = c.messages.map((m) => {
         const lines: string[] = [];
+        const ctx = c.contexts?.find((x) => x.messageId === m.id);
+        const settings = ctx ? `SYSTEM SETTINGS (not user-written text):\n${JSON.stringify(ctx)}\n\n` : "";
         for (const p of m.parts) {
           if (p.type === "text") lines.push(p.text);
-          else if (p.type === "file") lines.push(`[attached file: ${p.filename ?? "file"} (${p.mediaType})]`);
+          else if (p.type === "file") {
+            lines.push(`[attached file: ${p.filename ?? "file"} (${p.mediaType})]`);
+            if (p.mediaType.startsWith("text/") && p.url.startsWith("data:")) {
+              try { lines.push(clip(Buffer.from(p.url.split(",")[1], "base64").toString("utf8"), 24000)); } catch { /* file marker still available */ }
+            }
+          }
+          else if (p.type === "source-url") lines.push(`[source: ${p.title ?? ""} ${p.url}]`);
           else if (isToolUIPart(p)) {
             const name = getToolName(p);
             const input = "input" in p && p.input !== undefined ? JSON.stringify(p.input) : "";
             const output = "output" in p && p.output !== undefined ? JSON.stringify(p.output) : "";
-            lines.push(`[tool call: ${name} input=${clip(input, 300)}]`);
-            if (output) lines.push(`[tool result: ${clip(output, 1600)}]`);
+            lines.push(`[tool call: ${name} input=${clip(input, 16000)}]`);
+            if (p.state === "output-error") lines.push(`[tool error: ${p.errorText}]`);
+            if (output) lines.push(`[tool result: ${clip(output, 24000)}]`);
           }
         }
-        return `${m.role.toUpperCase()}:\n${lines.join("\n")}`;
+        return `${settings}${m.role.toUpperCase()}:\n${lines.join("\n")}`;
       });
       return [...head, ...body].join("\n\n");
     })

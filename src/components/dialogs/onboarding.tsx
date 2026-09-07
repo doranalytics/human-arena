@@ -1,61 +1,47 @@
 "use client";
 import { useState } from "react";
-import { Swords, Trophy, Timer, ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Button } from "../dialog";
-import { updateSettings } from "@/lib/store";
+import { updateSettings, useStore } from "@/lib/store";
 import { openDialog } from "@/lib/ui";
+import { useSession, setSession } from "@/lib/session";
+import { ONBOARDING_QUESTIONS } from "@/lib/onboarding";
 import { Logo } from "../icons";
 
-const SCREENS = [
-  {
-    icon: <Logo size={44} tile />,
-    title: "Welcome to How to AI Games",
-    body: "A safe copy of a modern AI assistant where you learn by doing. Nothing here is real, so you can click anything, break nothing, and find out what these tools can actually do.",
-  },
-  {
-    icon: <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-clay text-white"><Swords size={22} /></span>,
-    title: "Challenges teach one skill each",
-    body: "Pick a challenge, the clock starts, and everything you need appears above the message box. Make the move, and the arena checks what you did. Hints cost a little, quitting costs nothing.",
-  },
-  {
-    icon: <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#2c2b28] text-bg"><Trophy size={22} /></span>,
-    title: "Points, levels, and a weekly winner",
-    body: "Every pass earns points and unlocks a skill. Points move you from Tourist toward AI-Native. Top of the weekly board goes in front of a million people on Ruben\u2019s LinkedIn.",
-  },
-];
-
-/** First visit: three screens, then straight into the first challenge. */
 export function OnboardingDialog() {
-  const [i, setI] = useState(0);
-  const last = i === SCREENS.length - 1;
-  const s = SCREENS[i];
-  function finish(startFirst: boolean) {
-    updateSettings({ onboarded: true });
-    if (startFirst) openDialog({ kind: "brief", slug: "ten-words" });
-    else openDialog({ kind: "challenges" });
+  const session = useSession();
+  const saved = useStore((s) => s.settings.onboarding);
+  const [step, setStep] = useState(-1);
+  const [answers, setAnswers] = useState({ level: saved?.level ?? "", goal: saved?.goal ?? "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const q = step >= 0 ? ONBOARDING_QUESTIONS[step] : null;
+  async function next() {
+    if (step < 1) { setStep(step + 1); return; }
+    setBusy(true); setError("");
+    try {
+      if (session.me) {
+        const r = await fetch("/api/onboarding", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(answers) });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error ?? "Could not save your setup.");
+        setSession({ onboardedAt: j.onboardedAt });
+      }
+      updateSettings({ onboarded: true, onboarding: answers });
+      openDialog({ kind: "brief", slug: "ten-words" });
+    } catch (e) { setError(e instanceof Error ? e.message : "Please try again."); }
+    finally { setBusy(false); }
   }
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]">
-      <div role="dialog" aria-modal className="fade-up w-full max-w-md overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl shadow-black/20">
-        <div className="px-7 pb-2 pt-8">
-          {s.icon}
-          <h1 className="mt-5 font-serif text-[28px] leading-tight">{s.title}</h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-ink-2">{s.body}</p>
-        </div>
-        <div className="flex items-center justify-between px-7 pb-6 pt-4">
-          <div className="flex items-center gap-1.5">
-            {SCREENS.map((_, k) => <span key={k} className={"h-1.5 rounded-full transition-all " + (k === i ? "w-5 bg-clay" : "w-1.5 bg-line-2")} />)}
-          </div>
-          <div className="flex items-center gap-2">
-            {!last && <Button variant="ghost" onClick={() => finish(false)}>Skip</Button>}
-            {last ? (
-              <Button className="bg-clay hover:bg-clay-dark" onClick={() => finish(true)}><Timer size={14} /> Start your first challenge</Button>
-            ) : (
-              <Button onClick={() => setI(i + 1)}>Next <ArrowRight size={14} /></Button>
-            )}
-          </div>
-        </div>
+  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]">
+    <div role="dialog" aria-modal="true" aria-labelledby="welcome-title" className="fade-up w-full max-w-md rounded-2xl border border-line bg-bg p-7 shadow-2xl">
+      <Logo size={40} tile />
+      <h1 id="welcome-title" className="mt-4 font-serif text-[28px] leading-tight">{q?.title ?? "Learn AI by using it."}</h1>
+      {!q ? <p className="mt-3 text-[15px] leading-relaxed text-ink-2">Practice with real AI and sample files. Each challenge teaches a useful move, gives you everything you need, and checks the instructions you were shown. Complete the full library to reach AI-Native.</p> :
+        <div className="mt-4 space-y-2">{q.options.map((o) => <button key={o.id} onClick={() => setAnswers({ ...answers, [q.id]: o.id })} className={`flex w-full items-center justify-between rounded-lg border px-3.5 py-3 text-left text-[14px] ${answers[q.id] === o.id ? "border-clay bg-clay/5" : "border-line hover:bg-bg-2"}`}>{o.label}{answers[q.id] === o.id && <Check size={16} className="text-clay" />}</button>)}</div>}
+      {error && <p role="alert" className="mt-3 text-[13px] text-bad">{error}</p>}
+      <div className="mt-5 flex items-center justify-between">
+        <span className="text-[12px] text-ink-3">{q ? `${step + 1} of 2 questions` : "No experience needed"}</span>
+        <div className="flex gap-2">{step >= 0 && <Button variant="ghost" onClick={() => setStep(step - 1)} disabled={busy}>Back</Button>}<Button onClick={next} disabled={busy || !session.loaded || (!!q && !answers[q.id])}>{busy ? "Saving…" : step === 1 ? "Start learning" : "Continue"}<ArrowRight size={14} /></Button></div>
       </div>
     </div>
-  );
+  </div>;
 }

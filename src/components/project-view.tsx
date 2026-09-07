@@ -9,7 +9,7 @@ import { relTime } from "@/lib/utils";
 
 export function ProjectView({ project }: { project: Project }) {
   const allChats = useStore((s) => s.chats);
-  const chats = useMemo(() => allChats.filter((c) => c.projectId === project.id), [allChats, project.id]);
+  const chats = useMemo(() => allChats.filter((c) => c.projectId === project.id && !c.draft), [allChats, project.id]);
   const [instr, setInstr] = useState(project.instructions);
   const fileInput = useRef<HTMLInputElement>(null);
   const dirty = instr !== project.instructions;

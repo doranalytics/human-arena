@@ -1,0 +1,1266 @@
+[
+  {
+    "slug": "make-it-ask-first",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "asked",
+        "evidence": "The assistant asked three questions about the goal, group size, and budget before providing any plan.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You followed the instruction by gathering three key planning details before proposing an offsite plan.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "grade-yourself",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "rubric",
+        "evidence": "The assistant graded the draft 4/10 and identified unclear timing and the absence of a next step.",
+        "verdict": "pass"
+      },
+      {
+        "id": "rewrite",
+        "evidence": "The rewrite promises a delivery-date update tomorrow, addressing the critique about timing and next steps.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated effective self-critique and revision by turning identified weaknesses into concrete customer guidance.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "ten-words",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "ten",
+        "verdict": "pass",
+        "evidence": "The final explanation contains 10 words; the instruction asks for ten."
+      },
+      {
+        "id": "explains",
+        "evidence": "The ten-word explanation accurately describes gravity through attraction, falling, orbits, tides, and cosmic structure.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated concise, accurate explanation of a complex subject.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "make-it-ask-first",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "asked",
+        "evidence": "The assistant only said “Hello” and asked no questions before giving a plan.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the requirement to ask at least three questions first. Ask three planning questions before providing any offsite plan.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "grade-yourself",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "rubric",
+        "evidence": "The assistant only replied “Hello” and did not provide or critique a shipping-delay draft.",
+        "verdict": "fail"
+      },
+      {
+        "id": "rewrite",
+        "evidence": "The assistant provided no critique or rewritten shipping-delay note addressing identified problems.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the draft, self-grade, and rewrite. Provide a short delay note, critique it, then rewrite it using the critique.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "three-audiences",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "three",
+        "evidence": "The response provides three labelled sections: Age5, High-school graduate, and PhD.",
+        "verdict": "pass"
+      },
+      {
+        "id": "levels",
+        "evidence": "The explanations progress from simple language to atmospheric terminology and advanced Rayleigh-scattering detail.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated effective audience-aware explanation by adjusting vocabulary and technical depth across three levels.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "the-other-side",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "counter",
+        "evidence": "The assistant argues office work is better, citing immediate mentorship, spontaneous feedback, and faster onboarding without hedging.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated focused counterargument with concrete points and no both-sides hedging.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "the-other-side",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "counter",
+        "evidence": "The assistant only said “Hello” and gave no concrete argument against remote work or forceful one-sided reasoning.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the required counterargument. State your belief in remote work, then ask for a forceful argument against it with concrete points and no hedging.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "three-audiences",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "three",
+        "evidence": "The assistant replied only “Hello” and provided no labelled explanations; the task requires three labelled versions.",
+        "verdict": "fail"
+      },
+      {
+        "id": "levels",
+        "evidence": "No explanation was provided at any audience level; each version must be clearly pitched like I’m 5, high-school graduate, and PhD.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the three audience-specific explanations. Provide three labelled versions, adjusting vocabulary and depth for each audience.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "rehearsal",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "character",
+        "evidence": "The assistant made two in-character objections as a tough customer, citing a cheaper competitor and rejecting setup value.",
+        "verdict": "pass"
+      },
+      {
+        "id": "coach",
+        "evidence": "After the user said “Break character,” the assistant praised holding price and suggested asking about the customer’s desired outcome.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated sustained role-play and effective transition into concise coaching.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "ten-words",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "ten",
+        "verdict": "fail",
+        "evidence": "The final explanation contains 1 words; the instruction asks for ten."
+      },
+      {
+        "id": "explains",
+        "evidence": "The assistant only says “Hello” and provides no explanation of a complex subject.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "Ask for another revision with exactly ten words, then check the count.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "twenty-then-three",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "twenty",
+        "evidence": "The assistant produced a numbered list containing exactly twenty tent names, from Dawn through Moon.",
+        "verdict": "pass"
+      },
+      {
+        "id": "three",
+        "evidence": "The follow-up rule was four letters, and Dawn, Pine, and Peak are three original names that fit it.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated effective idea generation followed by clear rule-based narrowing.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "tutor-mode",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "one-at-a-time",
+        "evidence": "The assistant asked one question, waited for the user’s answer of 40, then asked the next question.",
+        "verdict": "pass"
+      },
+      {
+        "id": "adapts",
+        "evidence": "The later question explicitly used the earlier answer, “gross profit of 40,” to ask about gross margin.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated one-at-a-time questioning and adapted the next question to the learner’s answer.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "rehearsal",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "character",
+        "evidence": "The assistant only said “Hello” and did not role-play a tough customer or conduct exchanges while pressing for a discount.",
+        "verdict": "fail"
+      },
+      {
+        "id": "coach",
+        "evidence": "The transcript contains no “break character” request and no feedback on the learner’s responses.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed both the in-character negotiation and the coaching phase. Start as a demanding customer, exchange several price objections, then break character and give feedback.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "twenty-then-three",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "twenty",
+        "evidence": "The assistant said only “Hello” and produced no tent names; the challenge requires twenty names.",
+        "verdict": "fail"
+      },
+      {
+        "id": "three",
+        "evidence": "No follow-up rule was given and no three original names were selected; the challenge requires both.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the naming and narrowing tasks. Provide twenty tent names, then state one rule and select three of those names.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "tutor-mode",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "one-at-a-time",
+        "evidence": "The assistant only said “Hello” and asked no question, so it did not begin one-question-at-a-time tutoring.",
+        "verdict": "fail"
+      },
+      {
+        "id": "adapts",
+        "evidence": "There was no later question or learner answer, so the assistant could not respond to an earlier answer.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the quiz interaction entirely. Ask one question about gross margin, wait for the answer, then adapt the next question to it.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "deslop",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "clean",
+        "evidence": "The rewrite says teams communicate clearly, use useful tools, and work together in direct, natural language without clichés.",
+        "verdict": "pass"
+      },
+      {
+        "id": "meaning",
+        "evidence": "The rewrite preserves the point that communication, useful tools, and teamwork help teams get more done.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated concise plain-language rewriting while preserving the paragraph’s central meaning.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "reply-to-this",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "no",
+        "evidence": "The reply says, “I can’t cover Saturday,” clearly declining the shift.",
+        "verdict": "pass"
+      },
+      {
+        "id": "length",
+        "evidence": "The reply contains seven words and is a concise two-sentence response.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated concise, clear refusal writing.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "sound-like-you",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "samples",
+        "evidence": "The user included both sample passages before asking for a new note, satisfying the requirement to provide both samples.",
+        "verdict": "pass"
+      },
+      {
+        "id": "voice",
+        "evidence": "The note uses short, direct sentences and avoids corporate filler, matching the samples’ concise, practical voice.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated effective voice matching while addressing the delayed delivery clearly.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "deslop",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "clean",
+        "evidence": "The reply says only “Hello” and does not provide a plain rewrite of the paragraph.",
+        "verdict": "fail"
+      },
+      {
+        "id": "meaning",
+        "evidence": "The reply does not preserve the paragraph’s point about communication, tools, teamwork, and productivity.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You did not rewrite the supplied paragraph. Provide a natural, plain-language version that keeps its main point about communication, tools, teamwork, and productivity.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "reply-to-this",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "no",
+        "evidence": "The assistant reply says only “Hello” and does not decline the Saturday shift.",
+        "verdict": "fail"
+      },
+      {
+        "id": "length",
+        "evidence": "The reply is one word, so it is short.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You missed the required decline. Reply briefly with a clear no to covering the Saturday shift.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "sound-like-you",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "samples",
+        "evidence": "The user only said “Say hello”; neither sample was given to the assistant in the transcript.",
+        "verdict": "fail"
+      },
+      {
+        "id": "voice",
+        "evidence": "The assistant replied “Hello,” which is not a new note about a delayed delivery matching the samples’ style.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You did not provide the samples or request the required delayed-delivery note. Include both samples and ask for a short, direct note in the same voice.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "there-and-back",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "french",
+        "evidence": "A French translation is provided, preserving the tent’s weight, capacity, setup time, and drying purpose.",
+        "verdict": "pass"
+      },
+      {
+        "id": "back",
+        "evidence": "An English back-translation appears, followed by listed wording changes and a statement that measurements remain unchanged.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated accurate translation, round-trip comparison, and concise identification of meaningful wording changes.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "one-page",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "five",
+        "evidence": "The response contains exactly five bullets, each accurately drawn from the expense policy: timing, receipts, approvals, hotel caps, and travelling meal limits.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You selected five accurate, practical policy points and presented them as distinct bullets.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "pull-the-table",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "table",
+        "evidence": "The table lists all 10 expense line items, with lunches and taxis correctly combined.",
+        "verdict": "pass"
+      },
+      {
+        "id": "total",
+        "evidence": "The stated total is $3,686.20, matching the correct sum of all expenses.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You accurately transformed messy notes into a complete, organized expense table with a correct total.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "one-page",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "five",
+        "evidence": "The assistant only said “Hello” and provided no five bullets drawn from the expense policy, so the completion requirement is unmet.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the requirement to attach the expense policy and provide five document-based bullets. Ask for five key points and list exactly five bullets.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "there-and-back",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "french",
+        "evidence": "The assistant only says “Hello” and provides no French translation of the paragraph.",
+        "verdict": "fail"
+      },
+      {
+        "id": "back",
+        "evidence": "The assistant provides neither an English round trip nor a list of differences.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed both required translation stages. Translate the paragraph into French, back into English, then list the differences.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "pull-the-table",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "table",
+        "evidence": "The assistant replied only “Hello” and provided no table with one row per expense.",
+        "verdict": "fail"
+      },
+      {
+        "id": "total",
+        "evidence": "The assistant replied only “Hello” and provided no total for the expenses.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the requested expense table and total. Create one row per line item, then calculate and include the total of 3686.20.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "show-dont-tell",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "never",
+        "evidence": "The assistant names fabric softener, which the care label prohibits.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You correctly identified a prohibited care action from the photo.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "read-the-pdf",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "price",
+        "evidence": "The reply states USD3.85 per metre, matching the agreement’s price per metre.",
+        "verdict": "pass"
+      },
+      {
+        "id": "minimum",
+        "evidence": "The reply states a minimum of 8000 metres per colour, matching the agreement.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You accurately extracted both required figures from the attached PDF.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "picture-to-text",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "transcribed",
+        "evidence": "The assistant transcribed all six lines accurately, including times, quantities, locations, and punctuation-relevant wording.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You accurately converted the handwritten note into complete, readable text.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "show-dont-tell",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "never",
+        "evidence": "The assistant only says “Hello” and does not name any prohibited action from the care label.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the required prohibited step. Ask one question about what must never be done with the jacket, using the photo’s label.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "read-the-pdf",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "price",
+        "evidence": "The reply only says “Hello” and gives no price per metre; it should report USD3.85 per metre from the PDF.",
+        "verdict": "fail"
+      },
+      {
+        "id": "minimum",
+        "evidence": "The reply only says “Hello” and gives no minimum order; it should report 8000 metres per colour from the PDF.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed both requested figures. Attach the PDF, ask the questions, and report USD3.85 per metre and 8000 metres per colour.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "picture-math",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "june",
+        "evidence": "The assistant gives $1.789 million, equivalent to 1,789 thousand dollars, matching the six June values’ total.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You correctly totaled the June column and converted the result into millions.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "picture-to-text",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "transcribed",
+        "evidence": "The assistant only said “Hello” and did not transcribe any lines from the note.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You did not provide the note as text. Transcribe all lines accurately from the attached image.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "fresh-news",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "two-items",
+        "evidence": "The response lists two distinct outdoor gear stories dated September 5 and September 4, both within seven days of September 6.",
+        "verdict": "pass"
+      },
+      {
+        "id": "sourced",
+        "evidence": "Each story includes a link matching a URL returned by the successful web search.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated concise recent-story selection and source linking.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "check-it",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "two-turns",
+        "evidence": "The first answer occurred with web search off; the second used web search successfully after web search was enabled.",
+        "verdict": "pass"
+      },
+      {
+        "id": "verified",
+        "evidence": "The second response confirmed both original facts, naming Bob Gore and 1969, and stated that no correction was needed.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated effective two-turn fact verification with an appropriate confirmation of the original answer.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "picture-math",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "june",
+        "evidence": "The assistant only said “Hello” and provided no June-column total.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the required June total. Attach the screenshot and calculate the June column total, which is $1.789 million.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "fresh-news",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "two-items",
+        "evidence": "The assistant only says “Hello” and provides zero news stories, so it does not provide two distinct items dated within seven days.",
+        "verdict": "fail"
+      },
+      {
+        "id": "sourced",
+        "evidence": "The assistant provides no stories and no links from search results, so neither item has a real search-result link.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed both required recent outdoor-gear stories and their links. Search for two qualifying stories, verify their dates, and include each source link.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "check-it",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "two-turns",
+        "evidence": "The transcript contains only “Say hello” and “Hello,” with no Gore-Tex answer or searched second turn.",
+        "verdict": "fail"
+      },
+      {
+        "id": "verified",
+        "evidence": "No second-turn comparison, correction, or confirmation of Gore-Tex facts appears in the transcript.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed both required turns. Ask the unsearched Gore-Tex question first, then enable search and request verification with corrections or confirmation.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "deep-dive",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "structure",
+        "evidence": "The report has two sections, Diversify sourcing and Hold buffers, describing how outdoor apparel brands respond to supplier delays in 2026.",
+        "verdict": "pass"
+      },
+      {
+        "id": "sources",
+        "evidence": "Each reported tactic has a linked source, and both links correspond to the successful web search results.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated concise report structuring and linked sourcing from successful research results.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "read-the-link",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "bullets",
+        "evidence": "The tool result says ultralight backpacking minimizes carried weight through lightweight gear and careful choices while considering safety tradeoffs; the summary conveys these points.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You accurately summarized the page’s main idea and safety consideration.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "pick-the-brain",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "answer",
+        "evidence": "The assistant calculated 249 × 0.55 − 92 = $44.95, matching the correct partner-jacket earnings.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You correctly calculated the partner discount and per-jacket earnings.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "deep-dive",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "structure",
+        "evidence": "The assistant only said “Hello” and provided no sectioned report about how outdoor apparel brands handle supplier delays in 2026.",
+        "verdict": "fail"
+      },
+      {
+        "id": "sources",
+        "evidence": "The assistant included no linked sources or evidence from searches supporting a report.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the research request and both deliverables. Turn on Research, investigate the topic, then provide a sectioned report with supporting source links.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "read-the-link",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "bullets",
+        "evidence": "The assistant only says “Hello” and provides no summary reflecting the linked Wikipedia page.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the required page summary. Open the link, identify its main points, and summarize what the page says.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "pick-the-brain",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "answer",
+        "evidence": "The assistant only said “Hello” and did not ask the jacket-profit question or provide the $44.95 answer.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the required calculation and Smart-model request. Switch to Smart, ask the specified question, and answer $44.95 per jacket.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "connect-and-ask",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "number",
+        "evidence": "The warehouse’s latest row is 2025-08 with revenue_usd 2,490,000, matching the stated August 2025 amount.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You correctly identified and reported the latest monthly revenue from the warehouse.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "skill-up",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "sections",
+        "evidence": "The notes include Decisions, Action items, and Open questions, all grounded in the leadership transcript.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated accurate meeting-note organization by separating decisions, actions, and unresolved questions.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "inbox-to-reply",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "found",
+        "evidence": "The search result identifies Marcus Oyelaran’s unread email, “Board deck: what I need from ops,” dated September 1, 2026.",
+        "verdict": "pass"
+      },
+      {
+        "id": "reply",
+        "evidence": "The draft acknowledges the Bergstrom plan, FY24 margin trend, and Q3 regional sales, with a review deadline of September 10.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You correctly identified the newest unread email and drafted a concise reply addressing all requested items.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "connect-and-ask",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "number",
+        "evidence": "The reply only says “Hello” and gives no latest-month revenue; the required warehouse result is USD2,490,000 for 2025-08.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You did not connect to the warehouse or ask for revenue. Use Customize, then Connectors, connect the warehouse, and read the latest month’s revenue.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "skill-up",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "sections",
+        "evidence": "The assistant only replied “Hello.” and provided no Decisions, Action items, or Open questions from a transcript.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the required meeting notes. Connect Drive, type /meeting-notes, and request notes on the leadership meeting transcript.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "inbox-to-reply",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "found",
+        "evidence": "The assistant only said hello and did not identify the newest unread email from the CFO about the Board deck.",
+        "verdict": "fail"
+      },
+      {
+        "id": "reply",
+        "evidence": "No reply draft was created acknowledging or responding to the CFO’s requests about the Board deck.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You did not connect Gmail, find the newest unread email, or draft a reply. Connect Gmail, identify the CFO’s email, then draft a short acknowledgment.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "make-a-skill",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "three",
+        "evidence": "The assistant output contains exactly three concise lines summarizing the tent’s weight, capacity, setup time, and dryness.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated concise three-line transformation.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "set-up-shop",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "format",
+        "evidence": "The assistant reply contains exactly three bullet points: Eggs, Oats, and Toast.",
+        "verdict": "pass"
+      },
+      {
+        "id": "no-repeat",
+        "evidence": "The chat message says only “Name some breakfast foods” and does not mention bullets or the rule.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated following project instructions while answering the user’s question directly.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "call-me",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "honoured",
+        "evidence": "The assistant replied “Four, Captain,” and the user’s chat message never mentioned the name Captain.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated that the custom instruction was honored in a new chat.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "make-a-skill",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "three",
+        "evidence": "The assistant only said “Hello.” and did not create, save, invoke, or produce three short lines from the paragraph.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the required skill creation and invocation. Create and save /three-lines, then run it on the paragraph to produce three short lines.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "set-up-shop",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "format",
+        "evidence": "The assistant replied “Hello.” as one plain sentence, not three bullets.",
+        "verdict": "fail"
+      },
+      {
+        "id": "no-repeat",
+        "evidence": "The chat message “Say hello” did not mention bullets or the project rule.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You missed the three-bullet reply requirement. Ask a question inside the project and ensure the answer has exactly three bullets.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "remember-this",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "recalled",
+        "evidence": "In the second chat, the assistant answered “Timberline Trail,” matching the remembered favourite without being told again.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated successful cross-chat memory recall.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "call-me",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "honoured",
+        "evidence": "The assistant replied “Hello.” and did not address the user as Captain; the name was not mentioned in the chat.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "The reply missed the required custom instruction. Add the rule to call you Captain, then start a new chat and ask anything.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "say-it",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "tips",
+        "evidence": "The reply gives three relevant tips: shake off water, separate the wet fly, and dry the tent before storage.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated the ability to provide three practical tips for packing a wet tent.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "remember-this",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "recalled",
+        "evidence": "The transcript contains only “Say hello” and “Hello,” with no second-chat question or Timberline Trail answer.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You did not complete the memory test. Tell the assistant to remember Timberline Trail, start a new chat, and ask which trail you like best.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "hand-it-off",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "numbers",
+        "evidence": "The reply lists all 12 FY24 monthly margins and four Q3-to-date regional sales matching the warehouse results.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You accurately extracted and matched every requested figure from the appropriate warehouse tables.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "say-it",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "tips",
+        "evidence": "The reply says only “Hello” and gives no tips about packing a wet tent; the reply must provide three such tips.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the required three tips. Dictate the requested sentence, correct any transcription errors, send it, and provide three wet-tent packing tips.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "choose-your-own",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "bio",
+        "evidence": "The two recorded picks were Friendly and Hiking; the final bio is friendly in tone and explicitly focuses on hiking trails and adventure.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated using sequential clickable answers to create a personalized bio.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "hand-it-off",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "numbers",
+        "evidence": "The assistant only said “Hello,” reporting no email figures or warehouse data; it did not provide the requested numbers.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the handoff and the requested figures. Connect Gmail and the warehouse, switch to Cowork, then read the newest unread email and retrieve its numbers.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "choose-your-own",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "bio",
+        "evidence": "The assistant only said “Hello” and provided no question cards or bio reflecting the learner’s answers.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You did not ask two one-at-a-time questions with clickable options or write a bio from the learner’s picks.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "refine-it",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "expand",
+        "evidence": "The assistant expanded the coast idea with beach lodging, cliff walking, and sunset seafood.",
+        "verdict": "pass"
+      },
+      {
+        "id": "cut",
+        "evidence": "The revised coast idea contains exactly two sentences: beach stay, then cliff walking at sunset.",
+        "verdict": "pass"
+      },
+      {
+        "id": "angle",
+        "evidence": "The assistant offered a different angle by switching to a quiet cabin in the woods.",
+        "verdict": "pass"
+      },
+      {
+        "id": "table",
+        "evidence": "The final response compares coast, hills, city, and cabin ideas in a Markdown table.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated effective iterative reshaping across expansion, compression, reframing, and tabular comparison.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "one-paragraph",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "one",
+        "evidence": "The reply is one shorter paragraph accurately covering approval thresholds, the 30-day deadline, receipts over $25, and travel rules.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated concise, accurate summarization while preserving the policy’s main claiming requirements.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "chain-it",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "summary",
+        "evidence": "Three search results dated September 3–5, 2026 became three summary lines, and email delivery returned sent=true to you.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated effective search, concise summarization, and self-emailing.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "refine-it",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "expand",
+        "evidence": "The assistant only said “Hello” and did not expand any weekend-trip idea.",
+        "verdict": "fail"
+      },
+      {
+        "id": "cut",
+        "evidence": "No weekend-trip idea was cut to two sentences.",
+        "verdict": "fail"
+      },
+      {
+        "id": "angle",
+        "evidence": "The transcript contains no request for or response giving a completely different angle.",
+        "verdict": "fail"
+      },
+      {
+        "id": "table",
+        "evidence": "The assistant provided no comparison table of weekend-trip ideas.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed all four required follow-up turns. Ask for three weekend-trip ideas, then expand one, cut it to two sentences, request a different angle, and compare them in a table.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "chain-it",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "summary",
+        "evidence": "The assistant only said “Hello”; no web search, three-story summary, or email to the learner occurred.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed all three required steps. Enable web search, find three recent electric-bike stories, summarize them in three lines, and email the summary to yourself.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "one-paragraph",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "one",
+        "evidence": "The assistant reply is only “Hello.” and contains no summary of how to claim work expenses.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the required one-paragraph summary. Combine the five paragraphs into one shorter paragraph covering the main expense-claim rules.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "search-off",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "no-search",
+        "evidence": "The assistant wrote a five-line rhyming poem about Mondays, and webSearch and research were both false with no search calls.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You demonstrated writing a limerick directly without using search.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "memory-off",
+    "positive": true,
+    "ok": true,
+    "checks": [
+      {
+        "id": "blank",
+        "evidence": "The reply states memory is off and says it is not using saved facts about the user.",
+        "verdict": "pass"
+      }
+    ],
+    "feedback": "You clearly explained that memory is off without relying on saved memories.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "search-off",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "no-search",
+        "evidence": "The assistant replied only “Hello,” with no limerick about Mondays; no search call appears, but the required limerick is missing.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the requested limerick about Mondays. Ask directly for a limerick while keeping search off.",
+    "model": "gpt-5.6-luna"
+  },
+  {
+    "slug": "memory-off",
+    "positive": false,
+    "ok": true,
+    "checks": [
+      {
+        "id": "blank",
+        "evidence": "The assistant only says “Hello” and does not explain that memory is off or address what it remembers.",
+        "verdict": "fail"
+      }
+    ],
+    "feedback": "You missed the required explanation that memory is off. Answer the memory question and state that no saved memories are being used.",
+    "model": "gpt-5.6-luna"
+  }
+]

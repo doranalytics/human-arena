@@ -2,12 +2,14 @@
 /**
  * One client-side store for chats, projects, skills, connectors, settings and the
  * running challenge attempt. Persists to localStorage. Supabase, when configured,
- * holds only identity and scored results; the working set stays in the browser (v0).
+ * holds identity, onboarding, graded attempts and their transcripts; the working
+ * set of projects, skills and schedules stays in the browser.
  */
 import { useSyncExternalStore } from "react";
 import type { UIMessage } from "ai";
-import type { ChatGroup, Schedule, ArenaEvent, ArenaEventType, ArenaResult, Attempt, Chat, CustomSkill, Project, Settings } from "./types";
+import type { ChatGroup, Schedule, ArenaEvent, ArenaEventType, ArenaResult, Attempt, Chat, CustomSkill, Project, Settings, TurnContext } from "./types";
 import { uid } from "./utils";
+import { getChallenge } from "./arena/challenges";
 import type { ConnectorId } from "./connectors";
 
 export interface State {
@@ -23,9 +25,14 @@ export interface State {
   activeChatId: string | null;
   activeProjectId: string | null;
   hydrated: boolean;
+  latestResult: ArenaResult | null;
+  busyChatIds: string[];
+  grading: boolean;
+  ownerId: string | null;
 }
 
 const KEY = "human-arena:v1";
+const storageKey = () => state.ownerId ? `${KEY}:member:${state.ownerId}` : KEY;
 
 const initial: State = {
   chats: [],
@@ -40,6 +47,7 @@ const initial: State = {
   activeChatId: null,
   activeProjectId: null,
   hydrated: false,
+  latestResult: null, busyChatIds: [], grading: false, ownerId: null,
 };
 
 let state: State = initial;
@@ -54,7 +62,7 @@ function emit() {
     try {
       const { hydrated: _h, ...rest } = state;
       void _h;
-      localStorage.setItem(KEY, JSON.stringify(rest));
+      localStorage.setItem(storageKey(), JSON.stringify({ ...rest, busyChatIds: [], grading: false }));
     } catch {
       /* quota or private mode: carry on in memory */
     }
@@ -78,7 +86,7 @@ export function hydrate() {
       const saved = JSON.parse(raw) as Partial<State>;
       const chats = (saved.chats ?? []).filter((c) => !c.draft);
       const activeChatId = saved.activeChatId && chats.some((c) => c.id === saved.activeChatId) ? saved.activeChatId : null;
-      state = { ...initial, ...saved, chats, activeChatId, groups: saved.groups ?? [], schedules: saved.schedules ?? [], settings: { ...initial.settings, ...(saved.settings ?? {}) }, hydrated: true };
+      state = { ...initial, ...saved, chats, activeChatId, groups: saved.groups ?? [], schedules: saved.schedules ?? [], settings: { ...initial.settings, ...(saved.settings ?? {}) }, busyChatIds: [], grading: false, ownerId: null, hydrated: true };
     } else state = { ...initial, hydrated: true };
   } catch {
     state = { ...initial, hydrated: true };
@@ -101,6 +109,7 @@ export function useStore<T>(sel: (s: State) => T): T {
 /* ------------------------------------------------------------------ chats */
 export function newChat(projectId: string | null = null, title = "New chat"): Chat {
   const now = new Date().toISOString();
+  if (state.attempt && title === "New chat") title = getChallenge(state.attempt.slug)?.title ?? title;
   const c: Chat = { id: uid("c"), title, projectId, messages: [], createdAt: now, updatedAt: now, attemptId: state.attempt?.id, draft: true };
   setState((s) => ({ chats: [c, ...s.chats], activeChatId: c.id, activeProjectId: projectId }));
   if (projectId) track("chat_in_project", projectId);
@@ -109,7 +118,7 @@ export function newChat(projectId: string | null = null, title = "New chat"): Ch
 export function saveMessages(chatId: string, messages: UIMessage[]) {
   setState((s) => ({
     chats: s.chats.map((c) => {
-      if (c.id !== chatId) return c;
+      if (c.id !== chatId || c.messages === messages) return c;
       const title = c.title === "New chat" ? titleFrom(messages) : c.title;
       return { ...c, messages, title, updatedAt: new Date().toISOString(), draft: messages.length === 0 ? c.draft : false };
     }),
@@ -164,12 +173,12 @@ export function deleteSchedule(id: string) {
 export function runSchedule(id: string): Chat | null {
   const sc = state.schedules.find((x) => x.id === id);
   if (!sc) return null;
-  const c = newChat(sc.projectId, sc.name);
+  const c = newChat(sc.projectId, state.attempt ? getChallenge(state.attempt.slug)?.title : sc.name);
   setState((s) => ({
     chats: s.chats.map((x) => (x.id === c.id ? { ...x, cowork: true, pendingPrompt: sc.prompt, draft: false } : x)),
     schedules: s.schedules.map((x) => (x.id === id ? { ...x, runs: [{ at: new Date().toISOString(), chatId: c.id }, ...x.runs] } : x)),
   }));
-  track("schedule_run", id);
+
   return c;
 }
 export function clearPendingPrompt(chatId: string) {
@@ -262,13 +271,13 @@ export function removeMemory(fact: string) {
 }
 
 /* ------------------------------------------------------------------ arena */
-export function track(type: ArenaEventType, detail?: string) {
+export function track(type: ArenaEventType, detail?: string, chatId = state.activeChatId ?? undefined) {
   if (!state.attempt) return;
-  const ev: ArenaEvent = { type, at: new Date().toISOString(), detail };
+  const ev: ArenaEvent = { type, at: new Date().toISOString(), detail, chatId };
   setState((s) => (s.attempt ? { attempt: { ...s.attempt, events: [...s.attempt.events, ev] } } : {}));
 }
-export function startAttempt(slug: string, serverId?: string): Attempt {
-  const a: Attempt = { id: uid("a"), slug, startedAt: new Date().toISOString(), serverId, events: [], hintsUsed: 0, chatIds: [] };
+export function startAttempt(slug: string, serverId?: string, startedAt = new Date().toISOString(), version?: string, definition = getChallenge(slug) ?? undefined): Attempt {
+  const a: Attempt = { id: uid("a"), slug, startedAt, serverId, version, definition, events: [], hintsUsed: 0, chatIds: [] };
   setState({ attempt: a });
   return a;
 }
@@ -276,16 +285,19 @@ export function useHint() {
   setState((s) => (s.attempt ? { attempt: { ...s.attempt, hintsUsed: s.attempt.hintsUsed + 1 } } : {}));
   track("hint_used");
 }
-export function endAttempt(result?: ArenaResult) {
+export function endAttempt(result?: ArenaResult, expectedId = state.attempt?.id) {
+  if (!state.attempt || state.attempt.id !== expectedId) return false;
   setState((s) => {
     const a = s.attempt;
     // Any graded challenge closes the threads it ran in; they stay in the sidebar.
     const chats = result && a ? s.chats.map((c) => (c.attemptId === a.id && !c.draft ? { ...c, closed: true } : c)) : s.chats;
-    return { attempt: null, chats, results: result ? { ...s.results, [result.slug]: bestOf(s.results[result.slug], result) } : s.results };
+    return { attempt: null, grading: false, latestResult: result ?? s.latestResult, activeChatId: null, activeProjectId: null, chats, results: result ? { ...s.results, [result.slug]: bestOf(s.results[result.slug], result) } : s.results };
   });
+  return true;
 }
 function bestOf(a: ArenaResult | undefined, b: ArenaResult) {
   if (!a) return b;
+  if (a.passed !== b.passed) return b.passed ? b : a;
   return b.points >= a.points ? b : a;
 }
 export function importResults(rows: ArenaResult[]) {
@@ -295,12 +307,42 @@ export function importResults(rows: ArenaResult[]) {
     return { results };
   });
 }
-/** Chats created or touched during the running attempt (the submission). */
+/** Only chats belonging to this attempt can supply its evidence. */
 export function attemptChats(): Chat[] {
   const a = state.attempt;
   if (!a) return [];
-  return state.chats.filter((c) => c.attemptId === a.id || c.updatedAt >= a.startedAt);
+  return state.chats.filter((c) => c.attemptId === a.id);
 }
 export function totalPoints(results: Record<string, ArenaResult>) {
   return Object.values(results).reduce((n, r) => n + r.points, 0);
+}
+
+
+export function recordContext(chatId: string, context: TurnContext) {
+  setState((s) => ({ chats: s.chats.map((c) => c.id === chatId ? { ...c, contexts: [...(c.contexts ?? []).filter((x) => x.messageId !== context.messageId), context] } : c) }));
+}
+export function setChatBusy(chatId: string, busy: boolean) {
+  if (state.busyChatIds.includes(chatId) === busy) return;
+  setState((s) => ({ busyChatIds: busy ? [...s.busyChatIds, chatId] : s.busyChatIds.filter((id) => id !== chatId) }));
+}
+export function finishScheduleRun(chatId: string) {
+  if (!state.attempt || !state.chats.some((c) => c.id === chatId && c.attemptId === state.attempt?.id)) return;
+  const schedule = state.schedules.find((x) => x.runs.some((r) => r.chatId === chatId));
+  if (schedule && !state.attempt?.events.some((e) => e.type === "schedule_run" && e.chatId === chatId)) track("schedule_run", schedule.id, chatId);
+}
+
+/** Keep browser workspaces separate when different accounts use this device. */
+export function switchWorkspace(ownerId: string | null) {
+  if (state.ownerId === ownerId || typeof window === "undefined") return;
+  if (saveTimer) clearTimeout(saveTimer);
+  try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch { /* in-memory only */ }
+  const guest = state.ownerId === null ? state : null;
+  let saved: Partial<State> = {};
+  try { saved = JSON.parse(localStorage.getItem(ownerId ? `${KEY}:member:${ownerId}` : KEY) ?? "{}"); } catch { /* fresh workspace */ }
+  // First sign-in keeps the guest's practice workspace, but only server results enter the account score.
+  if (!Object.keys(saved).length && ownerId && guest) saved = { chats: guest.chats, projects: guest.projects, skills: guest.skills, connectors: guest.connectors, settings: guest.settings, groups: guest.groups, schedules: guest.schedules };
+  const ownWorkspace = !!ownerId && saved.ownerId === ownerId;
+  const activeChatId = ownWorkspace && saved.chats?.some((c) => c.id === saved.activeChatId) ? saved.activeChatId! : null;
+  state = { ...initial, ...saved, ownerId, hydrated: true, attempt: ownWorkspace ? saved.attempt ?? null : null, busyChatIds: [], grading: false, activeChatId, activeProjectId: ownWorkspace ? saved.activeProjectId ?? null : null, settings: { ...initial.settings, ...saved.settings } };
+  emit();
 }

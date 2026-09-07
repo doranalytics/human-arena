@@ -122,7 +122,7 @@ export function Sidebar() {
   const name = session.me?.name || settings.name || "You";
   const avatar = session.me?.avatar || settings.avatar;
   const pts = totalPoints(results);
-  const tier = tierFor(pts);
+  const tier = tierFor(pts, Object.values(results).filter((r) => r.passed).length);
   const list = chats.filter((c) => !c.draft && !c.archived && (!q || c.title.toLowerCase().includes(q.toLowerCase())));
   const archived = chats.filter((c) => c.archived && !c.draft);
   const [showArchived, setShowArchived] = useState(false);

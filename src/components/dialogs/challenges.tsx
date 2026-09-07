@@ -5,7 +5,7 @@ import { Check, Clock, Lock, Swords, Trophy, FileText, Quote, Table2 } from "luc
 import { Dialog, Button } from "../dialog";
 import { CHALLENGES, getChallenge } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
-import { SkillPill } from "../skill-pill";
+import { ChallengeCriteria } from "../challenge-criteria";
 import { SkillIcon } from "../skill-icon";
 import { LearnCard } from "../learn-card";
 import { useStore, startAttempt, newChat } from "@/lib/store";
@@ -33,7 +33,7 @@ export function ChallengesDialog({ open }: { open: boolean }) {
                 <span className="block truncate text-[15px] font-medium">{c.title}</span>
                 <span className="mt-0.5 flex items-center gap-2 text-[12px] text-ink-3">
                   <span className="flex items-center gap-1"><Clock size={11} /> {c.minutes} min</span>
-                  <span className="flex items-center gap-1">{c.badges.map((b) => <SkillPill key={b} id={b} iconOnly />)}</span>
+
                 </span>
               </span>
               {r?.passed ? <span className="shrink-0 text-[12.5px] font-semibold text-ok">{r.points} pts</span> : running ? <span className="shrink-0 rounded-md bg-clay/10 px-1.5 py-0.5 text-[11px] font-medium text-clay-dark">Running</span> : <span className="shrink-0 text-[12.5px] tabular-nums text-ink-3">{c.points} pts</span>}
@@ -42,7 +42,7 @@ export function ChallengesDialog({ open }: { open: boolean }) {
         })}
       </div>
       <div className="mt-4 flex items-center justify-between text-[12.5px] text-ink-3">
-        <span>Speed counts: full points inside 75% of the time box, sliding to 60% after it. Each hint costs {Math.round(HINT_COST * 100)}%.</span>
+        <span>Faster completion earns more points. Each hint costs {Math.round(HINT_COST * 100)}%.</span>
         <button onClick={() => openDialog({ kind: "leaderboard" })} className="flex items-center gap-1 text-ink-2 hover:text-ink"><Trophy size={13} /> Leaderboard</button>
       </div>
     </Dialog>
@@ -50,8 +50,8 @@ export function ChallengesDialog({ open }: { open: boolean }) {
 }
 
 export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
-  const c = getChallenge(slug);
   const attempt = useStore((s) => s.attempt);
+  const c = attempt?.slug === slug ? attempt.definition ?? getChallenge(slug) : getChallenge(slug);
   const [starting, setStarting] = useState(false);
   if (!c) return null;
   const blocked = attempt && attempt.slug !== slug;
@@ -59,18 +59,18 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
   async function start() {
     if (!c || starting) return;
     setStarting(true);
-    let serverId: string | undefined;
     try {
       const r = await fetch("/api/arena/start", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug: c.slug }) });
-      const j = (await r.json()) as { serverId?: string | null };
-      serverId = j.serverId ?? undefined;
-    } catch {
-      /* guest clock */
+      const j = await r.json() as { serverId?: string; startedAt: string; version: string; challenge: import("@/lib/arena/types").ChallengeDef; error?: string };
+      if (!r.ok) throw new Error(j.error ?? "Could not start the challenge");
+      startAttempt(c.slug, j.serverId, j.startedAt, j.version, j.challenge);
+    } catch (e) {
+      toast({ title: "Could not start", body: e instanceof Error ? e.message : "Please try again.", tone: "bad" });
+      setStarting(false); return;
     }
-    startAttempt(c.slug, serverId);
     newChat(null, c.title);
     closeDialog();
-    toast({ title: "Clock started", body: `${c.minutes} minutes. Submit from the top bar when you are done.`, tone: "info" });
+    toast({ title: "Clock started", body: "Submit from the top bar when you are done.", tone: "info" });
     setStarting(false);
   }
 
@@ -92,8 +92,9 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
         </>
       }
     >
-      <LearnCard text={c.hook} className="mb-4 border-b border-line pb-4" />
+      <LearnCard text={c.hook} className="mb-3 border-b border-line pb-3" />
       <BriefBody brief={c.brief} />
+      <ChallengeCriteria challenge={c} />
       {c.materials && c.materials.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12px] text-ink-3">
           <span>You get</span>
@@ -110,7 +111,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
 }
 
 /** Briefs are short markdown. Paragraphs become numbered steps, quotes become sample cards, bare links become chips. */
-function BriefBody({ brief }: { brief: string }) {
+export function BriefBody({ brief }: { brief: string }) {
   const blocks = brief.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
   const steps = blocks.filter((b) => !b.startsWith(">") && !/^https?:\/\/\S+$/.test(b) && !/^Sample \d+:$/.test(b));
   const numbered: { text: string; step: number | null }[] = [];

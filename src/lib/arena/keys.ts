@@ -1,55 +1,24 @@
 import "server-only";
 import type { ChallengeKey } from "./types";
 
-const KEYS: ChallengeKey[] = [
-  { slug: "ten-words", key: `Count the words of the assistant's final substantive answer (ignore a trailing note like "(10 words)"). Hyphenated words count as one. Exactly 10 passes; the ten words must explain the subject the user named (any complex subject; quantum physics is only the example). Grade the last reply only.` },
-  { slug: "make-it-ask-first", key: `"asked": before any itinerary, agenda or plan appears, the assistant asked at least three distinct questions (in one message or across several). A plan given in the same message as the questions fails. Whether the user answered is not graded.` },
-  { slug: "grade-yourself", key: `"rubric": the assistant produced a score or graded critique of its own draft against criteria it named (or the user named). "rewrite": a later draft exists that differs materially from the first. Length is not graded.` },
-  { slug: "three-audiences", key: `"three": three explanations of why the sky is blue, each labelled for its level (5-year-old, high-school graduate, PhD; accept close wordings). "levels", objective test: the 5-year-old version uses only everyday words and no technical terms (an analogy is fine); the high-school version may name light, wavelengths, scattering or the atmosphere; the PhD version uses technical vocabulary such as Rayleigh scattering, wavelength dependence (inverse fourth power), molecular scattering, or the solar spectrum. Pass when the three are clearly different in vocabulary and depth in that order. Fail if any two are near-identical or the order of complexity is wrong.` },
-  { slug: "the-other-side", key: `"counter": the assistant argued against remote work with at least three concrete points (onboarding, mentorship, spontaneous collaboration, culture, accountability, blurred hours, coordination cost, equipment) and did not add on-the-other-hand balance in the same reply.` },
-  { slug: "rehearsal", key: `"character": across at least two assistant turns the assistant speaks as a customer pushing for a discount and does not narrate or coach. "coach": after the user says break character (or similar), the assistant steps out and gives specific feedback on what the user said.` },
-  { slug: "twenty-then-three", key: `"twenty": a list of twenty tent names (accept 19 to 21). "three": after the user gave a rule, three names chosen with reasons that reference that rule.` },
-  { slug: "tutor-mode", key: `"one-at-a-time": at least two assistant turns each contain exactly one question and no lecture longer than two sentences; a turn with several questions fails. "adapts": at least one later question references the user's earlier answer. Gross margin = (revenue minus cost of goods) divided by revenue.` },
-  { slug: "deslop", key: `"clean": the rewrite contains none of: "in today's fast-paced world", "it's crucial to note", "leveraging", "cutting-edge", "unlock", "unprecedented", "ultimately", "working smarter", "let's dive in", "best practices", "transform", "one step at a time", "fostering". "meaning": it still says that good communication, good tools and teamwork make a team more productive.` },
-  { slug: "sound-like-you", key: `"samples": both sample notes appear in the user's messages. "voice": the new note is about a delayed delivery, uses short direct sentences, opens with the news, has no corporate filler. A generic formal memo fails.` },
-  { slug: "reply-to-this", key: `"no": the reply states the user cannot cover Saturday. "length": the reply body is under 100 words.` },
-  { slug: "there-and-back", key: `"french": a French translation of the tent paragraph. "back": an English back-translation plus a list or paragraph naming differences (word choices, units, nuance). If the assistant says nothing changed, it must at least say so explicitly and compare; an absent comparison fails.` },
-  { slug: "one-page", key: `"five": five bullets that are true to the policy (for example: 30-day deadline, receipts over $25, approval thresholds 500/2,500, hotel caps 220/160, meals $65/day, gifts $75, mileage $0.62, card reconciliation by the 5th).` },
-  { slug: "pull-the-table", key: `Line totals: booth 2400.00; catalogues 40 x 3.15 = 126.00; demo tent shipping 218.50; lunches 87.20 + 91.05 + 64.75 = 243.00; badges 58.00; hotel 2 x 189 = 378.00; taxis 24.60 + 27.10 = 51.70; freight surcharge 45.00; banner reprint 112.00; parking 3 x 18 = 54.00. Grand total 3686.20. "table": one row per line item (lunches or taxis may be one row or split). "total": 3,686.20 (accept 3686.2).` },
-  { slug: "read-the-pdf", key: `From the PDF: price USD 3.85 per metre; minimum order 8,000 metres per colour. The transcript must show the PDF as an attached file.` },
-  { slug: "show-dont-tell", key: `The label says: do not use fabric softener; do not iron; do not dry clean (and wash cold, tumble dry low). "never": at least one of fabric softener, ironing, dry cleaning (or hot wash) named as prohibited. You cannot see the image; grade the reply against this text.` },
-  { slug: "picture-to-text", key: `The note says: Trade show, Thursday. Booth 214, hall B, set up from 7am. Bring 40 catalogues and the demo tent. Buyer meetings 10:30, 1:15 and 3:00. Call the freight desk before 4pm. Dinner with the retail team at 7, Alder Street. "transcribed": at least five of the six lines reproduced with the numbers right.` },
-  { slug: "picture-math", key: `Table (USD thousands): PNW 412/438/471; Mountain West 297/305/352; Northeast 254/261/288; Southwest 143/151/139; Canada 118/124/137; Online direct 366/389/402. "june": the June total is 1,789.` },
-  { slug: "fresh-news", key: `Two separate items about outdoor gear, apparel, or the outdoor industry. Each must have a date within 7 days of the attempt date and a URL from the search results in the transcript. No search tool calls means fail on "sourced".` },
-  { slug: "check-it", key: `Gore-Tex was invented in 1969 by Bob Gore (Wilbert L. Gore's son) at W. L. Gore and Associates; patented in the early 1970s, commercialised 1976. "two-turns": the first assistant answer has no web_search tool call; a later assistant turn has one. "verified": the second turn explicitly compares its earlier answer with what search found, and either corrects or confirms each fact. A second answer that ignores the first fails.` },
-  { slug: "deep-dive", key: `"structure": a title and three or more headed sections. "sources": four or more distinct URLs or named publications, and the transcript shows web search tool calls. Without search calls, fail.` },
-  { slug: "read-the-link", key: `The transcript must show a read_link tool call for the Wikipedia Ultralight backpacking page. "bullets": the summary is consistent with the fetched text (base weight, gear choices, trade-offs, history, safety). A summary with no read_link call fails.` },
-  { slug: "pick-the-brain", key: `Partner pays 249 x 0.55 = 136.95; minus 92 cost = 44.95 per jacket. Accept 44.95, 45, or "about $45". A wrong figure fails.` },
-  { slug: "connect-and-ask", key: `The most recent month in monthly_financials is 2025-08 with revenue 2,490,000 USD (accept $2.49M, 2.49 million). The transcript must show a read_table or list_tables call; a number with no tool call fails.` },
-  { slug: "inbox-to-reply", key: `The newest unread email is from the CFO, subject "Board deck: what I need from ops", dated 1 September 2026, asking for three things for the board with a draft due 10 September. "found": that email identified (subject or its asks). "reply": the draft responds to that request. The transcript must show search_gmail or read_email calls.` },
-  { slug: "skill-up", key: `The transcript shows the meeting-notes skill active and a read_drive_file call on the leadership meeting transcript. Notes have Decisions, Action items, Open questions. Decisions from the transcript include approving a fabric sample, the CFO modelling options, no air freight yet, and holding a retail partner at net-30. Action items carry owners and dates. At least two correct decisions and the three sections pass.` },
-  { slug: "make-a-skill", key: `Output is three short lines (ignore blank lines; each under about 120 characters), derived from the tent paragraph.` },
-  { slug: "set-up-shop", key: `"format": the reply inside the project is exactly three bullets. "no-repeat": the user's message inside the project does not mention bullets or the rule. The project instructions in force appear in the transcript header and must contain the rule.` },
-  { slug: "call-me", key: `In a chat where the user's messages never mention "Captain", the assistant addresses the user as Captain. The custom instructions in force appear in the transcript header.` },
-  { slug: "remember-this", key: `A remember tool call saving the Timberline Trail appears in one chat. In a different chat (a second === CHAT block) the user asks which trail they like and the assistant answers Timberline Trail without the user restating it. Both chats must be present.` },
-  { slug: "say-it", key: `The user's message asks for tips on packing a wet tent (wording may vary from dictation errors; accept anything close). "tips": the reply contains three distinct tips relevant to a wet tent (shake or wipe it, pack the fly separately, dry it at home within a day, keep it out of the stuff sack, etc.).` },
-  { slug: "hand-it-off", key: `"numbers": the reply includes at least one figure that came from a read_table result in the transcript (any table). Do not require a specific dataset or both datasets; the brief only asks for numbers from the warehouse.` },
-  { slug: "choose-your-own", key: `The transcript must show at least two ask_user tool calls with answers. "bio": the final bio uses at least two of the picked answers (tone, length, audience, facts). A bio written before any card, or ignoring the picks, fails.` },
-  { slug: "refine-it", key: `Four follow-up turns after the initial three ideas. "expand": one idea expanded in more detail. "cut": a version of two sentences (accept one to three). "angle": a clearly different take or a new idea set. "table": a markdown table comparing the ideas.` },
-  { slug: "one-paragraph", key: `"one": a single paragraph (no bullet list, no headings) that mentions at least three of: approval thresholds, the 30-day deadline, receipts, travel rules, meal caps.` },
-  { slug: "chain-it", key: `"summary": a three-line (accept two to four) summary of the electric-bike stories appears before the send_email call. Transcript must show web_search calls and a send_email call.` },
-  { slug: "search-off", key: `"no-search": a limerick (five lines) about Mondays and NO web_search tool call anywhere in the transcript.` },
-  { slug: "memory-off", key: `"blank": the assistant says it has no remembered facts about the user (or nothing to recall). Transcript header must show no memories in force.` },
-  { slug: "pin-it", key: `Behaviours only.` },
-  { slug: "add-to-project", key: `Behaviours only.` },
-  { slug: "export-it", key: `Behaviours only.` },
-  { slug: "browse-skills", key: `Behaviours only.` },
-  { slug: "project-memory", key: `Behaviours only.` },
-  { slug: "schedule-it", key: `Behaviours only.` },
-  { slug: "cowork-to-skill", key: `Behaviours only.` },
-  { slug: "groups", key: `Behaviours only.` },
-];
-
-export function getKey(slug: string): ChallengeKey | null {
-  return KEYS.find((k) => k.slug === slug) ?? null;
+/** Reference facts ONLY. All grading requirements live in the public challenge definition. */
+const FACTS: Record<string, string> = {
+  "ten-words": "Count whitespace-separated words in the final explanation; hyphenated words count as one. Ignore an appended word-count note.",
+  "three-audiences": "Sky: shorter wavelengths of sunlight scatter more in the atmosphere. Rayleigh scattering is proportional to inverse wavelength to the fourth power. Child-friendly analogies and explained vocabulary are fine.",
+  "tutor-mode": "Gross margin = (revenue minus cost of goods) divided by revenue.",
+  "deslop": "The supplied paragraph says communication, useful tools and teamwork improve productivity. There is no forbidden-word list.",
+  "pull-the-table": "Expense totals: booth 2400; catalogues 126; shipping 218.50; lunches 243; badges 58; hotel 378; taxis 51.70; surcharge 45; banner 112; parking 54. Total 3686.20. Lunches and taxis may be combined or split without losing expenses.",
+  "read-the-pdf": "Supply agreement: USD3.85 per metre, minimum 8000 metres per colour.",
+  "show-dont-tell": "The care label prohibits fabric softener, ironing and dry cleaning; it says wash cold and tumble dry low.",
+  "picture-to-text": "The note reads: Trade show, Thursday. Booth 214, hall B, set up from 7am. Bring 40 catalogues and the demo tent. Buyer meetings 10:30, 1:15 and 3:00. Call the freight desk before 4pm. Dinner with the retail team at 7, Alder Street.",
+  "picture-math": "June values, USD thousands: 471,352,288,139,137,402. Total1789 thousand dollars = $1.789 million. Equivalent units are valid.",
+  "check-it": "Bob Gore discovered expanded PTFE in 1969 at W. L. Gore and Associates. Patented in the early1970s, commercialized in1976. Verification can confirm an already correct answer; no correction is required when none is needed.",
+  "pick-the-brain": "249 times0.55 minus92 = $44.95 earned per partner jacket. About $45 is equivalent rounding.",
+  "connect-and-ask": "Most recent monthly_financials month:2025-08, revenue USD2,490,000. list_tables alone contains no revenue data; read_table returns the figures.",
+  "inbox-to-reply": "Newest unread sample email: CFO, Board deck: what I need from ops,1September2026, draft due10September. A reply draft acknowledges its requests; it need not perform them.",
+  "hand-it-off": "The newest unread email asks for FY24 margin figures and Q3 regional sales to date. Only its numerical requests are in scope; no slide, chart or supplier plan is required. Compare each requested figure with the actual read_table results. The learner need not type numbers, request a table, name datasets or do further calculations unless the email asks for them. Accept prose, bullets or tables. Missing source data should be identified as unavailable, never fabricated.",
+  "one-paragraph": "The supplied five paragraphs cover purpose, approval thresholds, timing, receipts and travel. Meal caps are NOT in this material.",
+};
+export function getKey(slug: string): ChallengeKey {
+  return { slug, key: FACTS[slug] ?? "Use the supplied material and successful tool results as reference facts. There are no additional private requirements." };
 }

@@ -14,16 +14,16 @@ const MODES = [
 ] as const;
 
 /** Under the composer in Cowork mode: which project it works in, how much it asks, and the active Cowork threads. */
-export function CoworkPanel({ chat }: { chat: Chat }) {
+export function CoworkPanel({ chat, compact = false }: { chat: Chat; compact?: boolean }) {
   const projects = useStore((s) => s.projects);
   const chats = useStore((s) => s.chats);
   const mode = useStore((s) => s.settings.coworkApproval ?? "auto");
   const [open, setOpen] = useState<"project" | "mode" | "schedule" | null>(null);
-  const [schedPrompt, setSchedPrompt] = useState("");
+  const [schedPrompt, setSchedPrompt] = useState(chat.messages.filter((m) => m.role === "user").flatMap((m) => m.parts.filter((p) => p.type === "text").map((p) => p.text)).join("\n\n"));
   const [cadence, setCadence] = useState<"hourly" | "daily" | "weekly">("daily");
   const [more, setMore] = useState(false);
   const project = projects.find((p) => p.id === chat.projectId) ?? null;
-  const active = chats.filter((c) => c.cowork && !c.draft && c.id !== chat.id).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const active = chats.filter((c) => c.cowork && !c.draft && !c.closed && !c.archived && c.id !== chat.id).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   const shown = more ? active : active.slice(0, 5);
   return (
     <div className="mt-3 w-full max-w-[760px]" onClick={() => open && setOpen(null)}>
@@ -65,7 +65,7 @@ export function CoworkPanel({ chat }: { chat: Chat }) {
             <Clock size={14} className="text-ink-3" /> Schedule <ChevronDown size={13} className="text-ink-3" />
           </button>
           {open === "schedule" && (
-            <div className="fade-up absolute left-0 top-9 z-30 w-80 rounded-xl border border-line bg-bg p-3 shadow-lg shadow-black/10">
+            <div className={cn("fade-up absolute left-0 z-30 w-80 rounded-xl border border-line bg-bg p-3 shadow-lg shadow-black/10", compact ? "bottom-9" : "top-9")}>
               <div className="text-[13px] font-medium">Run a task on a schedule</div>
               <textarea value={schedPrompt} onChange={(e) => setSchedPrompt(e.target.value)} rows={3} placeholder="What should it do each time? e.g. find three new electric bike deals" className="mt-2 w-full resize-none rounded-lg border border-line bg-bg px-2.5 py-2 text-[13px] outline-none placeholder:text-ink-3 focus:border-ink-3" />
               <div className="mt-2 flex items-center gap-1">
@@ -91,7 +91,7 @@ export function CoworkPanel({ chat }: { chat: Chat }) {
         </div>
       </div>
 
-      {active.length > 0 && (
+      {!compact && active.length > 0 && (
         <div className="mt-6">
           <div className="mb-1 text-[13px] text-ink-3">Active</div>
           <div className="divide-y divide-line">

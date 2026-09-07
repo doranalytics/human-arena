@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage, lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { ArrowUp, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
-import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn, markCowork, clearPendingPrompt } from "@/lib/store";
+import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn, markCowork, clearPendingPrompt, setState, recordContext, setChatBusy, finishScheduleRun } from "@/lib/store";
 import { Message } from "./message";
 import { Composer, type ComposerSubmit } from "./composer";
 import { Spark } from "./icons";
@@ -13,14 +13,15 @@ import { BUILTIN_SKILLS } from "@/lib/skills";
 import { getChallenge } from "@/lib/arena/challenges";
 import { ChallengeStage, ChallengeStrip } from "./challenge-stage";
 import { CoworkPanel } from "./cowork-panel";
+import { toast } from "@/lib/ui";
 import { useSession } from "@/lib/session";
 
 function greeting(name: string) {
   const h = new Date().getHours();
   const first = name.split(/\s+/)[0];
   const opts = first
-    ? [h < 12 ? `Good morning, ${first}` : h < 18 ? `Good afternoon, ${first}` : `Good evening, ${first}`, `Back at it, ${first}?`, `Coffee and Claude time, ${first}?`]
-    : ["Coffee and Claude time?", "What are we working on?", "How can I help you today?"];
+    ? [h < 12 ? `Good morning, ${first}` : h < 18 ? `Good afternoon, ${first}` : `Good evening, ${first}`, `Back at it, ${first}?`, `Ready to practice, ${first}?`]
+    : ["Ready to practice?", "What are we working on?", "How can I help you today?"];
   return opts[Math.floor(Date.now() / 3600000) % opts.length];
 }
 
@@ -44,29 +45,46 @@ export function ChatView({ chat }: { chat: Chat }) {
   const customSkills = useStore((s) => s.skills);
   const session = useSession();
   const attempt = useStore((s) => s.attempt);
-  const challenge = attempt ? getChallenge(attempt.slug) : null;
+  const challenge = attempt ? attempt.definition ?? getChallenge(attempt.slug) : null;
   const freeLeft = useStore((s) => freeTurnsLeft(s));
   const name = session.me?.name || settings.name;
 
-  const transport = useMemo(() => new DefaultChatTransport<UIMessage>({ api: "/api/chat" }), []);
+  const transport = useMemo(() => new DefaultChatTransport<UIMessage>({ api: "/api/chat", body: () => getState().chats.find((c) => c.id === chat.id)?.request ?? {},
+    prepareSendMessagesRequest: ({ messages, id, trigger, messageId, body }) => {
+      const b = { ...(getState().chats.find((c) => c.id === id)?.request ?? {}), ...body };
+      const lastUser = messages.findLast((m) => m.role === "user");
+      if (lastUser && b.context) recordContext(id, { ...(b.context as import("@/lib/types").TurnContext), messageId: lastUser.id });
+      return { body: { ...b, messages, id, trigger, messageId } };
+    },
+  }), [chat.id]);
   const { messages, sendMessage, status, stop, error, addToolOutput } = useChat({ id: chat.id, messages: chat.messages, transport, sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls });
   const busy = status === "submitted" || status === "streaming";
   const bottomRef = useRef<HTMLDivElement>(null);
-  const trackedTools = useRef<Set<string>>(new Set());
-  const [webSearch, setWebSearch] = useState(false);
-  const [research, setResearch] = useState(false);
+  const trackedTools = useRef<Set<string>>(new Set(chat.messages.flatMap((m) => m.parts.filter(isToolUIPart).filter((p) => p.state === "output-available").map((p) => p.toolCallId))));
+  const [webSearch, setWebSearch] = useState(chat.contexts?.at(-1)?.webSearch ?? false);
+  const [research, setResearch] = useState(chat.contexts?.at(-1)?.research ?? false);
   const [cowork, setCowork] = useState(!!chat.cowork);
-  const [memoryOn, setMemoryOn] = useState(true);
+  const [memoryOn, setMemoryOn] = useState(!chat.contexts?.at(-1)?.memoryOff);
+
+  useEffect(() => {
+    setChatBusy(chat.id, busy);
+    return () => setChatBusy(chat.id, false);
+  }, [chat.id, busy]);
+  useEffect(() => {
+    if (!busy && !error && messages.some((m) => m.role === "assistant" && m.parts.some((p) => p.type === "text" && p.text.trim()))) finishScheduleRun(chat.id);
+  }, [busy, error, messages, chat.id]);
 
   // Persist and observe. Connector use is read off the assistant's tool parts.
   useEffect(() => {
     if (messages.length) saveMessages(chat.id, messages);
+    if (getState().attempt && chat.attemptId !== getState().attempt?.id) return;
     for (const m of messages) {
       if (m.role !== "assistant") continue;
       for (const p of m.parts) {
         if (!isToolUIPart(p) || !("toolCallId" in p) || trackedTools.current.has(p.toolCallId)) continue;
         if (p.state !== "output-available") continue;
         trackedTools.current.add(p.toolCallId);
+        if (p.output && typeof p.output === "object" && "error" in p.output) continue;
         const name = getToolName(p);
         const c = TOOL_CONNECTOR[name];
         if (c) track("connector_used", c);
@@ -82,7 +100,7 @@ export function ChatView({ chat }: { chat: Chat }) {
         }
       }
     }
-  }, [messages, chat.id, chat.projectId]);
+  }, [messages, chat.id, chat.projectId, chat.attemptId]);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages, status]);
@@ -90,7 +108,10 @@ export function ChatView({ chat }: { chat: Chat }) {
   const onSubmit = useCallback<ComposerSubmit>(
     async ({ text, files, skill, dictated }) => {
       const st = getState();
-      const fileParts = files.length ? await toFileParts(files) : [];
+      if (st.grading || chat.closed || (st.attempt && chat.attemptId !== st.attempt.id)) return;
+      setChatBusy(chat.id, true);
+      let fileParts: FileUIPart[];
+      try { fileParts = files.length ? await toFileParts(files) : []; } catch { setChatBusy(chat.id, false); toast({ title: "Could not read that file", tone: "bad" }); return; }
       for (const f of files) track(f.type.startsWith("image/") ? "image_attached" : "file_attached", f.name);
       if (webSearch) track("web_search_on");
       if (research) track("research_on");
@@ -103,28 +124,26 @@ export function ChatView({ chat }: { chat: Chat }) {
       track("message_sent");
       if (!st.attempt) consumeFreeTurn();
       const sk = skill ? (BUILTIN_SKILLS.find((s) => s.name === skill) ?? customSkills.find((s) => s.name === skill)) : null;
-      await sendMessage(
-        { text, files: fileParts },
-        {
-          body: {
-            model: st.settings.model,
-            effort: st.settings.effort,
-            webSearch,
-            research,
-            cowork,
-            approval: cowork ? (st.settings.coworkApproval ?? "auto") : undefined,
-            connectors: st.connectors,
-            skill: sk ? { name: sk.name, prompt: sk.prompt } : null,
-            project: project ? { name: project.name, instructions: project.instructions, files: project.files.map((f) => ({ name: f.name, text: f.text })) } : null,
-            userName: name,
-            instructions: st.settings.instructions ?? "",
-            memories: memoryOn ? [...(st.settings.memories ?? []), ...(project?.memories ?? [])] : [],
-            memoryOff: !memoryOn,
-          },
-        },
-      );
+      const context = {
+        messageId: "", at: new Date().toISOString(), model: st.settings.model, webSearch, research, cowork,
+        customInstructions: st.settings.instructions ?? "", memories: memoryOn ? [...(st.settings.memories ?? []), ...(project?.memories ?? [])] : [],
+        memoryOff: !memoryOn, projectName: project?.name, projectId: project?.id, projectInstructions: project?.instructions,
+        skill: sk?.name,
+      };
+      const requestBody = {
+        model: context.model, effort: st.settings.effort, webSearch, research, cowork,
+        approval: cowork ? (st.settings.coworkApproval ?? "auto") : undefined,
+        connectors: st.connectors, skill: sk ? { name: sk.name, prompt: sk.prompt } : null,
+        project: project ? { id: project.id, name: project.name, instructions: project.instructions, files: project.files.map((f) => ({ name: f.name, text: f.text })) } : null,
+        userName: name, instructions: context.customInstructions, memories: context.memories, memoryOff: !memoryOn,
+        context, attemptId: st.attempt?.serverId, challengeSlug: st.attempt?.slug,
+      };
+      setState((s) => ({ chats: s.chats.map((c) => c.id === chat.id ? { ...c, request: requestBody } : c) }));
+      try { await sendMessage({ text, files: fileParts }); }
+      catch { toast({ title: "Could not send", body: "Please try again.", tone: "bad" }); }
+      finally { setChatBusy(chat.id, false); }
     },
-    [sendMessage, webSearch, research, cowork, memoryOn, project, customSkills, name, chat.id],
+    [sendMessage, webSearch, research, cowork, memoryOn, project, customSkills, name, chat.id, chat.attemptId, chat.closed],
   );
 
   // Scheduled runs open with a prompt to send on their own.
@@ -139,21 +158,22 @@ export function ChatView({ chat }: { chat: Chat }) {
   }, [chat.id, chat.pendingPrompt]);
 
   const empty = messages.length === 0;
-  const composer = chat.closed ? (
+  const grading = useStore((s) => s.grading);
+  const historical = !!attempt && chat.attemptId !== attempt.id;
+  const composer = chat.closed || historical ? (
     <div className="flex items-center justify-between gap-3 rounded-2xl border border-ok/40 bg-ok/[0.06] px-4 py-3 text-[13.5px]">
-      <span><span className="font-medium text-ok">Challenge graded.</span> This thread is closed.</span>
+      <span>{historical ? "This saved thread belongs to a different session." : "Challenge graded. This thread is saved."}</span>
       <button onClick={() => newChat(null)} className="rounded-lg bg-ink px-3 py-1.5 text-[13px] font-medium text-bg hover:bg-black">New chat</button>
     </div>
   ) : (
-    <Composer onSubmit={onSubmit} busy={busy} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} memoryOn={memoryOn} setMemoryOn={(v) => { setMemoryOn(v); if (!v) track("memory_off"); }} projectName={project?.name ?? null} locked={!attempt && freeLeft <= 0} freeLeft={attempt ? null : freeLeft} clearOn={attempt?.id ?? "none"} menusDown={messages.length === 0} />
+    <Composer onSubmit={onSubmit} busy={busy} grading={grading} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} memoryOn={memoryOn} setMemoryOn={(v) => { setMemoryOn(v); if (!v) track("memory_off"); }} projectName={project?.name ?? null} locked={!attempt && freeLeft <= 0} freeLeft={attempt ? null : freeLeft} clearOn={attempt?.id ?? "none"} menusDown={messages.length === 0} />
   );
 
   if (empty && attempt && challenge)
     return (
       <div className="flex h-full flex-col items-center justify-center px-6 py-8">
         <ChallengeStage c={challenge} attempt={attempt} />
-        <div className="mt-5 w-full max-w-[760px]">{composer}</div>
-        <div className="mt-3 text-[12.5px] text-ink-3">Drag anything above into the message box.</div>
+        <div className="mt-5 w-full max-w-[760px]">{composer}{cowork && <CoworkPanel chat={chat} />}</div>
       </div>
     );
 
@@ -176,7 +196,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-[760px] space-y-7 px-6 pb-8 pt-8">
           {messages.map((m, i) => (
-            <Message key={m.id} m={m} onExport={() => track("exported")} onToolOutput={(toolCallId, output) => addToolOutput({ tool: "ask_user", toolCallId, output })} streaming={busy && i === messages.length - 1 && m.role === "assistant"} />
+            <Message key={m.id} m={m} onExport={() => track("exported", undefined, chat.id)} onToolOutput={(toolCallId, output) => addToolOutput({ tool: "ask_user", toolCallId, output })} streaming={busy && i === messages.length - 1 && m.role === "assistant"} />
           ))}
           {busy && messages[messages.length - 1]?.role === "user" && <Message m={{ id: "pending", role: "assistant", parts: [] }} streaming />}
           {error && <div className="rounded-lg border border-bad/30 bg-red-50 px-3 py-2 text-[13px] text-bad">Something went wrong: {error.message}</div>}
@@ -185,7 +205,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       </div>
       <div className="mx-auto w-full max-w-[760px] px-6 pb-4">
         {composer}
-        <div className="pt-2 text-center text-[11.5px] text-ink-3">How to AI Games is a training environment. Nothing here is real.</div>
+        {cowork && !chat.closed && <CoworkPanel chat={chat} compact />}
       </div>
     </div>
   );

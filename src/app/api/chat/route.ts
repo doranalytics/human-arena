@@ -7,12 +7,18 @@ import { EFFORTS, MODELS, FAST_FALLBACK, isEffort, isModelChoice } from "@/lib/m
 import { connectorTools } from "@/lib/connector-tools";
 import { isConnectorId, type ConnectorId } from "@/lib/connectors";
 import { BUILTIN_SKILLS } from "@/lib/skills";
-import { COMPANY, PEOPLE, personaBlurb } from "@/lib/company/world";
+import { getMember } from "@/lib/auth";
+import { adminClient } from "@/lib/supabase/admin";
+import { advanceHistory } from "@/lib/arena/server-history";
+import type { TurnContext } from "@/lib/types";
 
 export const maxDuration = 120;
 
 interface Body {
   messages: UIMessage[];
+  id?: string;
+  attemptId?: string;
+  challengeSlug?: string;
   model?: string;
   effort?: string;
   webSearch?: boolean;
@@ -22,7 +28,7 @@ interface Body {
   approval?: "manual" | "auto" | "skip";
   connectors?: string[];
   skill?: { name: string; prompt: string } | null;
-  project?: { name: string; instructions: string; files: { name: string; text: string }[] } | null;
+  project?: { id?: string; name: string; instructions: string; files: { name: string; text: string }[] } | null;
   userName?: string;
   /** custom instructions from Customize */
   instructions?: string;
@@ -35,9 +41,9 @@ interface Body {
 function systemPrompt(b: Body, connected: ConnectorId[]) {
   const name = (b.userName || "the user").trim();
   const parts = [
-    `You are Claude, a helpful AI assistant inside How to AI Games, a training environment that looks and behaves like a modern chat assistant. Be warm, direct and concise. Use markdown when it helps (headings, lists, tables); never pad.`,
+    `You are a helpful AI assistant inside How to AI Games, a training environment that looks and behaves like a modern chat assistant. Be warm, direct and concise. Use markdown when it helps (headings, lists, tables); never pad.`,
     connected.length
-      ? `Connected sources: ${connected.join(", ")}. They belong to ${COMPANY.name}, a sample ${COMPANY.headcount}-person outdoor gear company in ${COMPANY.hq} where ${personaBlurb(name)} (COO ${PEOPLE.priya.name}, CFO ${PEOPLE.marcus.name}). Use their tools whenever the question is about mail, files, data or calendar, and cite what you read (file name, email subject, table).`
+      ? `The user’s name is ${name}. Connected sample sources: ${connected.join(", ")}. Read the connected tools to learn what data they contain. Do not assume the user works for the sample company. Never invent colleagues or figures. Cite the file, email or table you actually read.`
       : `The user's name is ${name}. You know nothing about their job or company. No data sources are connected: if they ask about their inbox, files, company numbers or calendar, say you cannot see those until a connector is connected (Customize, then Connectors). Never invent a company, colleagues or figures.`,
   ];
   if (b.webSearch && !b.research) parts.push(`Web search is on. Search when the question needs current information, and cite sources with links and dates.`);
@@ -102,41 +108,83 @@ export async function POST(req: Request) {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!anthropicKey && !openaiKey) return demoResponse(b);
+  if (MODELS[model].provider === "anthropic" && !anthropicKey) return NextResponse.json({ error: "This model is unavailable. Select Fast and try again." }, { status: 503 });
 
-  // Fast runs on OpenAI (GPT-5.6 Luna) when its key is present, else Claude stands in. Smart is Claude.
-  const wanted = MODELS[model];
-  const useOpenAI = wanted.provider === "openai" && !!openaiKey;
-  const tools: ToolSet = { ...connectorTools(connected), ...baseTools() };
-  if (b.memoryOff) delete tools.remember;
-  if (connected.includes("gmail")) tools.send_email = sendEmailTool();
-  const search = b.webSearch || b.research;
-  let languageModel;
-  let providerOptions: Parameters<typeof streamText>[0]["providerOptions"];
-  if (useOpenAI) {
-    const openai = createOpenAI({ apiKey: openaiKey });
-    languageModel = openai(wanted.id);
-    if (search) tools.web_search = openai.tools.webSearch({ searchContextSize: b.research ? "high" : "medium" });
-    providerOptions = { openai: { reasoningEffort: EFFORTS[effort].openaiEffort } };
-  } else {
-    if (!anthropicKey) return demoResponse(b);
-    const anthropic = createAnthropic({ apiKey: anthropicKey });
-    languageModel = anthropic(wanted.provider === "anthropic" ? wanted.id : FAST_FALLBACK);
-    if (search) tools.web_search = anthropic.tools.webSearch_20250305({ maxUses: b.research ? 10 : 4 });
-    const budget = EFFORTS[effort].thinkingBudget;
-    providerOptions = budget ? { anthropic: { thinking: { type: "enabled", budgetTokens: budget } } } : undefined;
+  const member = await getMember();
+  let contexts: TurnContext[] = [];
+  let savedAttempt: string | undefined;
+  if (member && b.attemptId) {
+    const db = adminClient();
+    const { data: attempt, error } = await db.from("attempts").select("id,slug,submitted_at,grading_token").eq("id", b.attemptId).eq("member_id", member.id).maybeSingle();
+    if (error) return NextResponse.json({ error: "Could not load your attempt" }, { status: 503 });
+    if (!attempt || attempt.slug !== b.challengeSlug || attempt.submitted_at || attempt.grading_token || !b.id) return NextResponse.json({ error: "This attempt is not open for messages" }, { status: 409 });
+    const { data: old, error: historyError } = await db.from("attempt_chats").select("messages,contexts,pending").eq("attempt_id", attempt.id).eq("chat_id", b.id).maybeSingle();
+    if (historyError) return NextResponse.json({ error: "Could not load your conversation" }, { status: 503 });
+    if (old?.pending) return NextResponse.json({ error: "A reply is still running" }, { status: 409 });
+    try { b.messages = advanceHistory(old?.messages ?? [], b.messages); }
+    catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "Invalid conversation" }, { status: 409 }); }
+    const lastUser = b.messages.findLast((m) => m.role === "user");
+    contexts = old?.contexts ?? [];
+    if (lastUser && !contexts.some((x) => x.messageId === lastUser.id)) contexts.push({
+      messageId: lastUser.id, at: new Date().toISOString(), model, webSearch: !!b.webSearch, research: !!b.research,
+      memoryOff: !!b.memoryOff, cowork: !!b.cowork, customInstructions: b.instructions?.trim().slice(0, 2000) ?? "",
+      memories: b.memoryOff ? [] : (b.memories ?? []).slice(-30), projectName: b.project?.name, projectId: b.project?.id,
+      projectInstructions: b.project?.instructions, skill: b.skill?.name,
+    });
+    const { error: saveError } = await db.from("attempt_chats").upsert({ attempt_id: attempt.id, chat_id: b.id, title: attempt.slug, messages: b.messages, contexts, pending: true });
+    if (saveError) return NextResponse.json({ error: "Could not save the message" }, { status: 503 });
+    savedAttempt = attempt.id;
   }
 
-  const result = streamText({
-    model: languageModel,
-    system: systemPrompt(b, connected),
-    messages: await convertToModelMessages(inlineTextFiles(b.messages)),
-    tools,
-    stopWhen: stepCountIs(b.research || b.cowork ? 20 : 8),
-    maxOutputTokens: b.research ? 8000 : 4000,
-    providerOptions,
-    onError: ({ error }) => console.error("[chat]", error instanceof Error ? error.message : error),
-  });
-  return result.toUIMessageStreamResponse({ sendReasoning: false, sendSources: true });
+  try {
+    // Fast runs on OpenAI (GPT-5.6 Luna) when its key is present, else Claude stands in. Smart is Claude.
+    const wanted = MODELS[model];
+    const useOpenAI = wanted.provider === "openai" && !!openaiKey;
+    const tools: ToolSet = { ...connectorTools(connected), ...baseTools() };
+    if (b.memoryOff) delete tools.remember;
+    if (connected.includes("gmail")) tools.send_email = sendEmailTool();
+    const search = b.webSearch || b.research;
+    let languageModel;
+    let providerOptions: Parameters<typeof streamText>[0]["providerOptions"];
+    if (useOpenAI) {
+      const openai = createOpenAI({ apiKey: openaiKey });
+      languageModel = openai(wanted.id);
+      if (search) tools.web_search = openai.tools.webSearch({ searchContextSize: b.research ? "high" : "medium" });
+      providerOptions = { openai: { reasoningEffort: EFFORTS[effort].openaiEffort } };
+    } else {
+      if (!anthropicKey) return demoResponse(b);
+      const anthropic = createAnthropic({ apiKey: anthropicKey });
+      languageModel = anthropic(wanted.provider === "anthropic" ? wanted.id : FAST_FALLBACK);
+      if (search) tools.web_search = anthropic.tools.webSearch_20250305({ maxUses: b.research ? 10 : 4 });
+      const budget = EFFORTS[effort].thinkingBudget;
+      providerOptions = budget ? { anthropic: { thinking: { type: "enabled", budgetTokens: budget } } } : undefined;
+    }
+
+    const result = streamText({
+      model: languageModel,
+      system: systemPrompt(b, connected),
+      messages: await convertToModelMessages(inlineTextFiles(b.messages)),
+      tools,
+      stopWhen: stepCountIs(b.research || b.cowork ? 20 : 8),
+      maxOutputTokens: b.research ? 8000 : 4000,
+      providerOptions,
+      onError: async ({ error }) => {
+        console.error("[chat]", error instanceof Error ? error.message : error);
+        if (savedAttempt) await adminClient().from("attempt_chats").update({ pending: false }).eq("attempt_id", savedAttempt).eq("chat_id", b.id!);
+      },
+    });
+    return result.toUIMessageStreamResponse({ originalMessages: b.messages, sendReasoning: false, sendSources: true,
+      onEnd: async ({ messages }) => {
+        if (!savedAttempt) return;
+        const { error } = await adminClient().from("attempt_chats").update({ messages, contexts, pending: false }).eq("attempt_id", savedAttempt).eq("chat_id", b.id!);
+        if (error) console.error("[chat] Could not save completed response");
+      },
+    });
+  } catch (error) {
+    console.error("[chat] Could not start response", error instanceof Error ? error.message : "Unknown error");
+    if (savedAttempt) await adminClient().from("attempt_chats").update({ pending: false }).eq("attempt_id", savedAttempt).eq("chat_id", b.id!);
+    return NextResponse.json({ error: "Could not start the reply. Please try again." }, { status: 503 });
+  }
 }
 
 /** Simulated send. Nothing leaves the arena; the transcript records it. */

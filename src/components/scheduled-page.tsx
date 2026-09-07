@@ -9,6 +9,7 @@ const CADENCE = { hourly: "Every hour", daily: "Every day", weekly: "Every week"
 /** Scheduled Cowork tasks and their runs. Runs happen when you press Run now (the arena does not run clocks in the background). */
 export function ScheduledPage() {
   const schedules = useStore((s) => s.schedules);
+  const busyIds = useStore((s) => s.busyChatIds);
   const chats = useStore((s) => s.chats);
   return (
     <div className="mx-auto w-full max-w-[900px] px-8 py-10">
@@ -42,8 +43,8 @@ export function ScheduledPage() {
                     const c = chats.find((x) => x.id === r.chatId);
                     return (
                       <button key={r.at} onClick={() => { if (c) { setPage(null); openChat(c.id); } }} className="flex w-full items-center gap-3 py-2 text-left text-[13px] hover:bg-bg-2/60">
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-ok" />
-                        <span className="min-w-0 flex-1 truncate">{c ? c.title : "Run"}</span>
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${busyIds.includes(r.chatId) ? "animate-pulse bg-clay" : c?.messages.some((m) => m.role === "assistant") ? "bg-ok" : "bg-ink-3"}`} />
+                        <span className="min-w-0 flex-1 truncate">{c ? c.title : "Run"}{busyIds.includes(r.chatId) ? " · Running" : c?.messages.some((m) => m.role === "assistant") ? " · Finished" : " · No reply yet"}</span>
                         <span className="text-ink-3">{relTime(r.at)} ago</span>
                       </button>
                     );

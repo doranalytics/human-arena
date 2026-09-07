@@ -9,7 +9,7 @@ import { fmtClock } from "@/lib/utils";
 
 export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
   const c = getChallenge(slug);
-  const r = useStore((s) => s.results[slug]);
+  const r = useStore((s) => s.latestResult?.slug === slug ? s.latestResult : s.results[slug]);
   const results = useStore((s) => s.results);
   if (!c) return null;
   // The next challenge in order that has not been passed yet, starting after this one and wrapping.
@@ -44,7 +44,7 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
             <div>
               <div className="font-serif text-[24px]">{r.passed ? `+${r.points} points` : "Not this time"}</div>
               <div className="text-[13px] text-ink-2">
-                {fmtClock(r.seconds)} of {c.minutes}:00 · speed x{r.speedMult.toFixed(2)} · {r.hintsUsed} hint{r.hintsUsed === 1 ? "" : "s"}
+                {fmtClock(r.seconds)} elapsed · {r.hintsUsed} hint{r.hintsUsed === 1 ? "" : "s"}
               </div>
             </div>
           </div>
@@ -57,16 +57,16 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
               ))}
             </div>
           )}
-          <Section title="What the arena saw you do">
+          {r.behaviors.length > 0 && <Section title="Actions checked">
             {r.behaviors.map((b) => (
               <Row key={b.id} ok={b.pass} label={b.label} />
             ))}
-          </Section>
-          <Section title="What the reply needed">
+          </Section>}
+          {r.checks.length > 0 && <Section title="Answer checked">
             {r.checks.map((k) => (
-              <Row key={k.id} ok={k.verdict === "pass"} label={c.checks.find((x) => x.id === k.id)?.label ?? k.id} sub={k.evidence} />
+              <Row key={k.id} ok={k.verdict === "pass"} label={r.checkLabels?.[k.id] ?? c.checks.find((x) => x.id === k.id)?.label ?? k.id} sub={k.evidence} />
             ))}
-          </Section>
+          </Section>}
         </>
       )}
     </Dialog>
@@ -77,13 +77,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div className="mt-4">
       <div className="mb-1.5 text-[12px] font-medium text-ink-3">{title}</div>
-      <div className="space-y-1">{children}</div>
+      <div className="divide-y divide-line rounded-lg border border-line">{children}</div>
     </div>
   );
 }
 function Row({ ok, label, sub }: { ok: boolean; label: string; sub?: string }) {
   return (
-    <div className="flex gap-2.5 rounded-lg border border-line px-3 py-2">
+    <div className="flex gap-2.5 px-3 py-2.5">
       <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${ok ? "bg-ok/15 text-ok" : "bg-bad/15 text-bad"}`}>{ok ? <Check size={11} /> : <X size={11} />}</span>
       <div className="min-w-0">
         <div className="text-[13.5px]">{label}</div>

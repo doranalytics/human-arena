@@ -18,6 +18,7 @@ export type ComposerSubmit = (args: { text: string; files: File[]; skill: string
 interface Props {
   onSubmit: ComposerSubmit;
   busy: boolean;
+  grading?: boolean;
   onStop: () => void;
   webSearch: boolean;
   setWebSearch: (v: boolean) => void;
@@ -38,7 +39,7 @@ interface Props {
   menusDown?: boolean;
 }
 
-export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, memoryOn, setMemoryOn, projectName, locked, freeLeft, clearOn, menusDown }: Props) {
+export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSearch, research, setResearch, cowork, setCowork, memoryOn, setMemoryOn, projectName, locked, freeLeft, clearOn, menusDown }: Props) {
   const [text, setText] = useState("");
   const dictated = useRef(false);
   const dictation = useDictation((t) => { dictated.current = true; setText((cur) => (cur ? cur.replace(/\s*$/, " ") : "") + t); });
@@ -111,7 +112,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
     return () => window.removeEventListener("arena:material", on);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const canSend = !busy && (text.trim().length > 0 || files.length > 0);
+  const canSend = !busy && !grading && (text.trim().length > 0 || files.length > 0);
 
   async function submit() {
     if (!canSend) return;
@@ -289,7 +290,7 @@ export function Composer({ onSubmit, busy, onStop, webSearch, setWebSearch, rese
           >
             {dictation.transcribing ? <Loader2 size={17} className="animate-spin" /> : dictation.listening ? <><span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70" /><span className="relative inline-flex h-2 w-2 rounded-full bg-white" /></span><span className="text-[12.5px] font-medium">Stop</span></> : <Mic size={17} />}
           </button>
-          <StopOrSend busy={busy} canSend={canSend} onStop={onStop} />
+          {grading ? <span className="px-2 text-[12px] text-ink-3">Grading…</span> : <StopOrSend busy={busy} canSend={canSend} onStop={onStop} />}
         </div>
         {locked && (
           <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-bg/85 backdrop-blur-[1px]">

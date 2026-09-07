@@ -1,5 +1,6 @@
 "use client";
 /** Who is signed in (Supabase), if anyone. Fetched once on load. */
+import type { SubscriptionStatus } from "./subscription";
 import { useSyncExternalStore } from "react";
 
 export interface Me {
@@ -14,6 +15,8 @@ interface SessionState {
   loaded: boolean;
   configured: boolean;
   me: Me | null;
+  subscription?: SubscriptionStatus;
+  onboardedAt?: string | null;
 }
 let s: SessionState = { loaded: false, configured: false, me: null };
 const ls = new Set<() => void>();

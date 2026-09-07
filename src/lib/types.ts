@@ -20,11 +20,29 @@ export interface Project {
   memories?: string[];
 }
 
+export interface TurnContext {
+  messageId: string;
+  at: string;
+  model: string;
+  webSearch: boolean;
+  research: boolean;
+  memoryOff: boolean;
+  cowork: boolean;
+  customInstructions: string;
+  memories: string[];
+  projectName?: string;
+  projectId?: string;
+  projectInstructions?: string;
+  skill?: string;
+}
+
 export interface Chat {
   id: string;
   title: string;
   projectId: string | null;
   messages: UIMessage[];
+  contexts?: TurnContext[];
+  request?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   /** set while a challenge attempt is running so its chats can be collected at submit */
@@ -79,6 +97,7 @@ export interface Settings {
   model: ModelChoice;
   effort: Effort;
   onboarded?: boolean;
+  onboarding?: { level: string; goal: string };
   /** free (non-challenge) messages used today */
   freeTurns?: { day: string; used: number };
   /** Cowork approval mode */
@@ -125,6 +144,7 @@ export interface ArenaEvent {
   at: string;
   /** e.g. connector id, skill id, model choice */
   detail?: string;
+  chatId?: string;
 }
 
 export interface Attempt {
@@ -133,6 +153,8 @@ export interface Attempt {
   startedAt: string;
   /** server attempt id when signed in (server-side clock) */
   serverId?: string;
+  version?: string;
+  definition?: import("./arena/types").ChallengeDef;
   events: ArenaEvent[];
   hintsUsed: number;
   /** snapshot of state at start so behaviors must happen during the attempt */
@@ -146,6 +168,8 @@ export interface CheckResult {
 }
 
 export interface ArenaResult {
+  version?: string;
+  checkLabels?: Record<string, string>;
   slug: string;
   points: number;
   maxPoints: number;

@@ -1,10 +1,10 @@
 "use client";
 import { useEffect } from "react";
-import { useStore, hydrate, importResults, newChat } from "@/lib/store";
+import { useStore, hydrate, importResults, newChat, getState, switchWorkspace, updateSettings } from "@/lib/store";
 import { Logo } from "./icons";
 import { UpdateBar } from "./update-bar";
 import { useUI, closeDialog, toast } from "@/lib/ui";
-import { setSession } from "@/lib/session";
+import { useSession, setSession } from "@/lib/session";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./topbar";
 import { ChatView } from "./chat-view";
@@ -22,12 +22,14 @@ import { OnboardingDialog } from "./dialogs/onboarding";
 import type { ArenaResult } from "@/lib/types";
 
 export function Arena() {
+  const session = useSession();
   const hydrated = useStore((s) => s.hydrated);
   const activeChatId = useStore((s) => s.activeChatId);
   const activeProjectId = useStore((s) => s.activeProjectId);
   const chat = useStore((s) => s.chats.find((c) => c.id === s.activeChatId) ?? null);
   const project = useStore((s) => s.projects.find((p) => p.id === s.activeProjectId) ?? null);
   const dialog = useUI((s) => s.dialog);
+  const attempt = useStore((s) => s.attempt);
   const onboarded = useStore((s) => s.settings.onboarded);
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const page = useUI((s) => s.page);
@@ -40,8 +42,17 @@ export function Arena() {
     if (u.search) window.history.replaceState({}, "", "/");
     fetch("/api/profile")
       .then((r) => r.json())
-      .then((j: { configured: boolean; member: { id: string; email: string; name: string } | null; results: ArenaResult[] }) => {
-        setSession({ loaded: true, configured: j.configured, me: j.member });
+      .then(async (j: { configured: boolean; member: { id: string; email: string; name: string } | null; results: ArenaResult[]; subscription: import("@/lib/subscription").SubscriptionStatus; onboarding?: { level?: string; goal?: string }; onboardedAt?: string | null }) => {
+        switchWorkspace(j.member?.id ?? null);
+        if (j.member && !j.onboardedAt) {
+          const answers = getState().settings.onboarding;
+          if (answers?.level && answers.goal) {
+            const response = await fetch("/api/onboarding", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(answers) }).catch(() => null);
+            if (response?.ok) { const saved = await response.json(); j.onboardedAt = saved.onboardedAt; j.onboarding = saved.onboarding; }
+          }
+        }
+        setSession({ loaded: true, configured: j.configured, me: j.member, subscription: j.subscription, onboardedAt: j.onboardedAt });
+        if (j.onboardedAt && j.onboarding?.level && j.onboarding?.goal) updateSettings({ onboarded: true, onboarding: { level: j.onboarding.level, goal: j.onboarding.goal } });
         if (j.results?.length) importResults(j.results);
       })
       .catch(() => setSession({ loaded: true }));
@@ -79,9 +90,9 @@ export function Arena() {
       {dialog?.kind === "result" && <ResultDialog open slug={dialog.slug} />}
       {dialog?.kind === "leaderboard" && <LeaderboardDialog open initialTab={dialog.tab} />}
       {dialog?.kind === "settings" && <SettingsDialog key={dialog.section ?? "general"} section={dialog.section ?? "general"} />}
-      <NewProjectDialog open={dialog?.kind === "new-project"} />
+      <NewProjectDialog open={dialog?.kind === "new-project"} chatId={dialog?.kind === "new-project" ? dialog.chatId : undefined} />
       {dialog?.kind === "quit" && <QuitDialog />}
-      {hydrated && !onboarded && !dialog && <OnboardingDialog />}
+      {hydrated && session.loaded && (!onboarded || (!!session.me && !session.onboardedAt)) && !dialog && !attempt && <OnboardingDialog />}
       <span hidden onClick={closeDialog} />
     </div>
   );
