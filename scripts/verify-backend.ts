@@ -29,7 +29,7 @@ try {
   const onboarding = await request("/api/onboarding", { level: "casual", goal: "work", is_paid: true });
   assert.equal(onboarding.r.status, 200);
   const profile = await request("/api/profile");
-  assert.equal(profile.j.onboarding.goal, "work"); assert.ok(profile.j.onboardedAt); assert.equal(profile.j.subscription.paid, false); assert.equal(profile.j.subscription.available, true);
+  assert.equal(profile.j.onboarding.goal, "work"); assert.ok(profile.j.onboardedAt); assert.equal(profile.j.subscription.paid, false); assert.equal(profile.j.subscription.checks.substack, true);
   console.log("PASS authenticated onboarding saved; Substack source checked; paid flag cannot be self-assigned");
   const { j: attempt } = await request("/api/arena/start", { slug: "ten-words" });
   assert.ok(attempt.serverId && attempt.version);

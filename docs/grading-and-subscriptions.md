@@ -16,14 +16,14 @@ The timer shows elapsed time only. Speed and hints still affect points. Completi
 
 Subscription purchase and billing live at https://ruben.substack.com/subscribe. There is no Stripe integration in this app. Challenges remain free. Paid status enables full leaderboard recognition and weekly winner eligibility under the existing How to AI offer.
 
-The server matches the authenticated member's normalized email against AI Certified's existing `members.is_paid` field. Onboarding and profile requests cannot self-assign paid status. Account and leaderboard cards link to Substack; signed-in members can recheck their status. Use the same email in both products.
+The server matches the authenticated member's normalized email against AI Certified's existing `members.is_paid` field and the Circle community API. Either source can grant membership; see [Circle setup](circle-membership.md). Onboarding and profile requests cannot self-assign paid status. Account and leaderboard cards link to Substack; signed-in members can recheck their status. Use the same email in both products.
 
 Required server-only deployment variables:
 
 - `SUBSTACK_MEMBERS_SUPABASE_URL`: the existing AI Certified Supabase project URL.
 - `SUBSTACK_MEMBERS_SERVICE_ROLE_KEY`: the credential used only by the server for that lookup.
 
-The app reads the parent database and caches the result in its own member row. It does not modify the parent. When lookup is unavailable it preserves the last confirmed local status and reports verification unavailable.
+The app reads the parent database and caches Substack status separately in `members.substack_paid`; effective membership also includes Circle access. It does not modify the parent. When lookup is unavailable it preserves the last confirmed local status and reports verification unavailable.
 
 This is an imported subscriber list, not a live Substack billing webhook. A new subscription may not appear until the next import. The existing parent importer upserts paid subscribers; cancellation/revocation handling remains an operational responsibility. Rechecking in the game cannot fix stale source data. Before awarding a weekly prize, reconcile the current paid subscriber export and verify the winner's status.
 
