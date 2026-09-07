@@ -57,7 +57,7 @@ export function OnboardingDialog() {
       const normalized = email.trim().toLowerCase();
       const r = await fetch("/api/auth/signin", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: normalized }) });
       const j = await r.json();
-      if (!r.ok) throw new Error(j.error ?? "Could not send your sign-in link.");
+      if (!r.ok) throw new Error(j.error ?? "Could not send your confirmation email.");
       setEmail(normalized); setSent(true); setRetryAt(Date.now() + 60_000); setNow(Date.now());
       updateSettings({ onboarding: answers });
       try { localStorage.setItem(DRAFT, JSON.stringify({ email: normalized, answers, at: Date.now() })); } catch { /* Keep the current form. */ }
@@ -89,7 +89,7 @@ export function OnboardingDialog() {
     finally { setBusy(false); }
   }
   const freeAccount = !!session.me && !session.subscription?.paid;
-  const title = q?.title ?? (step === 0 ? "Learn to use AI." : session.me ? freeAccount ? "Ready for the spotlight?" : "You’re ready to compete." : sent ? "Check your inbox." : "Save your progress.");
+  const title = q?.title ?? (step === 0 ? "Learn to use AI." : session.me ? "You’re signed up." : sent ? "Confirm your email." : "Sign up to play.");
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]">
     <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="welcome-title" className="fade-up max-h-full w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-bg p-6 shadow-2xl sm:p-7" onKeyDown={(e) => {
       if (e.key !== "Tab") return;
@@ -111,32 +111,32 @@ export function OnboardingDialog() {
         <div className="rounded-xl border border-line bg-bg-2 px-4 py-3">
           <p className="flex items-center gap-2 text-[13px] font-medium"><Trophy size={16} className="text-clay" /> The weekly winner</p>
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">{WEEKLY_WINNER_COPY}</p>
-          <p className="mt-2 text-[12px] text-ink-3">Learn for free. Upgrade to Premium to compete for the weekly feature.</p>
+          <p className="mt-2 text-[12px] text-ink-3">Play for free. After signup, we’ll show you how to enter the weekly competition.</p>
         </div>
       </>}
       {q && <div className="mt-4 space-y-2">{q.options.map((o) => <button key={o.id} aria-pressed={answers[q.id] === o.id} onClick={() => setAnswers({ ...answers, [q.id]: o.id })} className={`flex w-full items-center justify-between rounded-lg border px-3.5 py-3 text-left text-[14px] ${answers[q.id] === o.id ? "border-clay bg-clay/5" : "border-line hover:bg-bg-2"}`}>{o.label}{answers[q.id] === o.id && <Check size={16} className="text-clay" />}</button>)}</div>}
       {step === 3 && (session.me ? <>
         <p className="mt-3 flex items-center gap-2 text-[13px]"><ShieldCheck size={17} className="shrink-0 text-ok" /><span className="min-w-0 break-all">Verified: {session.me.email}</span></p>
         <div className="mt-4"><SubscriptionCard compact onboarding /></div>
-        <p className="mt-3 text-[13px] leading-relaxed text-ink-2">{freeAccount ? "Standard stays free: every challenge, saved progress and leaderboard points. You can upgrade anytime." : "Your Premium benefits are already included. The arrow will show you where to choose your first challenge."}</p>
+        <p className="mt-3 text-[13px] leading-relaxed text-ink-2">{freeAccount ? "All challenges are free. You can subscribe later." : "You’re all set. The arrow will show you where to choose your first challenge."}</p>
       </> : sent ? <div className="mt-4">
         <Mail size={25} className="mb-2 text-clay" />
-        <p role="status" className="text-[14px] leading-relaxed text-ink-2">We sent a sign-in link to <strong className="break-all font-medium text-ink">{email}</strong>. Open it to verify your email and save your account.</p>
+        <p role="status" className="text-[14px] leading-relaxed text-ink-2">We sent a link to <strong className="break-all font-medium text-ink">{email}</strong>. Open it to confirm your email and finish signing up.</p>
         <div className="mt-4 flex flex-wrap gap-2"><Button onClick={checkSignIn} disabled={busy}>I’ve verified my email</Button><Button variant="ghost" onClick={sendLink} disabled={busy || retryIn > 0}>{retryIn ? `Resend in ${retryIn}s` : "Resend link"}</Button></div>
         <button className="mt-3 text-[12px] text-ink-2 underline underline-offset-2" onClick={() => { setSent(false); setError(""); }}>Use a different email</button>
       </div> : <form className="mt-4" onSubmit={(e) => { e.preventDefault(); if (!busy) void sendLink(); }}>
-        <p className="mb-4 text-[14px] leading-relaxed text-ink-2">Create your free Standard account with an email you actually use. We’ll send a link to verify it. Already have an account? The same link signs you in.</p>
+        <p className="mb-4 text-[14px] leading-relaxed text-ink-2">Enter your email to create your account. We’ll send a link to confirm it before you can play.</p>
         <label className="block text-[13px] font-medium" htmlFor="onboarding-email">Your email</label>
         <input id="onboarding-email" className={`${inputCls} mt-1.5`} required type="email" autoComplete="email" maxLength={254} placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <Button className="mt-3 w-full" type="submit" disabled={busy || !session.configured}>{busy ? "Sending…" : "Email me a sign-in link"}<Mail size={15} /></Button>
-        <p className="mt-3 text-[12px] leading-relaxed text-ink-3">Use your Circle or Substack email if you’re already a member. We’ll check your Premium access automatically.</p>
+        <Button className="mt-3 w-full" type="submit" disabled={busy || !session.configured}>{busy ? "Sending…" : "Sign up"}<ArrowRight size={15} /></Button>
+        <p className="mt-3 text-[12px] leading-relaxed text-ink-3">Already have an account? Use the same email to sign in.</p>
       </form>)}
       {(error || session.error) && <p role="alert" className="mt-3 text-[13px] text-bad">{error || session.error}</p>}
       {!session.configured && step === 3 && !session.error && <p role="alert" className="mt-3 text-[13px] text-bad">Sign-in is temporarily unavailable. Please try again shortly.</p>}
       {session.error && <Button variant="outline" className="mt-2" onClick={checkSignIn} disabled={busy}>Retry connection</Button>}
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
-        <span className="text-[12px] text-ink-3">{step === 0 ? "No experience needed" : step === 3 ? session.me ? "Choose a challenge next" : "Verify your email to continue" : `${step} of 2 questions`}</span>
-        <div className="flex shrink-0 gap-2">{step > 0 && <Button variant="ghost" onClick={() => { setError(""); setStep(step - 1); }} disabled={busy}>Back</Button>}{(step < 3 || session.me) && <Button variant={step === 3 && freeAccount ? "outline" : "primary"} onClick={next} disabled={busy || (!!q && !answers[q.id])}>{busy ? "Saving…" : step === 3 ? freeAccount ? "Continue free" : "Enter workspace" : "Continue"}<ArrowRight size={14} /></Button>}</div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
+        <span className="text-[12px] text-ink-3">{step === 0 ? session.me ? "No experience needed" : "Sign up to play · Free" : step === 3 ? session.me ? "Choose a challenge next" : "Email required to play" : `${step} of 2 questions`}</span>
+        <div className="flex shrink-0 gap-2">{step > 0 && <Button variant="ghost" onClick={() => { setError(""); setStep(step - 1); }} disabled={busy}>Back</Button>}{(step < 3 || session.me) && <Button variant={step === 3 && freeAccount ? "outline" : "primary"} onClick={next} disabled={busy || (!!q && !answers[q.id])}>{busy ? "Saving…" : step === 3 ? "Start playing" : "Continue"}<ArrowRight size={14} /></Button>}</div>
       </div>
     </div>
   </div>;

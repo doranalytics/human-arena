@@ -2,7 +2,9 @@
 
 The welcome flow explains AI practice, the challenge/feedback loop and the weekly winner feature on Ruben’s LinkedIn and Substack. Two short questions collect experience and intended use. Account creation uses a Supabase email verification link; there is no guest-completion shortcut. Onboarding ends in the workspace, without creating an attempt or opening a challenge. An animated arrow points to the actual Challenges button until the member opens the library or dismisses it. Reduced-motion users see a static arrow.
 
-After email verification, Standard members see a direct Premium offer: weekly winner eligibility and a public leaderboard profile with their full name, photo and social links. The primary upgrade action opens Ruben’s Substack; `Continue free` retains every challenge, saved progress and points. Opening checkout does not grant Premium. Returning members can check access against the server’s membership sources. Already-confirmed Circle and Substack members see their included benefits, with no new purchase prompt. Winning the weekly competition is required for the feature; subscribing alone does not promise exposure.
+Signup is presented as mandatory: `Sign up to play`, an email field and `Sign up`. It is not offered as an optional way to save progress. The form does not ask learners to identify an account tier or know which community they belong to. Standard/Premium remain internal entitlement names; the interface describes what the person can do.
+
+After email verification, the app automatically checks existing community and subscriber records. Members with confirmed access see the weekly competition included. Otherwise, the offer explains that a paid How to AI subscription on Ruben’s Substack adds weekly winner eligibility and a public leaderboard profile with their full name, photo and social links. `Start playing` retains every free challenge, saved progress and points. Opening checkout does not grant access. Returning members can check access again. Winning the weekly competition is required for the feature; subscribing alone does not promise exposure.
 
 ## Persisted account state
 

@@ -36,7 +36,7 @@ export function Arena() {
   useEffect(() => {
     hydrate();
     const u = new URL(window.location.href);
-    if (u.searchParams.get("signed_in")) toast({ title: "Signed in", body: "Your scores now save to the board.", tone: "ok" });
+    if (u.searchParams.get("signed_in")) toast({ title: "Email confirmed", body: "Your account is ready.", tone: "ok" });
     if (u.searchParams.get("auth_error")) toast({ title: "Sign-in failed", body: u.searchParams.get("auth_error") ?? undefined, tone: "bad" });
     if (u.search) window.history.replaceState({}, "", "/");
     void refreshSession().catch(() => {});
