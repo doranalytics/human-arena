@@ -6,7 +6,7 @@ import { readUIMessageStream, type UIMessageChunk, type UIMessage } from "ai";
 import { CHALLENGES } from "../src/lib/arena/challenges";
 
 const origin = process.env.VERIFY_ORIGIN ?? "http://localhost:3218";
-if (!/^http:\/\/(localhost|127\.0\.0\.1):/.test(origin) && origin !== "https://human-arena-kappa.vercel.app") throw new Error("Use the local server or this app's verified production origin");
+if (!/^http:\/\/(localhost|127\.0\.0\.1):/.test(origin) && !["https://howto-ai-games.vercel.app", "https://human-arena-kappa.vercel.app"].includes(origin)) throw new Error("Use the local server or this app's verified production origin");
 const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const email = `arena-qa-${randomUUID()}@example.com`;
 const password = randomUUID() + randomUUID();

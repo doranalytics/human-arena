@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const serif = Source_Serif_4({ subsets: ["latin"], variable: "--font-serif-var", weight: ["400", "500", "600"] });
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://human-arena-kappa.vercel.app";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://howto-ai-games.vercel.app";
 const DESCRIPTION = "Learn AI by doing. 32 timed challenges inside a chat that watches what you click. Nothing here is real, so click anything.";
 
 export const metadata: Metadata = {
