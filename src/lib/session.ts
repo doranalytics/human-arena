@@ -4,6 +4,7 @@ import type { SubscriptionStatus } from "./subscription";
 import { useSyncExternalStore } from "react";
 import { importResults, switchWorkspace, updateSettings } from "./store";
 import type { ArenaResult } from "./types";
+import { ONBOARDING_DRAFT_KEY, ONBOARDING_VERSION } from "./onboarding";
 
 export interface Me {
   id: string;
@@ -48,6 +49,11 @@ export function refreshSession(): Promise<SessionState> {
       const j = await r.json() as { configured: boolean; member: Me | null; results: ArenaResult[]; subscription?: SubscriptionStatus; onboarding?: { level?: string; goal?: string; version?: number }; onboardedAt?: string | null; guideSeenAt?: string | null };
       switchWorkspace(j.member?.id ?? null);
       if (j.onboardedAt && j.onboarding?.level && j.onboarding.goal) updateSettings({ onboarded: true, onboarding: { level: j.onboarding.level, goal: j.onboarding.goal } });
+      if (j.member && j.onboardedAt && (j.onboarding?.version ?? 0) >= ONBOARDING_VERSION) {
+        // Returning accounts leave the welcome dialog as soon as the profile
+        // loads, without clicking its final button. Clear their used code draft.
+        try { localStorage.removeItem(ONBOARDING_DRAFT_KEY); } catch { /* Storage is optional. */ }
+      }
       if (j.results?.length) importResults(j.results);
       setSession({ loaded: true, configured: j.configured, me: j.member, subscription: j.subscription, onboardedAt: j.onboardedAt, onboardingVersion: j.onboarding?.version ?? 0, guideSeenAt: j.guideSeenAt, error: undefined });
       return s;

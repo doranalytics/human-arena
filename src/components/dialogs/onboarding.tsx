@@ -5,13 +5,12 @@ import { Button } from "../dialog";
 import { updateSettings, useStore } from "@/lib/store";
 import { closeDialog, setPage } from "@/lib/ui";
 import { useSession, setSession, refreshSession } from "@/lib/session";
-import { ONBOARDING_QUESTIONS, ONBOARDING_VERSION, OnboardingSchema } from "@/lib/onboarding";
+import { ONBOARDING_QUESTIONS, ONBOARDING_VERSION, ONBOARDING_DRAFT_KEY as DRAFT, OnboardingSchema } from "@/lib/onboarding";
 import { WEEKLY_WINNER_COPY, MEMBERSHIP_UPGRADES_ENABLED } from "@/lib/subscription";
 import { SubscriptionCard } from "../subscription-card";
 import { Logo } from "../icons";
 import { EmailSignIn, type PendingEmailCode } from "../email-signin";
 
-const DRAFT = "howto-ai:onboarding:v2";
 type Answers = { level: string; goal: string };
 function readDraft(email?: string) {
   try {
