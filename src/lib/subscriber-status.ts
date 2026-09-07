@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { adminClient } from "./supabase/admin";
 import { refreshCircleEmail } from "./circle/service";
 import type { Member } from "./auth";
-import type { SubscriptionStatus } from "./subscription";
+import { accountAccess, type SubscriptionStatus } from "./subscription";
 
 async function substackStatus(email: string): Promise<boolean | null> {
   const url = process.env.SUBSTACK_MEMBERS_SUPABASE_URL;
@@ -20,8 +20,9 @@ async function substackStatus(email: string): Promise<boolean | null> {
 export async function subscriberStatus(member: Member, forceCircle = false): Promise<SubscriptionStatus> {
   const [substack, circle] = await Promise.all([substackStatus(member.email), refreshCircleEmail(member.email, forceCircle)]);
   const { data, error } = await adminClient().rpc("refresh_member_access", { p_member: member.id, p_substack_paid: substack });
-  if (error || !data) return { paid: member.is_paid, checkedAt: member.subscription_checked_at, available: false };
+  if (error || !data) return { paid: member.is_paid, ...accountAccess(member.is_paid), checkedAt: member.subscription_checked_at, available: false };
   return {
+    ...accountAccess(data.paid),
     paid: data.paid, sources: [data.substack ? "substack" : null, data.circle ? "circle" : null].filter(Boolean) as ("substack" | "circle")[],
     checkedAt: [data.circleCheckedAt, data.substackCheckedAt].filter(Boolean).sort().at(-1) ?? null,
     // Only report "not a member" after both sources were checked successfully.

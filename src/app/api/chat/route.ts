@@ -95,6 +95,8 @@ function inlineTextFiles(messages: UIMessage[]): UIMessage[] {
 }
 
 export async function POST(req: Request) {
+  const member = await getMember();
+  if (!member) return NextResponse.json({ error: "Sign in and verify your email to use the workspace." }, { status: 401 });
   const b = (await req.json().catch(() => null)) as Body | null;
   if (!b || !Array.isArray(b.messages)) return NextResponse.json({ error: "Bad request" }, { status: 400 });
   const model = isModelChoice(b.model) ? b.model : "fast";
@@ -110,7 +112,6 @@ export async function POST(req: Request) {
   if (!anthropicKey && !openaiKey) return demoResponse(b);
   if (MODELS[model].provider === "anthropic" && !anthropicKey) return NextResponse.json({ error: "This model is unavailable. Select Fast and try again." }, { status: 503 });
 
-  const member = await getMember();
   let contexts: TurnContext[] = [];
   let savedAttempt: string | undefined;
   if (member && b.attemptId) {

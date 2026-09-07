@@ -1,6 +1,7 @@
 "use client";
 /** Tiny UI store: which dialog is open, toasts. Separate from the persisted store. */
 import { useSyncExternalStore } from "react";
+import { dismissChallengeGuide } from "./session";
 
 export type DialogKind =
   | { kind: "challenges" }
@@ -40,6 +41,7 @@ export function useUI<T>(sel: (s: UIState) => T): T {
   return useSyncExternalStore(sub, () => sel(ui), () => sel(server));
 }
 export function openDialog(d: DialogKind) {
+  if (d.kind === "challenges") void dismissChallengeGuide();
   ui = { ...ui, dialog: d };
   emit();
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+export const ONBOARDING_VERSION = 2;
 export const OnboardingSchema = z.object({
   level: z.enum(["starting", "casual", "daily", "native"]),
   goal: z.enum(["everyday", "work", "automations"]),

@@ -3,3 +3,6 @@ project_id = "woisfoqzbdxdnugctwpk"
 [auth]
 site_url = "https://howto-ai-games.vercel.app"
 additional_redirect_urls = ["https://howto-ai-games.vercel.app/auth/callback", "https://human-arena-kappa.vercel.app/auth/callback", "https://human-arena-doranalytics.vercel.app/auth/callback", "http://localhost:3000/auth/callback"]
+
+[auth.email]
+enable_confirmations = true

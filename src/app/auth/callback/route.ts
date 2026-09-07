@@ -15,6 +15,9 @@ export async function GET(request: Request) {
   else return fail("The link is missing its code. Ask for a new one.");
   if (error) return fail(error.message);
   const { error: claimErr } = await supabase.rpc("claim_member");
-  if (claimErr) console.error("[auth] claim_member failed", claimErr.message);
+  if (claimErr) {
+    console.error("[auth] Could not claim verified member profile");
+    return fail("Could not finish setting up your account. Please request a new sign-in link.");
+  }
   return NextResponse.redirect(new URL("/?signed_in=1", url.origin));
 }

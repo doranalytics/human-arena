@@ -1,10 +1,11 @@
 "use client";
 import { useEffect } from "react";
-import { useStore, hydrate, importResults, newChat, getState, switchWorkspace, updateSettings } from "@/lib/store";
+import { useStore, hydrate, newChat } from "@/lib/store";
 import { Logo } from "./icons";
 import { UpdateBar } from "./update-bar";
 import { useUI, closeDialog, toast } from "@/lib/ui";
-import { useSession, setSession } from "@/lib/session";
+import { useSession, refreshSession } from "@/lib/session";
+import { ONBOARDING_VERSION } from "@/lib/onboarding";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./topbar";
 import { ChatView } from "./chat-view";
@@ -19,7 +20,6 @@ import { SettingsDialog } from "./dialogs/settings";
 import { NewProjectDialog } from "./dialogs/new-project";
 import { QuitDialog } from "./dialogs/quit";
 import { OnboardingDialog } from "./dialogs/onboarding";
-import type { ArenaResult } from "@/lib/types";
 
 export function Arena() {
   const session = useSession();
@@ -29,10 +29,9 @@ export function Arena() {
   const chat = useStore((s) => s.chats.find((c) => c.id === s.activeChatId) ?? null);
   const project = useStore((s) => s.projects.find((p) => p.id === s.activeProjectId) ?? null);
   const dialog = useUI((s) => s.dialog);
-  const attempt = useStore((s) => s.attempt);
-  const onboarded = useStore((s) => s.settings.onboarded);
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const page = useUI((s) => s.page);
+  const needsOnboarding = hydrated && session.loaded && (!session.me || !session.onboardedAt || (session.onboardingVersion ?? 0) < ONBOARDING_VERSION);
 
   useEffect(() => {
     hydrate();
@@ -40,22 +39,7 @@ export function Arena() {
     if (u.searchParams.get("signed_in")) toast({ title: "Signed in", body: "Your scores now save to the board.", tone: "ok" });
     if (u.searchParams.get("auth_error")) toast({ title: "Sign-in failed", body: u.searchParams.get("auth_error") ?? undefined, tone: "bad" });
     if (u.search) window.history.replaceState({}, "", "/");
-    fetch("/api/profile")
-      .then((r) => r.json())
-      .then(async (j: { configured: boolean; member: { id: string; email: string; name: string } | null; results: ArenaResult[]; subscription: import("@/lib/subscription").SubscriptionStatus; onboarding?: { level?: string; goal?: string }; onboardedAt?: string | null }) => {
-        switchWorkspace(j.member?.id ?? null);
-        if (j.member && !j.onboardedAt) {
-          const answers = getState().settings.onboarding;
-          if (answers?.level && answers.goal) {
-            const response = await fetch("/api/onboarding", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(answers) }).catch(() => null);
-            if (response?.ok) { const saved = await response.json(); j.onboardedAt = saved.onboardedAt; j.onboarding = saved.onboarding; }
-          }
-        }
-        setSession({ loaded: true, configured: j.configured, me: j.member, subscription: j.subscription, onboardedAt: j.onboardedAt });
-        if (j.onboardedAt && j.onboarding?.level && j.onboarding?.goal) updateSettings({ onboarded: true, onboarding: { level: j.onboarding.level, goal: j.onboarding.goal } });
-        if (j.results?.length) importResults(j.results);
-      })
-      .catch(() => setSession({ loaded: true }));
+    void refreshSession().catch(() => {});
   }, []);
 
   // A fresh visit lands on a blank chat, like the desktop app.
@@ -75,7 +59,7 @@ export function Arena() {
         <span className="text-bg/80">Safe training environment</span>
       </div>
       <UpdateBar />
-      <div className="flex min-h-0 flex-1">
+      <div inert={needsOnboarding || !session.loaded} className="flex min-h-0 flex-1">
         {sidebarOpen && <Sidebar />}
         <main className="flex min-w-0 flex-1 flex-col">
           <TopBar title={title} />
@@ -85,6 +69,7 @@ export function Arena() {
         </main>
       </div>
       <Toasts />
+      {!needsOnboarding && <>
       <ChallengesDialog open={dialog?.kind === "challenges"} />
       {dialog?.kind === "brief" && <BriefDialog open slug={dialog.slug} />}
       {dialog?.kind === "result" && <ResultDialog open slug={dialog.slug} />}
@@ -92,7 +77,8 @@ export function Arena() {
       {dialog?.kind === "settings" && <SettingsDialog key={dialog.section ?? "general"} section={dialog.section ?? "general"} />}
       <NewProjectDialog open={dialog?.kind === "new-project"} chatId={dialog?.kind === "new-project" ? dialog.chatId : undefined} />
       {dialog?.kind === "quit" && <QuitDialog />}
-      {hydrated && session.loaded && (!onboarded || (!!session.me && !session.onboardedAt)) && !dialog && !attempt && <OnboardingDialog />}
+      </>}
+      {needsOnboarding && <OnboardingDialog />}
       <span hidden onClick={closeDialog} />
     </div>
   );

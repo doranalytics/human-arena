@@ -4,7 +4,7 @@
 
 `src/lib/arena/challenges.ts` is the single source for the instructions, visible completion checks and action requirements. `ChallengeCriteria` renders those same criteria. Private keys supply reference facts only; they must never add a requirement.
 
-A signed-in attempt freezes the full challenge and reference facts when it starts. Later curriculum edits apply to new attempts. Results retain the criteria labels and version that were actually used. Guest attempts must restart if their definition changes.
+A signed-in attempt freezes the full challenge and reference facts when it starts. Later curriculum edits apply to new attempts. Results retain the criteria labels and version that were actually used. Starting or submitting a challenge requires a verified email account.
 
 Luna evaluates semantic checks. Exact ten-word counting runs in code. Action checks use the messages, effective per-turn settings, successful tool results and relevant workspace state. Failed tools and toggles that were never used do not count. Summaries can omit secondary details. Graders must accept equivalent wording, units and valid methods.
 
@@ -33,4 +33,4 @@ This is an imported subscriber list, not a live Substack billing webhook. A new 
 - `scripts/eval-rubrics.ts`: valid and invalid transcript fixtures for all 38 semantic challenges. Runs real Luna calls and writes `verify/rubric-evals.json`; it does not change member data. Run with `node --env-file=.env.local --conditions=react-server --import tsx scripts/eval-rubrics.ts`.
 - `scripts/verify-backend.ts`: disposable authenticated account, onboarding, subscriber lookup, real AI response, server history, grading persistence, replay, restored badges and final workspace actions. Run against a local production server on port 3218 with `node --env-file=.env.local --import tsx scripts/verify-backend.ts`. Test rows are deleted afterward.
 
-These checks reduce rubric drift, but do not prove perfect judgment on every possible learner response. Workspace gestures remain client-reported: this is not a complete anti-cheat system. Projects, skills, schedules and guest progress remain browser-local. Scheduled tasks are practice runs started with Run now, not background jobs. A hard runtime termination during streaming can leave a pending attempt requiring recovery; ordinary model/setup failures clear the pending state.
+These checks reduce rubric drift, but do not prove perfect judgment on every possible learner response. Workspace gestures remain client-reported: this is not a complete anti-cheat system. Working projects, skills and schedules remain browser-local. Account onboarding and membership are described in [Accounts and onboarding](accounts-and-onboarding.md). Scheduled tasks are practice runs started with Run now, not background jobs. A hard runtime termination during streaming can leave a pending attempt requiring recovery; ordinary model/setup failures clear the pending state.

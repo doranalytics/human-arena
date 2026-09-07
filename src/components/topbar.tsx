@@ -8,6 +8,7 @@ import { getChallenge } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
 import { fmtClock, cn } from "@/lib/utils";
 import type { ArenaResult } from "@/lib/types";
+import { ChallengePointer } from "./challenge-pointer";
 
 export function TopBar({ title }: { title: string }) {
   const attempt = useStore((s) => s.attempt);
@@ -107,9 +108,12 @@ export function TopBar({ title }: { title: string }) {
           <button onClick={() => openDialog({ kind: "leaderboard" })} className="flex h-8 items-center gap-1.5 rounded-lg border border-line-2 px-2.5 text-[13px] font-medium text-ink hover:bg-bg-2" title="Leaderboard">
             <Trophy size={14} className="text-clay" /> <span className="hidden sm:inline">Leaderboard</span>
           </button>
+          <div className="relative">
           <button onClick={() => openDialog({ kind: "challenges" })} className="flex h-8 items-center gap-1.5 rounded-lg bg-clay px-3 text-[13px] font-semibold text-white shadow-sm shadow-clay/30 hover:bg-clay-dark">
             <Swords size={14} /> Challenges
           </button>
+          <ChallengePointer />
+          </div>
           <button onClick={() => openDialog({ kind: "settings", section: "account" })} className="rounded-lg p-1.5 text-ink-2 hover:bg-bg-3" title="Your profile and settings">
             <Settings size={17} />
           </button>

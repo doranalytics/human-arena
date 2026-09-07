@@ -88,7 +88,7 @@ function General() {
     <div className="space-y-7">
       <section>
         <Label>Local data</Label>
-        <div className="mb-2 text-[13px] text-ink-2">Chats, projects, skills, memories and results live in this browser until you sign in.</div>
+        <div className="mb-2 text-[13px] text-ink-2">Your account and challenge results are saved online. Working chats, projects, skills and memories are stored in this browser.</div>
         <Button
           variant="danger"
           onClick={() => {

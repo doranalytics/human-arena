@@ -11,7 +11,7 @@ import type { ArenaResult } from "@/lib/types";
 export async function GET() {
   const configured = supabaseConfigured() && adminConfigured();
   const member = await getMember();
-  if (!member) return NextResponse.json({ configured, member: null, results: [] });
+  if (!member) return NextResponse.json({ configured, member: null, results: [] }, { headers: { "Cache-Control": "no-store" } });
   const { data } = await adminClient().from("results").select("slug,points,passed,seconds,hints_used,grade,submitted_at").eq("member_id", member.id);
   const results: ArenaResult[] = (data ?? []).map((r) => {
     const g = (r.grade ?? {}) as Partial<ArenaResult>;
@@ -31,7 +31,7 @@ export async function GET() {
       at: r.submitted_at,
     };
   });
-  return NextResponse.json({ configured, member: { id: member.id, email: member.email, name: member.display_name || member.pseudonym, avatar: member.avatar_url, linkedin: member.linkedin_url, x: member.x_url }, results, subscription: await subscriberStatus(member), onboarding: member.onboarding, onboardedAt: member.onboarded_at }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ configured, member: { id: member.id, email: member.email, emailVerified: true, name: member.display_name || member.pseudonym, avatar: member.avatar_url, linkedin: member.linkedin_url, x: member.x_url }, results, subscription: await subscriberStatus(member), onboarding: member.onboarding, onboardedAt: member.onboarded_at, guideSeenAt: member.challenge_guide_seen_at }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PATCH(request: Request) {

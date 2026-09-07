@@ -13,6 +13,8 @@ import type { ArenaEvent, ArenaResult, Chat, TurnContext } from "@/lib/types";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
+  const member = await getMember();
+  if (!member) return NextResponse.json({ error: "Sign in and verify your email to submit a challenge." }, { status: 401 });
   const raw = await req.text();
   if (raw.length > 4_000_000) return NextResponse.json({ error: "Attempt too large" }, { status: 413 });
   let json: unknown; try { json = JSON.parse(raw); } catch { return NextResponse.json({ error: "Invalid request" }, { status: 400 }); }
@@ -21,7 +23,6 @@ export async function POST(req: Request) {
   const b = parsed.data;
   let c = getChallenge(b.slug);
   if (!c) return NextResponse.json({ error: "Unknown challenge" }, { status: 400 });
-  const member = await getMember();
   const now = new Date();
   let startedAt = new Date(b.startedAt);
   let reference: string | undefined;
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
       .eq("id", a.id).is("submitted_at", null).or(`grading_token.is.null,grading_started_at.lt.${expired}`).select("id").maybeSingle();
     if (claimError) return fail("Could not begin grading. Try again.");
     if (!claimed) return fail("This attempt is already being graded. Please wait, then retry.", 409);
-  } else if (b.version !== version) return fail("Challenge instructions changed. Start a new attempt to use the updated rules.", 409);
+  }
 
   const release = async () => { if (member && token) await adminClient().from("attempts").update({ grading_token: null, grading_started_at: null }).eq("id", b.serverId!).eq("grading_token", token); };
   if (startedAt.getTime() > now.getTime()) { await release(); return fail("Invalid start time. Please start a new attempt.", 400); }

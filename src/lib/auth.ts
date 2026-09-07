@@ -11,7 +11,8 @@ export interface Member {
   linkedin_url: string | null;
   x_url: string | null;
   onboarded_at: string | null;
-  onboarding: { level?: string; goal?: string };
+  onboarding: { level?: string; goal?: string; version?: number };
+  challenge_guide_seen_at: string | null;
   is_paid: boolean;
   subscription_checked_at: string | null;
 }
@@ -21,7 +22,7 @@ export async function getUser() {
   try {
     const supabase = await createClient();
     const { data } = await supabase.auth.getUser();
-    return data.user ?? null;
+    return data.user?.email_confirmed_at && !data.user.is_anonymous ? data.user : null;
   } catch {
     return null;
   }
@@ -32,7 +33,7 @@ export async function getMember(): Promise<Member | null> {
   const user = await getUser();
   if (!user || !adminConfigured()) return null;
   try {
-    const { data } = await adminClient().from("members").select("id,email,pseudonym,display_name,avatar_url,linkedin_url,x_url,onboarding,onboarded_at,is_paid,subscription_checked_at").eq("auth_id", user.id).maybeSingle();
+    const { data } = await adminClient().from("members").select("id,email,pseudonym,display_name,avatar_url,linkedin_url,x_url,onboarding,onboarded_at,challenge_guide_seen_at,is_paid,subscription_checked_at").eq("auth_id", user.id).maybeSingle();
     return (data as Member | null) ?? null;
   } catch {
     return null;
