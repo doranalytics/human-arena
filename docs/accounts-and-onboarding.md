@@ -4,7 +4,13 @@ The welcome flow explains AI practice, the challenge/feedback loop and the weekl
 
 Signup is presented as mandatory: `Sign up to play`, an email field and `Sign up`. It is not offered as an optional way to save progress. The form does not ask learners to identify an account tier or know which community they belong to. Standard/Premium remain internal entitlement names; the interface describes what the person can do.
 
-After email verification, the app automatically checks existing community and subscriber records. Members with confirmed access see the weekly competition included. Otherwise, the offer explains that a paid How to AI subscription on Ruben’s Substack adds weekly winner eligibility and a public leaderboard profile with their full name, photo and social links. `Start playing` retains every free challenge, saved progress and points. Opening checkout does not grant access. Returning members can check access again. Winning the weekly competition is required for the feature; subscribing alone does not promise exposure.
+After email verification, the app checks whichever membership records are available. Confirmed access is preserved. **New membership upgrades are disabled** (`MEMBERSHIP_UPGRADES_ENABLED=false`): non-members see “Coming soon” and can start playing for free, without a purchase link or a misleading recheck action. The offer code is retained for when the connection is working. Opening checkout never grants access.
+
+## Membership is not operationally connected yet
+
+The current backend can store entitlements, read the older AI Certified `members.is_paid` field, and import Circle data once configured. That is not a new-purchase integration. The 2026-09-07 audit found no Circle credentials, zero Circle membership rows and zero sync runs. The old subscriber table is not a live billing feed. Test fixtures demonstrate entitlement logic only; they do not demonstrate real subscriber import or purchase fulfillment.
+
+Before enabling upgrades, establish a trusted source for existing paid subscribers, connect the existing Circle community, and verify that new purchases and cancellations update Games by the verified account email. A current Substack subscriber CSV can supply an initial snapshot, but periodic imports are an operational process and must not be presented as instant activation. Whether new Substack subscriptions already create Circle membership still needs confirmation. Leave the paid offer off until an actual purchase-to-access path is verified.
 
 ## Persisted account state
 

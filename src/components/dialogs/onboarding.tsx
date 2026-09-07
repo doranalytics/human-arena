@@ -6,7 +6,7 @@ import { updateSettings, useStore } from "@/lib/store";
 import { closeDialog, setPage } from "@/lib/ui";
 import { useSession, setSession, refreshSession } from "@/lib/session";
 import { ONBOARDING_QUESTIONS, ONBOARDING_VERSION, OnboardingSchema } from "@/lib/onboarding";
-import { WEEKLY_WINNER_COPY } from "@/lib/subscription";
+import { WEEKLY_WINNER_COPY, MEMBERSHIP_UPGRADES_ENABLED } from "@/lib/subscription";
 import { SubscriptionCard } from "../subscription-card";
 import { Logo } from "../icons";
 
@@ -111,14 +111,14 @@ export function OnboardingDialog() {
         <div className="rounded-xl border border-line bg-bg-2 px-4 py-3">
           <p className="flex items-center gap-2 text-[13px] font-medium"><Trophy size={16} className="text-clay" /> The weekly winner</p>
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">{WEEKLY_WINNER_COPY}</p>
-          <p className="mt-2 text-[12px] text-ink-3">Play for free. After signup, we’ll show you how to enter the weekly competition.</p>
+          <p className="mt-2 text-[12px] text-ink-3">{MEMBERSHIP_UPGRADES_ENABLED ? "Play for free. After signup, we’ll show you how to enter the weekly competition." : "All challenges are free. Membership upgrades for the weekly competition are coming soon."}</p>
         </div>
       </>}
       {q && <div className="mt-4 space-y-2">{q.options.map((o) => <button key={o.id} aria-pressed={answers[q.id] === o.id} onClick={() => setAnswers({ ...answers, [q.id]: o.id })} className={`flex w-full items-center justify-between rounded-lg border px-3.5 py-3 text-left text-[14px] ${answers[q.id] === o.id ? "border-clay bg-clay/5" : "border-line hover:bg-bg-2"}`}>{o.label}{answers[q.id] === o.id && <Check size={16} className="text-clay" />}</button>)}</div>}
       {step === 3 && (session.me ? <>
         <p className="mt-3 flex items-center gap-2 text-[13px]"><ShieldCheck size={17} className="shrink-0 text-ok" /><span className="min-w-0 break-all">Verified: {session.me.email}</span></p>
         <div className="mt-4"><SubscriptionCard compact onboarding /></div>
-        <p className="mt-3 text-[13px] leading-relaxed text-ink-2">{freeAccount ? "All challenges are free. You can subscribe later." : "You’re all set. The arrow will show you where to choose your first challenge."}</p>
+        <p className="mt-3 text-[13px] leading-relaxed text-ink-2">{freeAccount && MEMBERSHIP_UPGRADES_ENABLED ? "All challenges are free. You can subscribe later." : "You’re all set. The arrow will show you where to choose your first challenge."}</p>
       </> : sent ? <div className="mt-4">
         <Mail size={25} className="mb-2 text-clay" />
         <p role="status" className="text-[14px] leading-relaxed text-ink-2">We sent a link to <strong className="break-all font-medium text-ink">{email}</strong>. Open it to confirm your email and finish signing up.</p>
@@ -136,7 +136,7 @@ export function OnboardingDialog() {
       {session.error && <Button variant="outline" className="mt-2" onClick={checkSignIn} disabled={busy}>Retry connection</Button>}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
         <span className="text-[12px] text-ink-3">{step === 0 ? session.me ? "No experience needed" : "Sign up to play · Free" : step === 3 ? session.me ? "Choose a challenge next" : "Email required to play" : `${step} of 2 questions`}</span>
-        <div className="flex shrink-0 gap-2">{step > 0 && <Button variant="ghost" onClick={() => { setError(""); setStep(step - 1); }} disabled={busy}>Back</Button>}{(step < 3 || session.me) && <Button variant={step === 3 && freeAccount ? "outline" : "primary"} onClick={next} disabled={busy || (!!q && !answers[q.id])}>{busy ? "Saving…" : step === 3 ? "Start playing" : "Continue"}<ArrowRight size={14} /></Button>}</div>
+        <div className="flex shrink-0 gap-2">{step > 0 && <Button variant="ghost" onClick={() => { setError(""); setStep(step - 1); }} disabled={busy}>Back</Button>}{(step < 3 || session.me) && <Button variant={step === 3 && freeAccount && MEMBERSHIP_UPGRADES_ENABLED ? "outline" : "primary"} onClick={next} disabled={busy || (!!q && !answers[q.id])}>{busy ? "Saving…" : step === 3 ? "Start playing" : "Continue"}<ArrowRight size={14} /></Button>}</div>
       </div>
     </div>
   </div>;

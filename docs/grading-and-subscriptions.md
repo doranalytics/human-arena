@@ -14,9 +14,9 @@ The timer shows elapsed time only. Speed and hints still affect points. Completi
 
 ## Subscription source
 
-Subscription purchase and billing live at https://ruben.substack.com/subscribe. There is no Stripe integration in this app. Challenges remain free. Paid status enables full leaderboard recognition and weekly winner eligibility under the existing How to AI offer.
+Subscription purchase and billing belong on https://ruben.substack.com/subscribe. There is no Stripe integration in this app. **The Games upgrade offer is currently disabled because there is no verified new-purchase-to-access connection.** Challenges remain free, and existing confirmed paid status is preserved. Paid status enables full leaderboard recognition and weekly winner eligibility under the existing How to AI offer.
 
-The server matches the authenticated member's normalized email against AI Certified's existing `members.is_paid` field and the Circle community API. Either source can grant membership; see [Circle setup](circle-membership.md). Onboarding and profile requests cannot self-assign paid status. Account and leaderboard cards link to Substack; signed-in members can recheck their status. Use the same email in both products.
+The server matches the authenticated member's normalized email against AI Certified's existing `members.is_paid` field and, when configured, the Circle community API. Either source can grant membership; see [Circle setup](circle-membership.md). Onboarding and profile requests cannot self-assign paid status. Existing confirmed subscribers can manage their subscription; new purchase and recheck prompts are hidden while upgrades are disabled.
 
 Required server-only deployment variables:
 
@@ -25,7 +25,7 @@ Required server-only deployment variables:
 
 The app reads the parent database and caches Substack status separately in `members.substack_paid`; effective membership also includes Circle access. It does not modify the parent. When lookup is unavailable it preserves the last confirmed local status and reports verification unavailable.
 
-This is an imported subscriber list, not a live Substack billing webhook. A new subscription may not appear until the next import. The existing parent importer upserts paid subscribers; cancellation/revocation handling remains an operational responsibility. Rechecking in the game cannot fix stale source data. Before awarding a weekly prize, reconcile the current paid subscriber export and verify the winner's status.
+This is a stored subscriber list, not a live Substack billing webhook. No functioning import schedule or new-subscription feed has been verified. New purchases and cancellations therefore have no guaranteed path into this app. Rechecking in the game cannot fix stale source data. Before enabling upgrades or awarding a weekly prize, establish the current paid subscriber source and verify the complete access lifecycle.
 
 ## Verification and remaining limits
 

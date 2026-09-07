@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { ExternalLink, Check, RefreshCw, Trophy, UserRound } from "lucide-react";
 import { useSession, setSession } from "@/lib/session";
-import { SUBSCRIBE_URL, SUBSCRIPTION_SETTINGS_URL, WEEKLY_WINNER_COPY, type SubscriptionStatus } from "@/lib/subscription";
+import { SUBSCRIBE_URL, SUBSCRIPTION_SETTINGS_URL, WEEKLY_WINNER_COPY, MEMBERSHIP_UPGRADES_ENABLED, type SubscriptionStatus } from "@/lib/subscription";
 import { openDialog } from "@/lib/ui";
 
 export function SubscriptionCard({ compact = false, onboarding = false }: { compact?: boolean; onboarding?: boolean }) {
@@ -21,10 +21,14 @@ export function SubscriptionCard({ compact = false, onboarding = false }: { comp
       const j = await r.json() as { subscription?: SubscriptionStatus; error?: string };
       if (!r.ok || !j.subscription) throw new Error(j.error ?? "Could not check your subscription.");
       setSession({ subscription: j.subscription });
-      setMessage(!j.subscription.available ? "We couldn’t check your access right now. Your last confirmed access is unchanged." : j.subscription.paid ? "Your weekly competition access is confirmed." : "We haven’t confirmed weekly competition access for this email. If you’ve just subscribed, it may take a little while to appear.");
+      setMessage(!j.subscription.available ? "We couldn’t check your access right now. Your last confirmed access is unchanged." : j.subscription.paid ? "Your weekly competition access is confirmed." : "We haven’t confirmed weekly competition access for this email. New Substack purchases are not automatically connected to Games yet.");
     } catch (e) { setMessage(e instanceof Error ? e.message : "Please try again."); }
     finally { setBusy(false); }
   }
+  if (!paid && !MEMBERSHIP_UPGRADES_ENABLED) return <div className="rounded-lg border border-line bg-bg-2/70 px-3.5 py-3">
+    <div className="flex items-center justify-between gap-2"><p className="text-[14px] font-medium">Weekly competition</p><span className="shrink-0 rounded-full border border-line-2 px-2 py-0.5 text-[11px] text-ink-2">Coming soon</span></div>
+    <p className="mt-2 text-[13px] leading-relaxed text-ink-2">Subscription benefits for the weekly competition are coming soon. All challenges are free to play.</p>
+  </div>;
   return <div className={offer ? "rounded-xl border border-clay/30 bg-bg-2/70 p-4" : compact ? "rounded-lg border border-line bg-bg-2/70 px-3.5 py-3" : "rounded-xl border border-line bg-bg-2/70 p-4"}>
     {offer ? <>
       <p className="text-[14px] font-medium">Enter the weekly competition</p>
