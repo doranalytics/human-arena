@@ -23,6 +23,7 @@ interface SessionState {
   onboardingVersion?: number;
   guideSeenAt?: string | null;
   error?: string;
+  authNotice?: string;
 }
 let s: SessionState = { loaded: false, configured: false, me: null };
 const ls = new Set<() => void>();

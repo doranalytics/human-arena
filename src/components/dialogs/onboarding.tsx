@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, Mail, MessageSquare, Swords, Trophy, ShieldCheck } from "lucide-react";
-import { Button, inputCls } from "../dialog";
+import { ArrowRight, Check, MessageSquare, Swords, Trophy, ShieldCheck } from "lucide-react";
+import { Button } from "../dialog";
 import { updateSettings, useStore } from "@/lib/store";
 import { closeDialog, setPage } from "@/lib/ui";
 import { useSession, setSession, refreshSession } from "@/lib/session";
@@ -9,13 +9,15 @@ import { ONBOARDING_QUESTIONS, ONBOARDING_VERSION, OnboardingSchema } from "@/li
 import { WEEKLY_WINNER_COPY, MEMBERSHIP_UPGRADES_ENABLED } from "@/lib/subscription";
 import { SubscriptionCard } from "../subscription-card";
 import { Logo } from "../icons";
+import { EmailSignIn, type PendingEmailCode } from "../email-signin";
 
 const DRAFT = "howto-ai:onboarding:v2";
 type Answers = { level: string; goal: string };
 function readDraft(email?: string) {
   try {
     const d = JSON.parse(localStorage.getItem(DRAFT) ?? "null");
-    if (d && typeof d.email === "string" && (!email || d.email === email.toLowerCase()) && Date.now() - d.at < 48 * 60 * 60_000 && OnboardingSchema.safeParse(d.answers).success) return d as { email: string; answers: Answers; at: number };
+    const validAnswers = d?.answers && (d.answers.level === "" || OnboardingSchema.shape.level.safeParse(d.answers.level).success) && (d.answers.goal === "" || OnboardingSchema.shape.goal.safeParse(d.answers.goal).success);
+    if (d && typeof d.email === "string" && (!email || d.email === email.toLowerCase()) && Date.now() - d.at < 48 * 60 * 60_000 && validAnswers) return d as { email: string; answers: Answers; at: number; method?: "code" };
   } catch { /* Storage is optional; account creation still works. */ }
   return null;
 }
@@ -24,58 +26,34 @@ export function OnboardingDialog() {
   const session = useSession();
   const saved = useStore((s) => s.settings.onboarding);
   const [draft] = useState(() => readDraft(session.me?.email));
-  const [step, setStep] = useState(draft ? 3 : 0);
+  const [step, setStep] = useState(draft || session.authNotice ? 3 : 0);
   const [answers, setAnswers] = useState<Answers>(draft?.answers ?? { level: saved?.level ?? "", goal: saved?.goal ?? "" });
-  const [email, setEmail] = useState(draft?.email ?? "");
-  const [sent, setSent] = useState(!!draft);
+  const [pending, setPending] = useState<PendingEmailCode | null>(draft?.method === "code" ? { email: draft.email, sentAt: draft.at } : null);
   const [busy, setBusy] = useState(false);
-  const [retryAt, setRetryAt] = useState(0);
-  const [now, setNow] = useState(() => Date.now());
   const [error, setError] = useState("");
   const panel = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const q = step === 1 || step === 2 ? ONBOARDING_QUESTIONS[step - 1] : null;
-  const retryIn = Math.max(0, Math.ceil((retryAt - now) / 1000));
-
   useEffect(() => { heading.current?.focus(); }, [step]);
-  useEffect(() => {
-    if (!retryAt) return;
-    const id = setInterval(() => { const time = Date.now(); setNow(time); if (time >= retryAt) clearInterval(id); }, 1000);
-    return () => clearInterval(id);
-  }, [retryAt]);
-  useEffect(() => {
-    if (!sent || session.me) return;
-    const check = () => { if (document.visibilityState === "visible") void refreshSession().catch(() => {}); };
-    window.addEventListener("focus", check);
-    document.addEventListener("visibilitychange", check);
-    return () => { window.removeEventListener("focus", check); document.removeEventListener("visibilitychange", check); };
-  }, [sent, session.me]);
 
-  async function sendLink() {
-    setBusy(true); setError("");
+  function rememberCode(value: PendingEmailCode | null) {
+    setPending(value);
+    updateSettings({ onboarding: answers });
     try {
-      const normalized = email.trim().toLowerCase();
-      const r = await fetch("/api/auth/signin", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: normalized }) });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error ?? "Could not send your confirmation email.");
-      setEmail(normalized); setSent(true); setRetryAt(Date.now() + 60_000); setNow(Date.now());
-      updateSettings({ onboarding: answers });
-      try { localStorage.setItem(DRAFT, JSON.stringify({ email: normalized, answers, at: Date.now() })); } catch { /* Keep the current form. */ }
-    } catch (e) { setError(e instanceof Error ? e.message : "Could not send the link. Please try again."); }
-    finally { setBusy(false); }
+      localStorage.setItem(DRAFT, JSON.stringify({ email: value?.email ?? "", answers, at: value?.sentAt ?? Date.now(), method: value ? "code" : undefined }));
+    } catch { /* The current form remains usable without local storage. */ }
   }
   async function checkSignIn() {
     setBusy(true); setError("");
-    try {
-      const current = await refreshSession();
-      if (!current.me && sent) setError("Open the link in your email to verify your account, then return here.");
-    } catch { setError("Could not check your sign-in. Please try again."); }
+    try { await refreshSession(); }
+    catch { setError("Could not load your account. Please try again."); }
     finally { setBusy(false); }
   }
   async function next() {
     setError("");
     if (step < 3) { setStep(step + 1); return; }
     if (!session.me) return;
+    if (!OnboardingSchema.safeParse(answers).success) { setStep(1); return; }
     setBusy(true);
     try {
       const r = await fetch("/api/onboarding", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(answers) });
@@ -89,7 +67,8 @@ export function OnboardingDialog() {
     finally { setBusy(false); }
   }
   const freeAccount = !!session.me && !session.subscription?.paid;
-  const title = q?.title ?? (step === 0 ? "Learn to use AI." : session.me ? "You’re signed up." : sent ? "Confirm your email." : "Sign up to play.");
+  const answered = OnboardingSchema.safeParse(answers).success;
+  const title = q?.title ?? (step === 0 ? "Learn to use AI." : session.me ? "You’re signed up." : pending ? "Check your email." : answered ? "Sign up to play." : "Sign in to play.");
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]">
     <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="welcome-title" className="fade-up max-h-full w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-bg p-6 shadow-2xl sm:p-7" onKeyDown={(e) => {
       if (e.key !== "Tab") return;
@@ -113,30 +92,20 @@ export function OnboardingDialog() {
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">{WEEKLY_WINNER_COPY}</p>
           <p className="mt-2 text-[12px] text-ink-3">{MEMBERSHIP_UPGRADES_ENABLED ? "Play for free. After signup, we’ll show you how to enter the weekly competition." : "All challenges are free. Membership upgrades for the weekly competition are coming soon."}</p>
         </div>
+        {!session.me && <button className="mt-3 text-[12px] text-ink-2 underline underline-offset-2" onClick={() => setStep(3)}>Already signed up? Sign in</button>}
       </>}
       {q && <div className="mt-4 space-y-2">{q.options.map((o) => <button key={o.id} aria-pressed={answers[q.id] === o.id} onClick={() => setAnswers({ ...answers, [q.id]: o.id })} className={`flex w-full items-center justify-between rounded-lg border px-3.5 py-3 text-left text-[14px] ${answers[q.id] === o.id ? "border-clay bg-clay/5" : "border-line hover:bg-bg-2"}`}>{o.label}{answers[q.id] === o.id && <Check size={16} className="text-clay" />}</button>)}</div>}
       {step === 3 && (session.me ? <>
         <p className="mt-3 flex items-center gap-2 text-[13px]"><ShieldCheck size={17} className="shrink-0 text-ok" /><span className="min-w-0 break-all">Verified: {session.me.email}</span></p>
         <div className="mt-4"><SubscriptionCard compact onboarding /></div>
-        <p className="mt-3 text-[13px] leading-relaxed text-ink-2">{freeAccount && MEMBERSHIP_UPGRADES_ENABLED ? "All challenges are free. You can subscribe later." : "You’re all set. The arrow will show you where to choose your first challenge."}</p>
-      </> : sent ? <div className="mt-4">
-        <Mail size={25} className="mb-2 text-clay" />
-        <p role="status" className="text-[14px] leading-relaxed text-ink-2">We sent a link to <strong className="break-all font-medium text-ink">{email}</strong>. Open it to confirm your email and finish signing up.</p>
-        <div className="mt-4 flex flex-wrap gap-2"><Button onClick={checkSignIn} disabled={busy}>I’ve verified my email</Button><Button variant="ghost" onClick={sendLink} disabled={busy || retryIn > 0}>{retryIn ? `Resend in ${retryIn}s` : "Resend link"}</Button></div>
-        <button className="mt-3 text-[12px] text-ink-2 underline underline-offset-2" onClick={() => { setSent(false); setError(""); }}>Use a different email</button>
-      </div> : <form className="mt-4" onSubmit={(e) => { e.preventDefault(); if (!busy) void sendLink(); }}>
-        <p className="mb-4 text-[14px] leading-relaxed text-ink-2">Enter your email to create your account. We’ll send a link to confirm it before you can play.</p>
-        <label className="block text-[13px] font-medium" htmlFor="onboarding-email">Your email</label>
-        <input id="onboarding-email" className={`${inputCls} mt-1.5`} required type="email" autoComplete="email" maxLength={254} placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <Button className="mt-3 w-full" type="submit" disabled={busy || !session.configured}>{busy ? "Sending…" : "Sign up"}<ArrowRight size={15} /></Button>
-        <p className="mt-3 text-[12px] leading-relaxed text-ink-3">Already have an account? Use the same email to sign in.</p>
-      </form>)}
+        <p className="mt-3 text-[13px] leading-relaxed text-ink-2">{!answered ? "One last step: tell us how you’d like to use AI." : freeAccount && MEMBERSHIP_UPGRADES_ENABLED ? "All challenges are free. You can subscribe later." : "You’re all set. The arrow will show you where to choose your first challenge."}</p>
+      </> : <div className="mt-4"><EmailSignIn initialEmail={draft?.email} pending={pending} onPendingChange={rememberCode} signup={answered} /></div>)}
       {(error || session.error) && <p role="alert" className="mt-3 text-[13px] text-bad">{error || session.error}</p>}
       {!session.configured && step === 3 && !session.error && <p role="alert" className="mt-3 text-[13px] text-bad">Sign-in is temporarily unavailable. Please try again shortly.</p>}
       {session.error && <Button variant="outline" className="mt-2" onClick={checkSignIn} disabled={busy}>Retry connection</Button>}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
-        <span className="text-[12px] text-ink-3">{step === 0 ? session.me ? "No experience needed" : "Sign up to play · Free" : step === 3 ? session.me ? "Choose a challenge next" : "Email required to play" : `${step} of 2 questions`}</span>
-        <div className="flex shrink-0 gap-2">{step > 0 && <Button variant="ghost" onClick={() => { setError(""); setStep(step - 1); }} disabled={busy}>Back</Button>}{(step < 3 || session.me) && <Button variant={step === 3 && freeAccount && MEMBERSHIP_UPGRADES_ENABLED ? "outline" : "primary"} onClick={next} disabled={busy || (!!q && !answers[q.id])}>{busy ? "Saving…" : step === 3 ? "Start playing" : "Continue"}<ArrowRight size={14} /></Button>}</div>
+        <span className="text-[12px] text-ink-3">{step === 0 ? session.me ? "No experience needed" : "Sign up to play · Free" : step === 3 ? session.me ? answered ? "Choose a challenge next" : "Finish your setup" : "Email required to play" : `${step} of 2 questions`}</span>
+        <div className="flex shrink-0 gap-2">{step > 0 && <Button variant="ghost" onClick={() => { setError(""); setStep(step - 1); }} disabled={busy}>Back</Button>}{(step < 3 || session.me) && <Button variant={step === 3 && freeAccount && MEMBERSHIP_UPGRADES_ENABLED ? "outline" : "primary"} onClick={next} disabled={busy || (!!q && !answers[q.id])}>{busy ? "Saving…" : step === 3 && OnboardingSchema.safeParse(answers).success ? "Start playing" : "Continue"}<ArrowRight size={14} /></Button>}</div>
       </div>
     </div>
   </div>;

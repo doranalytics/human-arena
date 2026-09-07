@@ -1,6 +1,6 @@
 # Accounts and onboarding
 
-The welcome flow explains AI practice, the challenge/feedback loop and the weekly winner feature on Ruben’s LinkedIn and Substack. Two short questions collect experience and intended use. Account creation uses a Supabase email verification link; there is no guest-completion shortcut. Onboarding ends in the workspace, without creating an attempt or opening a challenge. An animated arrow points to the actual Challenges button until the member opens the library or dismisses it. Reduced-motion users see a static arrow.
+The welcome flow explains AI practice, the challenge/feedback loop and the weekly winner feature on Ruben’s LinkedIn and Substack. Two short questions collect experience and intended use. Account creation uses a Supabase email code entered in the same window; there is no guest-completion shortcut. Onboarding ends in the workspace, without creating an attempt or opening a challenge. An animated arrow points to the actual Challenges button until the member opens the library or dismisses it. Reduced-motion users see a static arrow.
 
 Signup is presented as mandatory: `Sign up to play`, an email field and `Sign up`. It is not offered as an optional way to save progress. The form does not ask learners to identify an account tier or know which community they belong to. Standard/Premium remain internal entitlement names; the interface describes what the person can do.
 
@@ -21,7 +21,15 @@ Before enabling upgrades, establish a trusted source for existing paid subscribe
 - Standard includes free challenges, saved scores and leaderboard points. Premium adds full leaderboard recognition and weekly winner eligibility. New purchases go to `https://ruben.substack.com/subscribe`; existing Circle members do not need another purchase.
 - Chat, transcription, challenge start and submission require verified accounts on the server. A localStorage flag cannot bypass this requirement.
 
-Onboarding drafts survive the email-link round trip in the same browser for 48 hours and are matched to the verified email. Completing setup clears the draft. Profiles, onboarding and scored attempts are stored online; working projects, skills and schedules remain browser-local as before.
+Onboarding drafts survive refreshes in the same browser for 48 hours and are matched to the verified email. Completing setup clears the draft. Profiles, onboarding and scored attempts are stored online; working projects, skills and schedules remain browser-local as before.
+
+### Email codes and old links
+
+`POST /api/auth/signin` requests an email code with a stateless public Supabase client. Both the confirmation and magic-link email templates must use `supabase/templates/email-code.html`, which includes `{{ .Token }}` and no sign-in link. Hosted settings use `mailer_templates_confirmation_content` and `mailer_templates_magic_link_content`; patch only these templates, their subjects and the six-digit/one-hour OTP settings, without replacing unrelated auth configuration.
+
+`POST /api/auth/verify` verifies the email/code with Supabase, creates session cookies in that browser and calls `claim_member`. Supabase enforces code expiry, one-time use and rate limits. A verified session can retry claiming its own profile after a lost response. New signup and returning-account sign-in share the same form. Codes and sessions are never saved in the draft or placed in URLs.
+
+The old PKCE links required a verifier cookie from the browser where signup began. Opening one in another browser could not create a session there, and clicking “I’ve verified my email” in the original browser only rechecked its unchanged session. `/auth/callback` still accepts valid legacy links (including their flow ID), while failures offer code signup with a persistent explanation. Old local drafts retain their answers and request a new code. Completed onboarding is restored from the member profile when signing into any browser.
 
 ## Email delivery configuration still required
 
@@ -32,7 +40,8 @@ Circle recognition additionally requires the existing `CIRCLE_API_TOKEN` / commu
 ## Verification
 
 - `scripts/verify-accounts.ts` creates disposable Supabase accounts and checks anonymous-route rejection, email verification, Standard/Premium state, RLS, onboarding persistence, absence of auto-started attempts, pointer persistence and attempted client escalation. Fixtures are removed and no emails are sent.
+- `scripts/verify-email-auth.ts` uses real Supabase signup and returning-account OTPs with isolated browser cookie jars. It checks invalid codes, mismatched emails, one-time use, legacy link recovery, cookie-session creation, retry safety, account identity and restored onboarding. Run with `node --env-file=.env.local --import tsx scripts/verify-email-auth.ts`; set `VERIFY_ORIGIN=https://howto-ai-games.vercel.app` to verify production. Admin-generated codes avoid sending test emails; inbox delivery must be checked separately once SMTP is connected.
 - `scripts/verify-backend.ts` covers authenticated onboarding, chat, grading and stored results.
-- Browser QA covers welcome content, input validation, verified account summary, entering the blank workspace, arrow animation and dismissing it by opening Challenges. Generated test links exercise the real callback without sending messages.
+- Browser QA covers welcome content, code entry, an invalid code, persistence across reopening the page, the verified account summary, entering the blank workspace and the challenge arrow. A disposable local proxy replaces email delivery with admin-generated OTPs; verification, sessions, onboarding and profile requests use the real app and Supabase. This is not an inbox-delivery test.
 
 Run against the local production server: `node --env-file=.env.local --import tsx scripts/verify-accounts.ts`. Set `VERIFY_ORIGIN=https://howto-ai-games.vercel.app` for the live account check.

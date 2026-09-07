@@ -1,5 +1,6 @@
 "use client";
 import { SubscriptionCard } from "../subscription-card";
+import { EmailSignIn } from "../email-signin";
 import { useEffect, useRef, useState } from "react";
 import { Camera, Check, Trash2, X, Settings as Gear, CircleUser, Zap, Cable, Brain, Plus, SlidersHorizontal } from "lucide-react";
 import { Button, inputCls } from "../dialog";
@@ -165,9 +166,6 @@ function Account() {
   const [x, setX] = useState(savedX);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
-  const [busy, setBusy] = useState(false);
 
   const liSlug = linkedinSlug(linkedin);
   const xH = xHandle(x);
@@ -202,14 +200,7 @@ function Account() {
     setSaving(false);
     toast({ title: "Profile saved", tone: "info" });
   }
-  async function signIn() {
-    setBusy(true);
-    const r = await fetch("/api/auth/signin", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email }) });
-    const j = (await r.json()) as { error?: string };
-    setBusy(false);
-    if (!r.ok) return toast({ title: "Could not send the link", body: j.error, tone: "bad" });
-    setSent(true);
-  }
+
 
   return (
     <div className="space-y-7">
@@ -253,23 +244,7 @@ function Account() {
           </div>
         ) : !session.configured ? (
           <div className="rounded-lg border border-line px-3 py-2 text-[13px] text-ink-2">Sign-in is off on this deployment. Your progress lives in this browser.</div>
-        ) : sent ? (
-          <div className="rounded-lg border border-ok/40 px-3 py-2 text-[13px]">Check {email} for a sign-in link.</div>
-        ) : (
-          <>
-          <form
-            className="flex items-stretch gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (email && !busy) void signIn();
-            }}
-          >
-            <input className={cn(inputCls, "h-10 flex-1")} type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <Button type="submit" className="h-10 shrink-0 whitespace-nowrap px-4" disabled={busy || !email}>{busy ? "Sending…" : "Email me a link"}</Button>
-          </form>
-          <div className="mt-1.5 text-[12px] text-ink-3">No password. We send a one-tap link, and your scores start saving to the board.</div>
-          </>
-        )}
+        ) : <EmailSignIn />}
       </section>
       <SubscriptionCard />
     </div>

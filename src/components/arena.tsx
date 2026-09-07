@@ -4,7 +4,8 @@ import { useStore, hydrate, newChat } from "@/lib/store";
 import { Logo } from "./icons";
 import { UpdateBar } from "./update-bar";
 import { useUI, closeDialog, toast } from "@/lib/ui";
-import { useSession, refreshSession } from "@/lib/session";
+import { useSession, refreshSession, setSession } from "@/lib/session";
+import { OLD_LINK_NOTICE } from "@/lib/email-auth";
 import { ONBOARDING_VERSION } from "@/lib/onboarding";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./topbar";
@@ -37,8 +38,8 @@ export function Arena() {
     hydrate();
     const u = new URL(window.location.href);
     if (u.searchParams.get("signed_in")) toast({ title: "Email confirmed", body: "Your account is ready.", tone: "ok" });
-    if (u.searchParams.get("auth_error")) toast({ title: "Sign-in failed", body: u.searchParams.get("auth_error") ?? undefined, tone: "bad" });
-    if (u.search) window.history.replaceState({}, "", "/");
+    if (u.searchParams.has("auth_error") || window.location.hash.includes("error=")) setSession({ authNotice: OLD_LINK_NOTICE });
+    if (u.search || u.hash) window.history.replaceState({}, "", "/");
     void refreshSession().catch(() => {});
   }, []);
 
