@@ -88,9 +88,10 @@ export function OnboardingDialog() {
     } catch (e) { setError(e instanceof Error ? e.message : "Please try again."); }
     finally { setBusy(false); }
   }
-  const title = q?.title ?? (step === 0 ? "Learn to use AI." : session.me ? "Your account is ready." : sent ? "Check your inbox." : "Save your progress.");
+  const freeAccount = !!session.me && !session.subscription?.paid;
+  const title = q?.title ?? (step === 0 ? "Learn to use AI." : session.me ? freeAccount ? "Ready for the spotlight?" : "You’re ready to compete." : sent ? "Check your inbox." : "Save your progress.");
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]">
-    <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="welcome-title" className="fade-up max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-bg p-6 shadow-2xl sm:p-7" onKeyDown={(e) => {
+    <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="welcome-title" className="fade-up max-h-full w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-bg p-6 shadow-2xl sm:p-7" onKeyDown={(e) => {
       if (e.key !== "Tab") return;
       const items = panel.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled)');
       if (!items?.length) return;
@@ -110,14 +111,14 @@ export function OnboardingDialog() {
         <div className="rounded-xl border border-line bg-bg-2 px-4 py-3">
           <p className="flex items-center gap-2 text-[13px] font-medium"><Trophy size={16} className="text-clay" /> The weekly winner</p>
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">{WEEKLY_WINNER_COPY}</p>
-          <p className="mt-2 text-[12px] text-ink-3">All challenges are free. Premium members are eligible for the weekly feature.</p>
+          <p className="mt-2 text-[12px] text-ink-3">Learn for free. Upgrade to Premium to compete for the weekly feature.</p>
         </div>
       </>}
       {q && <div className="mt-4 space-y-2">{q.options.map((o) => <button key={o.id} aria-pressed={answers[q.id] === o.id} onClick={() => setAnswers({ ...answers, [q.id]: o.id })} className={`flex w-full items-center justify-between rounded-lg border px-3.5 py-3 text-left text-[14px] ${answers[q.id] === o.id ? "border-clay bg-clay/5" : "border-line hover:bg-bg-2"}`}>{o.label}{answers[q.id] === o.id && <Check size={16} className="text-clay" />}</button>)}</div>}
       {step === 3 && (session.me ? <>
         <p className="mt-3 flex items-center gap-2 text-[13px]"><ShieldCheck size={17} className="shrink-0 text-ok" /><span className="min-w-0 break-all">Verified: {session.me.email}</span></p>
-        <div className="mt-4"><SubscriptionCard compact /></div>
-        <p className="mt-3 text-[13px] leading-relaxed text-ink-2">Next, explore your workspace. The arrow will show you where to choose a challenge when you’re ready.</p>
+        <div className="mt-4"><SubscriptionCard compact onboarding /></div>
+        <p className="mt-3 text-[13px] leading-relaxed text-ink-2">{freeAccount ? "Standard stays free: every challenge, saved progress and leaderboard points. You can upgrade anytime." : "Your Premium benefits are already included. The arrow will show you where to choose your first challenge."}</p>
       </> : sent ? <div className="mt-4">
         <Mail size={25} className="mb-2 text-clay" />
         <p role="status" className="text-[14px] leading-relaxed text-ink-2">We sent a sign-in link to <strong className="break-all font-medium text-ink">{email}</strong>. Open it to verify your email and save your account.</p>
@@ -133,9 +134,9 @@ export function OnboardingDialog() {
       {(error || session.error) && <p role="alert" className="mt-3 text-[13px] text-bad">{error || session.error}</p>}
       {!session.configured && step === 3 && !session.error && <p role="alert" className="mt-3 text-[13px] text-bad">Sign-in is temporarily unavailable. Please try again shortly.</p>}
       {session.error && <Button variant="outline" className="mt-2" onClick={checkSignIn} disabled={busy}>Retry connection</Button>}
-      <div className="mt-5 flex items-center justify-between gap-2 border-t border-line pt-4">
-        <span className="text-[12px] text-ink-3">{step === 0 ? "No experience needed" : step === 3 ? "Your progress, saved" : `${step} of 2 questions`}</span>
-        <div className="flex gap-2">{step > 0 && <Button variant="ghost" onClick={() => { setError(""); setStep(step - 1); }} disabled={busy}>Back</Button>}{(step < 3 || session.me) && <Button onClick={next} disabled={busy || (!!q && !answers[q.id])}>{busy ? "Saving…" : step === 3 ? "Enter workspace" : "Continue"}<ArrowRight size={14} /></Button>}</div>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
+        <span className="text-[12px] text-ink-3">{step === 0 ? "No experience needed" : step === 3 ? session.me ? "Choose a challenge next" : "Verify your email to continue" : `${step} of 2 questions`}</span>
+        <div className="flex shrink-0 gap-2">{step > 0 && <Button variant="ghost" onClick={() => { setError(""); setStep(step - 1); }} disabled={busy}>Back</Button>}{(step < 3 || session.me) && <Button variant={step === 3 && freeAccount ? "outline" : "primary"} onClick={next} disabled={busy || (!!q && !answers[q.id])}>{busy ? "Saving…" : step === 3 ? freeAccount ? "Continue free" : "Enter workspace" : "Continue"}<ArrowRight size={14} /></Button>}</div>
       </div>
     </div>
   </div>;

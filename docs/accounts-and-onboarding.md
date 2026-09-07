@@ -2,6 +2,8 @@
 
 The welcome flow explains AI practice, the challenge/feedback loop and the weekly winner feature on Ruben’s LinkedIn and Substack. Two short questions collect experience and intended use. Account creation uses a Supabase email verification link; there is no guest-completion shortcut. Onboarding ends in the workspace, without creating an attempt or opening a challenge. An animated arrow points to the actual Challenges button until the member opens the library or dismisses it. Reduced-motion users see a static arrow.
 
+After email verification, Standard members see a direct Premium offer: weekly winner eligibility and a public leaderboard profile with their full name, photo and social links. The primary upgrade action opens Ruben’s Substack; `Continue free` retains every challenge, saved progress and points. Opening checkout does not grant Premium. Returning members can check access against the server’s membership sources. Already-confirmed Circle and Substack members see their included benefits, with no new purchase prompt. Winning the weekly competition is required for the feature; subscribing alone does not promise exposure.
+
 ## Persisted account state
 
 - Supabase Auth owns email identity and confirmation. Email confirmation is enabled in the hosted auth settings. `claim_member` also requires a confirmed email before claiming an imported profile.
