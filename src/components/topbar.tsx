@@ -9,6 +9,8 @@ import { HINT_COST } from "@/lib/arena/types";
 import { fmtClock, cn } from "@/lib/utils";
 import type { ArenaResult } from "@/lib/types";
 import { ChallengePointer } from "./challenge-pointer";
+import { setSession } from "@/lib/session";
+import type { PracticeSummary } from "@/lib/practice";
 
 export function TopBar({ title }: { title: string }) {
   const attempt = useStore((s) => s.attempt);
@@ -31,14 +33,14 @@ export function TopBar({ title }: { title: string }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ slug: attempt.slug, serverId: attempt.serverId ?? null, startedAt: attempt.startedAt, hintsUsed: attempt.hintsUsed, events: attempt.events, chats, version: attempt.version, workspace: { projects: st.projects, skills: st.skills, groups: st.groups, schedules: st.schedules } }),
       });
-      const j = (await r.json()) as { result?: ArenaResult; error?: string; detail?: string };
+      const j = (await r.json()) as { result?: ArenaResult; practice?: PracticeSummary | null; error?: string; detail?: string };
       if (!r.ok || !j.result) {
         toast({ title: "Could not grade that", body: j.detail ?? j.error ?? "Try again in a moment.", tone: "bad" });
         return;
       }
       if (!endAttempt(j.result, attempt.id)) return;
+      setSession({ practice: j.practice });
       newChat(null);
-      toast({ title: j.result.passed ? `Challenge complete: +${j.result.points} points` : "Not quite", body: j.result.passed ? c.title : "See what the arena saw.", tone: j.result.passed ? "ok" : "bad" }, 6000);
       openDialog({ kind: "result", slug: attempt.slug });
     } catch {
       toast({ title: "Network problem", body: "Your attempt is still running. Try Submit again.", tone: "bad" });

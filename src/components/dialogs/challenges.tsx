@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { Check, Clock, Lock, Swords, Trophy, FileText, Quote, Table2 } from "lucide-react";
+import { ArrowRight, Check, Lock, Swords, Trophy, FileText, Quote, Table2 } from "lucide-react";
 import { Dialog, Button } from "../dialog";
 import { CHALLENGES, getChallenge } from "@/lib/arena/challenges";
 import { HINT_COST } from "@/lib/arena/types";
@@ -11,17 +11,35 @@ import { LearnCard } from "../learn-card";
 import { useStore, startAttempt, newChat } from "@/lib/store";
 import { openDialog, closeDialog, toast } from "@/lib/ui";
 import { cn } from "@/lib/utils";
+import { recommendPractice } from "@/lib/practice";
+import { useSession } from "@/lib/session";
+import { PracticeStatus } from "../practice-status";
 
 export function ChallengesDialog({ open }: { open: boolean }) {
   const results = useStore((s) => s.results);
   const attempt = useStore((s) => s.attempt);
+  const { practice } = useSession();
   const done = Object.values(results).filter((r) => r.passed).length;
+  const recommended = recommendPractice(results);
   return (
     <Dialog open={open} onClose={closeDialog} wide title={<span className="flex items-center gap-2"><Swords size={16} className="text-clay" /> Challenges</span>}>
       <div className="mb-3 flex items-end justify-between gap-4">
         <div className="font-serif text-[20px]">Learn by doing.</div>
         <div className="text-[13px] text-ink-3">{done} of {CHALLENGES.length} done</div>
       </div>
+      <section aria-label="Today's practice" className="mb-4 rounded-xl border border-line-2 bg-bg-2/50 p-3.5">
+        <div className="mb-2 flex items-center justify-between gap-3 text-[12px] text-ink-3">
+          <span>{practice?.todayDone ? "Next to learn" : "Today’s practice"}</span>
+          {practice?.todayDone && <span className="flex items-center gap-1 text-ok"><Check size={12} /> Done today</span>}
+        </div>
+        {recommended ? <button onClick={() => openDialog({ kind: "brief", slug: recommended.slug })} className="group flex w-full items-center gap-3 rounded-lg text-left focus-visible:outline-clay">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-clay/10 text-clay-dark"><SkillIcon id={recommended.badges[0]} size={18} /></span>
+          <span className="min-w-0 flex-1"><span className="block text-[16px] font-medium">{recommended.title}</span><span className="block text-[13px] text-ink-2">{recommended.hook}</span></span>
+          <ArrowRight size={17} className="shrink-0 text-ink-3 transition-transform group-hover:translate-x-0.5" />
+        </button> : <p className="text-[14px] text-ink-2">You’ve completed every challenge. Revisit any skill below whenever you want to practise.</p>}
+        <div className="mt-3 border-t border-line pt-3"><PracticeStatus compact /></div>
+      </section>
+      <div className="mb-2 text-[12px] text-ink-3">All challenges · choose any</div>
       <div className="grid gap-1.5 sm:grid-cols-2">
         {[...CHALLENGES].sort((a, b) => a.order - b.order).map((c) => {
           const r = results[c.slug];
@@ -31,17 +49,13 @@ export function ChallengesDialog({ open }: { open: boolean }) {
               <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", r?.passed ? "bg-ok text-bg" : "bg-bg-3 text-ink-2")}>{r?.passed ? <Check size={16} strokeWidth={3} /> : <SkillIcon id={c.badges[0]} size={16} />}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[15px] font-medium">{c.title}</span>
-                <span className="mt-0.5 flex items-center gap-2 text-[12px] text-ink-3">
-                  <span className="flex items-center gap-1"><Clock size={11} /> {c.minutes} min</span>
-
-                </span>
               </span>
               {r?.passed ? <span className="shrink-0 text-[12.5px] font-semibold text-ok">{r.points} pts</span> : running ? <span className="shrink-0 rounded-md bg-clay/10 px-1.5 py-0.5 text-[11px] font-medium text-clay-dark">Running</span> : <span className="shrink-0 text-[12.5px] tabular-nums text-ink-3">{c.points} pts</span>}
             </button>
           );
         })}
       </div>
-      <div className="mt-4 flex items-center justify-between text-[12.5px] text-ink-3">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[12.5px] text-ink-3">
         <span>Faster completion earns more points. Each hint costs {Math.round(HINT_COST * 100)}%.</span>
         <button onClick={() => openDialog({ kind: "leaderboard" })} className="flex items-center gap-1 text-ink-2 hover:text-ink"><Trophy size={13} /> Leaderboard</button>
       </div>
@@ -60,7 +74,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
     if (!c || starting) return;
     setStarting(true);
     try {
-      const r = await fetch("/api/arena/start", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug: c.slug }) });
+      const r = await fetch("/api/arena/start", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug: c.slug, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }) });
       const j = await r.json() as { serverId?: string; startedAt: string; version: string; challenge: import("@/lib/arena/types").ChallengeDef; error?: string };
       if (!r.ok) throw new Error(j.error ?? "Could not start the challenge");
       startAttempt(c.slug, j.serverId, j.startedAt, j.version, j.challenge);
@@ -70,7 +84,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
     }
     newChat(null, c.title);
     closeDialog();
-    toast({ title: "Clock started", body: "Submit from the top bar when you are done.", tone: "info" });
+    toast({ title: "Challenge started", body: "Submit from the top bar when you are done.", tone: "info" });
     setStarting(false);
   }
 
@@ -103,7 +117,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
               {m.kind === "table" ? <Table2 size={12} /> : m.kind === "text" ? <Quote size={12} /> : <FileText size={12} />} {m.title}
             </span>
           ))}
-          <span>once the clock starts</span>
+          <span>when you start</span>
         </div>
       )}
     </Dialog>

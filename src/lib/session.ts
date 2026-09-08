@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 import { importResults, switchWorkspace, updateSettings } from "./store";
 import type { ArenaResult } from "./types";
 import { ONBOARDING_DRAFT_KEY, ONBOARDING_VERSION } from "./onboarding";
+import type { PracticeSummary } from "./practice";
 
 export interface Me {
   id: string;
@@ -25,6 +26,7 @@ interface SessionState {
   guideSeenAt?: string | null;
   error?: string;
   authNotice?: string;
+  practice?: PracticeSummary | null;
 }
 let s: SessionState = { loaded: false, configured: false, me: null };
 const ls = new Set<() => void>();
@@ -46,7 +48,7 @@ export function refreshSession(): Promise<SessionState> {
     try {
       const r = await fetch("/api/profile", { cache: "no-store" });
       if (!r.ok) throw new Error("Could not load your account. Please try again.");
-      const j = await r.json() as { configured: boolean; member: Me | null; results: ArenaResult[]; subscription?: SubscriptionStatus; onboarding?: { level?: string; goal?: string; version?: number }; onboardedAt?: string | null; guideSeenAt?: string | null };
+      const j = await r.json() as { configured: boolean; member: Me | null; results: ArenaResult[]; subscription?: SubscriptionStatus; practice?: PracticeSummary | null; onboarding?: { level?: string; goal?: string; version?: number }; onboardedAt?: string | null; guideSeenAt?: string | null };
       switchWorkspace(j.member?.id ?? null);
       if (j.onboardedAt && j.onboarding?.level && j.onboarding.goal) updateSettings({ onboarded: true, onboarding: { level: j.onboarding.level, goal: j.onboarding.goal } });
       if (j.member && j.onboardedAt && (j.onboarding?.version ?? 0) >= ONBOARDING_VERSION) {
@@ -55,7 +57,7 @@ export function refreshSession(): Promise<SessionState> {
         try { localStorage.removeItem(ONBOARDING_DRAFT_KEY); } catch { /* Storage is optional. */ }
       }
       if (j.results?.length) importResults(j.results);
-      setSession({ loaded: true, configured: j.configured, me: j.member, subscription: j.subscription, onboardedAt: j.onboardedAt, onboardingVersion: j.onboarding?.version ?? 0, guideSeenAt: j.guideSeenAt, error: undefined });
+      setSession({ loaded: true, configured: j.configured, me: j.member, subscription: j.subscription, practice: j.practice, onboardedAt: j.onboardedAt, onboardingVersion: j.onboarding?.version ?? 0, guideSeenAt: j.guideSeenAt, error: undefined });
       return s;
     } catch (error) {
       setSession({ loaded: true, error: error instanceof Error ? error.message : "Could not load your account." });
@@ -63,6 +65,24 @@ export function refreshSession(): Promise<SessionState> {
     } finally { refreshing = null; }
   })();
   return refreshing;
+}
+
+let refreshingPractice: Promise<void> | null = null;
+export function refreshPractice(): Promise<void> {
+  if (!s.me) return Promise.resolve();
+  if (refreshingPractice) return refreshingPractice;
+  const memberId = s.me.id;
+  refreshingPractice = (async () => {
+    try {
+      const response = await fetch("/api/practice", { cache: "no-store" });
+      if (!response.ok) throw new Error("Practice unavailable");
+      const data = await response.json() as { memberId: string; practice: PracticeSummary };
+      if (s.me?.id === memberId && data.memberId === memberId) setSession({ practice: data.practice });
+    } catch {
+      if (s.me?.id === memberId) setSession({ practice: null });
+    } finally { refreshingPractice = null; }
+  })();
+  return refreshingPractice;
 }
 
 export async function dismissChallengeGuide() {

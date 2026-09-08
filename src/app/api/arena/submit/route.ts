@@ -10,6 +10,7 @@ import { gradeBehaviors, type WorkspaceEvidence } from "@/lib/arena/evidence";
 import { SubmissionSchema } from "@/lib/arena/submission";
 import { transcriptOf } from "@/lib/transcript";
 import type { ArenaEvent, ArenaResult, Chat, TurnContext } from "@/lib/types";
+import { readPractice } from "@/lib/practice-server";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     const { data: a, error } = await db.from("attempts").select("*").eq("id", b.serverId).eq("member_id", member.id).eq("slug", b.slug).maybeSingle();
     if (error) return fail("Could not load this attempt. Try again.");
     if (!a) return fail("Attempt not found for this account and challenge.", 404);
-    if (a.result) return NextResponse.json({ result: a.result });
+    if (a.result) return NextResponse.json({ result: a.result, practice: await readPractice(member) });
     if (a.submitted_at || !a.contract) return fail("This attempt predates the updated rules. Please start it again.", 409);
     const frozen = a.contract as { challenge: ChallengeDef; reference: string };
     c = frozen.challenge; reference = frozen.reference; version = a.version; startedAt = new Date(a.started_at);
@@ -84,7 +85,7 @@ export async function POST(req: Request) {
         p_grade: { ...result, model: grade.model, events, transcript } });
       if (error) throw new Error("Could not save grade");
     }
-    return NextResponse.json({ result });
+    return NextResponse.json({ result, practice: await readPractice(member) });
   } catch (e) {
     console.error("[submit]", e instanceof Error ? e.message : "Grading failed");
     await release();

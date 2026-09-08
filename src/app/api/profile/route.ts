@@ -6,6 +6,7 @@ import { getChallenge } from "@/lib/arena/challenges";
 import { speedMultiplier } from "@/lib/arena/types";
 import { subscriberStatus } from "@/lib/subscriber-status";
 import type { ArenaResult } from "@/lib/types";
+import { readPractice } from "@/lib/practice-server";
 
 /** Who am I, plus my scored results so a fresh browser can catch up. */
 export async function GET() {
@@ -31,7 +32,8 @@ export async function GET() {
       at: r.submitted_at,
     };
   });
-  return NextResponse.json({ configured, member: { id: member.id, email: member.email, emailVerified: true, name: member.display_name || member.pseudonym, avatar: member.avatar_url, linkedin: member.linkedin_url, x: member.x_url }, results, subscription: await subscriberStatus(member), onboarding: member.onboarding, onboardedAt: member.onboarded_at, guideSeenAt: member.challenge_guide_seen_at }, { headers: { "Cache-Control": "no-store" } });
+  const [subscription, practice] = await Promise.all([subscriberStatus(member), readPractice(member)]);
+  return NextResponse.json({ configured, member: { id: member.id, email: member.email, emailVerified: true, name: member.display_name || member.pseudonym, avatar: member.avatar_url, linkedin: member.linkedin_url, x: member.x_url }, results, subscription, practice, onboarding: member.onboarding, onboardedAt: member.onboarded_at, guideSeenAt: member.challenge_guide_seen_at }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PATCH(request: Request) {

@@ -15,6 +15,7 @@ export interface Member {
   challenge_guide_seen_at: string | null;
   is_paid: boolean;
   subscription_checked_at: string | null;
+  practice_timezone: string | null;
 }
 
 export async function getUser() {
@@ -33,7 +34,7 @@ export async function getMember(): Promise<Member | null> {
   const user = await getUser();
   if (!user || !adminConfigured()) return null;
   try {
-    const { data } = await adminClient().from("members").select("id,email,pseudonym,display_name,avatar_url,linkedin_url,x_url,onboarding,onboarded_at,challenge_guide_seen_at,is_paid,subscription_checked_at").eq("auth_id", user.id).maybeSingle();
+    const { data } = await adminClient().from("members").select("id,email,pseudonym,display_name,avatar_url,linkedin_url,x_url,onboarding,onboarded_at,challenge_guide_seen_at,is_paid,subscription_checked_at,practice_timezone").eq("auth_id", user.id).maybeSingle();
     return (data as Member | null) ?? null;
   } catch {
     return null;

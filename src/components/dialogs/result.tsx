@@ -1,21 +1,27 @@
 "use client";
-import { Check, X, Swords } from "lucide-react";
+import { Check, X, Swords, Flame } from "lucide-react";
 import { Dialog, Button } from "../dialog";
-import { getChallenge, CHALLENGES } from "@/lib/arena/challenges";
+import { getChallenge } from "@/lib/arena/challenges";
 import { SkillPill } from "../skill-pill";
 import { useStore } from "@/lib/store";
 import { closeDialog, openDialog } from "@/lib/ui";
 import { fmtClock } from "@/lib/utils";
+import { recommendPractice } from "@/lib/practice";
+import { useSession } from "@/lib/session";
 
 export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
   const c = getChallenge(slug);
   const r = useStore((s) => s.latestResult?.slug === slug ? s.latestResult : s.results[slug]);
   const results = useStore((s) => s.results);
+  const { practice } = useSession();
   if (!c) return null;
-  // The next challenge in order that has not been passed yet, starting after this one and wrapping.
-  const ordered = [...CHALLENGES].sort((a, b) => a.order - b.order);
-  const i = ordered.findIndex((x) => x.slug === slug);
-  const next = [...ordered.slice(i + 1), ...ordered.slice(0, i)].find((x) => !results[x.slug]?.passed) ?? null;
+  const next = recommendPractice(results);
+  const steps = r ? [
+    ...r.behaviors.map((b) => ({ label: b.label, pass: b.pass, evidence: "" })),
+    ...r.checks.map((k) => ({ label: r.checkLabels?.[k.id] ?? c.checks.find((x) => x.id === k.id)?.label ?? k.id, pass: k.verdict === "pass", evidence: k.evidence })),
+  ] : [];
+  const missing = steps.find((s) => !s.pass);
+  const milestone = practice?.todayDone && [3, 7, 30].includes(practice.current);
   return (
     <Dialog
       open={open}
@@ -39,25 +45,33 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
         <div className="text-ink-2">No result recorded for this challenge yet.</div>
       ) : (
         <>
-          <div className="flex items-center gap-4">
-            <div className={`flex h-14 w-14 items-center justify-center rounded-full ${r.passed ? "bg-ok/10 text-ok" : "bg-bad/10 text-bad"}`}>{r.passed ? <Check size={28} /> : <X size={28} />}</div>
+          <div className="flex items-start gap-3">
+            <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${r.passed ? "practice-success bg-ok/10 text-ok" : "bg-bg-3 text-ink-2"}`}>{r.passed ? <Check size={20} /> : <Swords size={18} />}</div>
             <div>
-              <div className="font-serif text-[24px]">{r.passed ? `+${r.points} points` : "Not this time"}</div>
-              <div className="text-[13px] text-ink-2">
-                {fmtClock(r.seconds)} elapsed · {r.hintsUsed} hint{r.hintsUsed === 1 ? "" : "s"}
-              </div>
+              <div className="font-serif text-[22px]">{r.passed ? "Challenge complete" : `${steps.filter((s) => s.pass).length} of ${steps.length} steps complete`}</div>
+              <p className="mt-1 text-[15px] leading-relaxed text-ink-2">{r.passed ? c.hook : missing ? `Next: ${missing.label}` : r.feedback}</p>
+              {!r.passed && missing?.evidence && <p className="mt-1 text-[13px] text-ink-3">{missing.evidence}</p>}
             </div>
           </div>
-          <div className="mt-4 rounded-lg bg-bg-2 px-3.5 py-3 text-[14px] leading-relaxed">{r.feedback}</div>
           {r.badges.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              <span className="text-[12.5px] text-ink-3">Unlocked</span>
+            <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Skills practised">
               {r.badges.map((b) => (
                 <SkillPill key={b} id={b} size="md" earned onClick={() => openDialog({ kind: "leaderboard", tab: "progress" })} />
               ))}
             </div>
           )}
-          {r.behaviors.length > 0 && <Section title="Actions checked">
+          {r.passed && practice?.todayDone && <div className="mt-4 flex items-center gap-2 rounded-lg bg-bg-2 px-3 py-2.5 text-[13px]">
+            <Flame size={16} className="shrink-0 text-clay" />
+            <span className="min-w-0 flex-1">{milestone ? `${practice.current} days of practice. Keep building.` : "Today’s practice complete"}</span>
+            <span className="shrink-0 text-[12px] tabular-nums text-ink-3">{practice.current} day streak</span>
+          </div>}
+          <div className="mt-4 text-[12px] tabular-nums text-ink-3">
+            {r.passed && <>{r.points} points · </>}{fmtClock(r.seconds)} elapsed · {r.hintsUsed} hint{r.hintsUsed === 1 ? "" : "s"}
+          </div>
+          <details className="mt-4 border-t border-line pt-3">
+            <summary className="cursor-pointer text-[13px] text-ink-2">See grading details</summary>
+            <p className="mt-3 text-[13px] leading-relaxed text-ink-2">{r.feedback}</p>
+            {r.behaviors.length > 0 && <Section title="Actions checked">
             {r.behaviors.map((b) => (
               <Row key={b.id} ok={b.pass} label={b.label} />
             ))}
@@ -67,6 +81,7 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
               <Row key={k.id} ok={k.verdict === "pass"} label={r.checkLabels?.[k.id] ?? c.checks.find((x) => x.id === k.id)?.label ?? k.id} sub={k.evidence} />
             ))}
           </Section>}
+          </details>
         </>
       )}
     </Dialog>

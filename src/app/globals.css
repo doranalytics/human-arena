@@ -207,3 +207,11 @@ html, body { height: 100%; width: 100%; }
 @keyframes challenge-pointer { 0%, 100% { transform: translateY(3px); } 50% { transform: translateY(-3px); } }
 .challenge-pointer { animation: challenge-pointer 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .challenge-pointer { animation: none; } }
+
+@keyframes practice-success {
+  0% { transform: scale(.85); }
+  65% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.practice-success { animation: practice-success 350ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .practice-success, .fade-up { animation: none; } }

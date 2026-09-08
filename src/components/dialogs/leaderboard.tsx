@@ -7,12 +7,10 @@ import { Dialog } from "../dialog";
 import { Avatar } from "../avatar";
 import { TierBadge, IconLinkedIn, IconX, type BadgeTier } from "../icons";
 import { closeDialog } from "@/lib/ui";
-import { useStore, totalPoints } from "@/lib/store";
-import { useSession } from "@/lib/session";
 import { tierFor, type Tier } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 
-interface Row { id: string; name: string; avatar?: string | null; linkedin?: string | null; x?: string | null; paid?: boolean; seed?: boolean; points: number; challenges: number; rank: number; you?: boolean }
+interface Row { id: string; name: string; avatar?: string | null; linkedin?: string | null; x?: string | null; paid?: boolean; points: number; challenges: number; lifetimePoints: number; lifetimeChallenges: number; rank: number; you?: boolean }
 
 /* Same pill palette as the How to AI Games board. */
 const TIER_PILL: Record<string, string> = {
@@ -35,16 +33,6 @@ function TierPill({ tier, className }: { tier: Tier; className?: string }) {
   );
 }
 
-/** Sort by points, then challenges; ties share a rank. */
-function rankRows(rows: Omit<Row, "rank">[]): Row[] {
-  const sorted = [...rows].sort((a, b) => b.points - a.points || b.challenges - a.challenges);
-  let rank = 0, prevPts = -1, prevCh = -1;
-  return sorted.map((r, i) => {
-    if (r.points !== prevPts || r.challenges !== prevCh) { rank = i + 1; prevPts = r.points; prevCh = r.challenges; }
-    return { ...r, rank };
-  });
-}
-
 function Socials({ row, size = 5 }: { row: Row; size?: number }) {
   if ((!row.paid && !row.you) || (!row.linkedin && !row.x)) return null;
   const cls = `flex h-${size} w-${size} items-center justify-center rounded-full text-white opacity-85 transition-opacity hover:opacity-100`;
@@ -62,7 +50,7 @@ function MemberCard({ row, onClose }: { row: Row; onClose: () => void }) {
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, [onClose]);
-  const tier = tierFor(row.points, row.challenges);
+  const tier = tierFor(row.lifetimePoints, row.lifetimeChallenges);
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div role="dialog" aria-modal className="fade-up relative w-full max-w-sm rounded-2xl border border-line bg-bg p-6 text-center shadow-2xl shadow-black/10">
@@ -107,30 +95,20 @@ export function LeaderboardDialog({ open, initialTab }: { open: boolean; initial
   const [tab, setTab] = useState<"board" | "progress">(initialTab ?? "board");
   const [q, setQ] = useState("");
   const [openRow, setOpenRow] = useState<Row | null>(null);
-  const [data, setData] = useState<{ board: string; rows: Row[]; live: boolean; at: number } | null>(null);
-  const live = data?.live ?? false;
-  const results = useStore((s) => s.results);
-  const settings = useStore((s) => s.settings);
-  const session = useSession();
+  const [data, setData] = useState<{ board: string; rows: Row[]; error?: string } | null>(null);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     if (!open) return;
-    fetch(`/api/leaderboard?board=${board}`)
-      .then((r) => r.json())
-      .then((j: { rows: Row[]; live: boolean }) => setData({ board, rows: j.rows, live: j.live, at: Date.now() }))
-      .catch(() => setData({ board, rows: [], live: false, at: Date.now() }));
-  }, [open, board]);
-
-  // Guest: merge yourself in from local progress. Signed in: the server already marks your row.
-  const rows = useMemo(() => {
-    if (!data || data.board !== board) return null;
-    if (data.live && session.me) return data.rows;
-    const mine = Object.values(results).filter((r) => board === "all" || data.at - new Date(r.at).getTime() < 7 * 86400000);
-    const pts = totalPoints(Object.fromEntries(mine.map((r) => [r.slug, r])));
-    if (pts <= 0) return data.rows;
-    const you: Omit<Row, "rank"> = { id: "you", name: session.me?.name || settings.name || "You", avatar: session.me?.avatar || settings.avatar, linkedin: session.me?.linkedin || settings.linkedin, x: session.me?.x || settings.x, paid: session.subscription?.paid ?? false, points: pts, challenges: mine.filter((r) => r.passed).length, you: true };
-    return rankRows([...data.rows.filter((r) => !r.you), you]);
-  }, [data, board, results, settings.name, settings.avatar, settings.linkedin, settings.x, session.me, session.subscription?.paid]);
+    const controller = new AbortController();
+    fetch(`/api/leaderboard?board=${board}`, { cache: "no-store", signal: controller.signal })
+      .then(async (r) => { if (!r.ok) throw new Error("Unavailable"); return r.json(); })
+      .then((j: { rows: Row[] }) => { if (!controller.signal.aborted) setData({ board, rows: j.rows }); })
+      .catch(() => { if (!controller.signal.aborted) setData({ board, rows: [], error: "The leaderboard is temporarily unavailable." }); });
+    return () => controller.abort();
+  }, [open, board, retry]);
+  const rows = data?.board === board ? data.rows : null;
+  const error = data?.board === board ? data.error : undefined;
 
   const filtered = useMemo(() => {
     if (!rows) return null;
@@ -172,18 +150,18 @@ export function LeaderboardDialog({ open, initialTab }: { open: boolean; initial
       <div className="mt-4 flex items-center gap-3 border-b border-line pb-2 text-[11.5px] font-medium text-ink-3 sm:gap-4">
         <span className="w-9 shrink-0">#</span>
         <span className="flex-1 pl-12">Member</span>
-        <span className="hidden w-28 shrink-0 text-right sm:block">Level</span>
+        <span className="hidden w-28 shrink-0 text-right sm:block">Lifetime level</span>
         <span className="w-14 shrink-0 text-right">Points</span>
       </div>
 
-      {filtered === null ? (
+      {error ? <div className="py-10 text-center text-[13px] text-ink-2">{error} <button className="underline" onClick={() => { setData(null); setRetry((r) => r + 1); }}>Retry</button></div> : filtered === null ? (
         <div className="py-10 text-center text-[13px] text-ink-3">Loading…</div>
       ) : filtered.length === 0 ? (
         <div className="py-10 text-center text-[13px] text-ink-2">{rows && rows.length ? "No match." : "No one yet. Finish a challenge to open the board."}</div>
       ) : (
         <ol className="divide-y divide-line">
           {filtered.map((row) => {
-            const tier = tierFor(row.points, row.challenges);
+            const tier = tierFor(row.lifetimePoints, row.lifetimeChallenges);
             return (
               <li
                 key={row.id}
@@ -215,7 +193,7 @@ export function LeaderboardDialog({ open, initialTab }: { open: boolean; initial
           })}
         </ol>
       )}
-      <div className="mt-3 text-[12px] text-ink-3">{live ? "Sign in under Account to be ranked." : "Sample board."} Weeks run Monday to Sunday, UTC.</div>
+      <div className="mt-3 text-[12px] text-ink-3">Your best score per challenge counts. Streaks do not add points. Weeks run Monday to Sunday, UTC.</div>
       {openRow && <MemberCard row={openRow} onClose={() => setOpenRow(null)} />}
       </>)}
     </Dialog>

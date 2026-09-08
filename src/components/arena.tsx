@@ -4,7 +4,8 @@ import { useStore, hydrate, newChat } from "@/lib/store";
 import { Logo } from "./icons";
 import { UpdateBar } from "./update-bar";
 import { useUI, closeDialog, toast } from "@/lib/ui";
-import { useSession, refreshSession, setSession } from "@/lib/session";
+import { useSession, refreshSession, refreshPractice, setSession } from "@/lib/session";
+import { practiceDate } from "@/lib/practice";
 import { OLD_LINK_NOTICE } from "@/lib/email-auth";
 import { ONBOARDING_VERSION } from "@/lib/onboarding";
 import { Sidebar } from "./sidebar";
@@ -42,6 +43,21 @@ export function Arena() {
     if (u.search || u.hash) window.history.replaceState({}, "", "/");
     void refreshSession().catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!session.me) return;
+    const refresh = () => { if (document.visibilityState === "visible") void refreshPractice(); };
+    const timer = window.setInterval(() => {
+      if (!session.practice || practiceDate(new Date(), session.practice.timezone) !== session.practice.today) refresh();
+    }, 60_000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [session.me, session.practice]);
 
   // A fresh visit lands on a blank chat, like the desktop app.
   useEffect(() => {

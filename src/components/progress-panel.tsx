@@ -8,6 +8,7 @@ import { SKILLS, SKILL_GROUPS } from "@/lib/arena/skills";
 import { CHALLENGES } from "@/lib/arena/challenges";
 import { TIERS, tierFor } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
+import { PracticeStatus } from "./practice-status";
 
 function Label({ children }: { children: React.ReactNode }) {
   return <div className="mb-1.5 text-[12px] font-medium text-ink-3">{children}</div>;
@@ -27,7 +28,11 @@ export function ProgressPanel() {
   return (
     <div className="space-y-7">
       <section>
-        <Label>Level</Label>
+        <Label>Daily practice</Label>
+        <div className="rounded-xl border border-line p-4"><PracticeStatus /></div>
+      </section>
+      <section>
+        <Label>Lifetime progress</Label>
         <div className="rounded-xl border border-line bg-bg-2/60 p-4">
           <div className="flex items-center gap-3">
             {tier === "Analog" ? <TierBadge tier="Tourist" locked size={44} /> : <TierBadge tier={tier as BadgeTier} size={44} />}
@@ -40,7 +45,7 @@ export function ProgressPanel() {
           <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-line"><div className="h-full rounded-full transition-all" style={{ width: `${Math.round(progress * 100)}%`, background: TIER_STYLE[(next?.tier ?? "AI-Native") as BadgeTier].fill }} /></div>
           <ol className="mt-4 grid grid-cols-5 gap-1">
             {TIERS.map((t) => {
-              const unlocked = pts >= t.min;
+              const unlocked = TIERS.findIndex((x) => x.tier === t.tier) <= TIERS.findIndex((x) => x.tier === tier);
               return (
                 <li key={t.tier} className="flex flex-col items-center text-center" title={t.blurb}>
                   <span className={cn("rounded-full bg-bg p-0.5", t.tier === tier && "ring-2 ring-clay ring-offset-2 ring-offset-bg-2")}><TierBadge tier={t.tier} locked={!unlocked} size={34} /></span>
@@ -84,4 +89,3 @@ export function ProgressPanel() {
     </div>
   );
 }
-
