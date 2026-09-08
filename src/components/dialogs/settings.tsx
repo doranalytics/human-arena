@@ -241,8 +241,8 @@ function Account() {
       <section>
         <Label>Sign-in</Label>
         {session.me ? (
-          <div className="flex items-center justify-between rounded-lg border border-line px-3 py-2 text-[13.5px]">
-            <span>Signed in as <span className="font-medium">{session.me.email}</span>. Scores are saved to the board.</span>
+          <div className="flex flex-col items-start justify-between gap-2 rounded-lg border border-line px-3 py-2 text-[13.5px] md:flex-row md:items-center">
+            <span className="min-w-0">Signed in as <span className="break-all font-medium">{session.me.email}</span>. Scores are saved to the board.</span>
             <form action="/auth/signout" method="post"><Button type="submit" variant="ghost">Sign out</Button></form>
           </div>
         ) : !session.configured ? (

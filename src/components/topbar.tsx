@@ -52,7 +52,7 @@ export function TopBar({ title }: { title: string }) {
   }
 
   return (
-    <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-1.5 border-b border-line/70 px-2 py-1 md:h-12 md:flex-nowrap md:gap-2 md:px-3 md:py-0">
+    <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-1.5 border-b border-line/70 px-2 py-1 xl:h-12 xl:flex-nowrap md:gap-2 md:px-3 xl:py-0">
         <button onClick={toggleSidebar} className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-auto md:w-auto md:p-1.5", sidebarOpen && "md:hidden")} title="Open sidebar" aria-expanded={mobileSidebarOpen} aria-controls="mobile-navigation">
           <PanelLeft size={17} />
         </button>
@@ -60,7 +60,7 @@ export function TopBar({ title }: { title: string }) {
       <ThreadActions />
 
       {attempt && c ? (
-        <div className="order-last flex w-full min-w-0 items-center gap-1.5 pb-1 md:order-none md:w-auto md:pb-0">
+        <div className="order-last flex w-full min-w-0 items-center gap-1.5 pb-1 xl:order-none xl:w-auto xl:pb-0">
           <button onClick={() => openDialog({ kind: "brief", slug: attempt.slug })} title="Show the challenge brief" className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-lg border border-line-2 px-2.5 py-1 text-[13px] hover:bg-bg-2 md:h-auto md:flex-none">
             <Swords size={14} className="shrink-0 text-clay" />
             <span className="truncate font-medium md:max-w-[180px]">{c.title}</span>
