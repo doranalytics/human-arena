@@ -1,6 +1,7 @@
 "use client";
 import { ArrowUp, X } from "lucide-react";
 import { useSession, dismissChallengeGuide } from "@/lib/session";
+import { TESTING_MODE } from "@/lib/testing-mode";
 import { ONBOARDING_VERSION } from "@/lib/onboarding";
 import { useUI } from "@/lib/ui";
 
@@ -9,7 +10,7 @@ export function ChallengePointer() {
   const session = useSession();
   const dialog = useUI((s) => s.dialog);
   const mobileSidebarOpen = useUI((s) => s.mobileSidebarOpen);
-  if (!session.me || (session.onboardingVersion ?? 0) < ONBOARDING_VERSION || !session.onboardedAt || session.guideSeenAt || dialog || mobileSidebarOpen) return null;
+  if (!session.me || (!TESTING_MODE && ((session.onboardingVersion ?? 0) < ONBOARDING_VERSION || !session.onboardedAt)) || session.guideSeenAt || dialog || mobileSidebarOpen) return null;
   return <div role="status" className="absolute right-0 top-full z-40 mt-2 w-60 max-w-[calc(100vw-4rem)]">
     <div className="challenge-pointer mr-10 flex justify-end text-clay" aria-hidden="true"><ArrowUp size={32} strokeWidth={2} /></div>
     <div className="mt-1 rounded-xl border border-line-2 bg-bg p-3 shadow-lg shadow-black/10">

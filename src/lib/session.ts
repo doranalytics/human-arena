@@ -11,6 +11,7 @@ export interface Me {
   id: string;
   email: string;
   emailVerified?: boolean;
+  guest?: boolean;
   name: string;
   avatar?: string | null;
   linkedin?: string | null;
@@ -47,7 +48,7 @@ export function refreshSession(): Promise<SessionState> {
   refreshing = (async () => {
     try {
       const r = await fetch("/api/profile", { cache: "no-store" });
-      if (!r.ok) throw new Error("Could not load your account. Please try again.");
+      if (!r.ok) throw new Error("Could not load your progress. Please try again.");
       const j = await r.json() as { configured: boolean; member: Me | null; results: ArenaResult[]; subscription?: SubscriptionStatus; practice?: PracticeSummary | null; onboarding?: { level?: string; goal?: string; version?: number }; onboardedAt?: string | null; guideSeenAt?: string | null };
       switchWorkspace(j.member?.id ?? null);
       if (j.onboardedAt && j.onboarding?.level && j.onboarding.goal) updateSettings({ onboarded: true, onboarding: { level: j.onboarding.level, goal: j.onboarding.goal } });

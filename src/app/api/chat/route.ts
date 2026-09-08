@@ -1,3 +1,4 @@
+import { SESSION_REQUIRED } from "@/lib/testing-mode";
 import { NextResponse } from "next/server";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -96,7 +97,7 @@ function inlineTextFiles(messages: UIMessage[]): UIMessage[] {
 
 export async function POST(req: Request) {
   const member = await getMember();
-  if (!member) return NextResponse.json({ error: "Sign in and verify your email to use the workspace." }, { status: 401 });
+  if (!member) return NextResponse.json({ error: SESSION_REQUIRED }, { status: 401 });
   const b = (await req.json().catch(() => null)) as Body | null;
   if (!b || !Array.isArray(b.messages)) return NextResponse.json({ error: "Bad request" }, { status: 400 });
   const model = isModelChoice(b.model) ? b.model : "fast";

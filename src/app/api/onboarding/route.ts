@@ -1,3 +1,4 @@
+import { SESSION_REQUIRED } from "@/lib/testing-mode";
 import { NextResponse } from "next/server";
 import { getMember } from "@/lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
@@ -5,7 +6,7 @@ import { OnboardingSchema, ONBOARDING_VERSION } from "@/lib/onboarding";
 import { subscriberStatus } from "@/lib/subscriber-status";
 export async function POST(request: Request) {
   const member = await getMember();
-  if (!member) return NextResponse.json({ error: "Sign in to save your setup." }, { status: 401 });
+  if (!member) return NextResponse.json({ error: SESSION_REQUIRED }, { status: 401 });
   const parsed = OnboardingSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Choose an answer for each question." }, { status: 400 });
   const completedAt = member.onboarded_at ?? new Date().toISOString();
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
 /** Remember that this member found (or dismissed the pointer to) Challenges. */
 export async function PATCH(request: Request) {
   const member = await getMember();
-  if (!member) return NextResponse.json({ error: "Verify your email first." }, { status: 401 });
+  if (!member) return NextResponse.json({ error: SESSION_REQUIRED }, { status: 401 });
   const body = await request.json().catch(() => null);
   if (body?.action !== "guide_seen") return NextResponse.json({ error: "Unknown onboarding action." }, { status: 400 });
   const guideSeenAt = member.challenge_guide_seen_at ?? new Date().toISOString();

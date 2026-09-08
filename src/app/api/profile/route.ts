@@ -7,11 +7,13 @@ import { speedMultiplier } from "@/lib/arena/types";
 import { subscriberStatus } from "@/lib/subscriber-status";
 import type { ArenaResult } from "@/lib/types";
 import { readPractice } from "@/lib/practice-server";
+import { TESTING_MODE, SESSION_REQUIRED } from "@/lib/testing-mode";
 
 /** Who am I, plus my scored results so a fresh browser can catch up. */
 export async function GET() {
   const configured = supabaseConfigured() && adminConfigured();
-  const member = await getMember();
+  const member = await getMember({ createGuest: true }).catch(() => null);
+  if (TESTING_MODE && !member) return NextResponse.json({ error: "Could not start your testing session. Please retry." }, { status: 503, headers: { "Cache-Control": "no-store" } });
   if (!member) return NextResponse.json({ configured, member: null, results: [] }, { headers: { "Cache-Control": "no-store" } });
   const { data } = await adminClient().from("results").select("slug,points,passed,seconds,hints_used,grade,submitted_at").eq("member_id", member.id);
   const results: ArenaResult[] = (data ?? []).map((r) => {
@@ -33,12 +35,12 @@ export async function GET() {
     };
   });
   const [subscription, practice] = await Promise.all([subscriberStatus(member), readPractice(member)]);
-  return NextResponse.json({ configured, member: { id: member.id, email: member.email, emailVerified: true, name: member.display_name || member.pseudonym, avatar: member.avatar_url, linkedin: member.linkedin_url, x: member.x_url }, results, subscription, practice, onboarding: member.onboarding, onboardedAt: member.onboarded_at, guideSeenAt: member.challenge_guide_seen_at }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ configured, member: { id: member.id, email: member.isGuest ? "" : member.email, emailVerified: !member.isGuest, guest: !!member.isGuest, name: member.display_name || member.pseudonym, avatar: member.avatar_url, linkedin: member.linkedin_url, x: member.x_url }, results, subscription, practice, onboarding: member.onboarding, onboardedAt: member.onboarded_at, guideSeenAt: member.challenge_guide_seen_at }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PATCH(request: Request) {
   const member = await getMember();
-  if (!member) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  if (!member) return NextResponse.json({ error: SESSION_REQUIRED }, { status: 401 });
   const b = (await request.json().catch(() => ({}))) as { name?: string; product?: string; avatar?: string | null; linkedin?: string | null; x?: string | null };
   const patch: Record<string, unknown> = {};
   if ("name" in b) patch.display_name = String(b.name ?? "").trim().slice(0, 80) || null;

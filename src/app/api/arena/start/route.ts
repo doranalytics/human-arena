@@ -1,3 +1,4 @@
+import { SESSION_REQUIRED } from "@/lib/testing-mode";
 import { NextResponse } from "next/server";
 import { getMember } from "@/lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
@@ -8,7 +9,7 @@ import { practiceTimezone } from "@/lib/practice";
 
 export async function POST(req: Request) {
   const member = await getMember();
-  if (!member) return NextResponse.json({ error: "Sign in and verify your email to start a challenge." }, { status: 401 });
+  if (!member) return NextResponse.json({ error: SESSION_REQUIRED }, { status: 401 });
   const { slug, timezone } = (await req.json().catch(() => ({}))) as { slug?: string; timezone?: unknown };
   const c = slug && getChallenge(slug);
   if (!c) return NextResponse.json({ error: "Unknown challenge" }, { status: 400 });

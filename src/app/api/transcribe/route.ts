@@ -1,3 +1,4 @@
+import { SESSION_REQUIRED } from "@/lib/testing-mode";
 import { NextResponse } from "next/server";
 import { createOpenAI } from "@ai-sdk/openai";
 import { experimental_transcribe as transcribe } from "ai";
@@ -14,7 +15,7 @@ export async function GET() {
 
 /** Transcribes one recorded clip (multipart field "audio"). */
 export async function POST(req: Request) {
-  if (!await getMember()) return NextResponse.json({ error: "Sign in and verify your email to use dictation." }, { status: 401 });
+  if (!await getMember()) return NextResponse.json({ error: SESSION_REQUIRED }, { status: 401 });
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "Transcription is not configured." }, { status: 503 });
   const form = await req.formData().catch(() => null);

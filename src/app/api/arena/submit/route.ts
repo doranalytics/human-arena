@@ -1,3 +1,4 @@
+import { SESSION_REQUIRED } from "@/lib/testing-mode";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getMember } from "@/lib/auth";
@@ -15,7 +16,7 @@ export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const member = await getMember();
-  if (!member) return NextResponse.json({ error: "Sign in and verify your email to submit a challenge." }, { status: 401 });
+  if (!member) return NextResponse.json({ error: SESSION_REQUIRED }, { status: 401 });
   const raw = await req.text();
   if (raw.length > 4_000_000) return NextResponse.json({ error: "Attempt too large" }, { status: 413 });
   let json: unknown; try { json = JSON.parse(raw); } catch { return NextResponse.json({ error: "Invalid request" }, { status: 400 }); }
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
   let chats = b.chats as unknown as Chat[];
   const fail = (error: string, status = 503) => NextResponse.json({ error }, { status });
   if (member) {
-    if (!b.serverId) return fail("Start a new challenge while signed in to save its score.", 409);
+    if (!b.serverId) return fail("Start a new challenge to save its score.", 409);
     const db = adminClient();
     const { data: a, error } = await db.from("attempts").select("*").eq("id", b.serverId).eq("member_id", member.id).eq("slug", b.slug).maybeSingle();
     if (error) return fail("Could not load this attempt. Try again.");

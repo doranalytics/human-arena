@@ -1,4 +1,5 @@
 "use client";
+import { TESTING_MODE } from "@/lib/testing-mode";
 import { useState } from "react";
 import { ExternalLink, Check, RefreshCw, Trophy, UserRound } from "lucide-react";
 import { useSession, setSession } from "@/lib/session";
@@ -25,6 +26,7 @@ export function SubscriptionCard({ compact = false, onboarding = false }: { comp
     } catch (e) { setMessage(e instanceof Error ? e.message : "Please try again."); }
     finally { setBusy(false); }
   }
+  if (TESTING_MODE) return null;
   if (!paid && !MEMBERSHIP_UPGRADES_ENABLED) return <div className="rounded-lg border border-line bg-bg-2/70 px-3.5 py-3">
     <div className="flex items-center justify-between gap-2"><p className="text-[14px] font-medium">Weekly competition</p><span className="shrink-0 rounded-full border border-line-2 px-2 py-0.5 text-[11px] text-ink-2">Coming soon</span></div>
     <p className="mt-2 text-[13px] leading-relaxed text-ink-2">Subscription benefits for the weekly competition are coming soon. All challenges are free to play.</p>

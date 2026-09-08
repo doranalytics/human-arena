@@ -1,9 +1,11 @@
+import { TESTING_MODE } from "@/lib/testing-mode";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 /** Compatibility for links already sent before switching to in-window codes. */
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  if (TESTING_MODE) return NextResponse.redirect(new URL("/", url.origin));
   const code = url.searchParams.get("code");
   const flowId = url.searchParams.get("sb_flow_id");
   const tokenHash = url.searchParams.get("token_hash");

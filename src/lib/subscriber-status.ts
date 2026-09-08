@@ -18,6 +18,8 @@ async function substackStatus(email: string): Promise<boolean | null> {
 
 /** Either confirmed source grants membership. A miss in one source never erases the other. */
 export async function subscriberStatus(member: Member, forceCircle = false): Promise<SubscriptionStatus> {
+  // Guest addresses are internal identifiers, never membership lookup emails.
+  if (member.isGuest) return { paid: false, ...accountAccess(false), checkedAt: null, available: true, sources: [] };
   const [substack, circle] = await Promise.all([substackStatus(member.email), refreshCircleEmail(member.email, forceCircle)]);
   const { data, error } = await adminClient().rpc("refresh_member_access", { p_member: member.id, p_substack_paid: substack });
   if (error || !data) return { paid: member.is_paid, ...accountAccess(member.is_paid), checkedAt: member.subscription_checked_at, available: false };

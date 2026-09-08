@@ -7,6 +7,7 @@ import { useUI, closeDialog, toast } from "@/lib/ui";
 import { useSession, refreshSession, refreshPractice, setSession } from "@/lib/session";
 import { practiceDate } from "@/lib/practice";
 import { OLD_LINK_NOTICE } from "@/lib/email-auth";
+import { TESTING_MODE } from "@/lib/testing-mode";
 import { ONBOARDING_VERSION } from "@/lib/onboarding";
 import { Sidebar } from "./sidebar";
 import { MobileNavigation } from "./mobile-navigation";
@@ -37,13 +38,13 @@ export function Arena() {
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const mobileSidebarOpen = useUI((s) => s.mobileSidebarOpen);
   const page = useUI((s) => s.page);
-  const needsOnboarding = hydrated && session.loaded && (!session.me || !session.onboardedAt || (session.onboardingVersion ?? 0) < ONBOARDING_VERSION);
+  const needsOnboarding = !TESTING_MODE && hydrated && session.loaded && (!session.me || !session.onboardedAt || (session.onboardingVersion ?? 0) < ONBOARDING_VERSION);
 
   useEffect(() => {
     hydrate();
     const u = new URL(window.location.href);
-    if (u.searchParams.get("signed_in")) toast({ title: "Email confirmed", body: "Your account is ready.", tone: "ok" });
-    if (u.searchParams.has("auth_error") || window.location.hash.includes("error=")) setSession({ authNotice: OLD_LINK_NOTICE });
+    if (!TESTING_MODE && u.searchParams.get("signed_in")) toast({ title: "Email confirmed", body: "Your account is ready.", tone: "ok" });
+    if (!TESTING_MODE && (u.searchParams.has("auth_error") || window.location.hash.includes("error="))) setSession({ authNotice: OLD_LINK_NOTICE });
     if (u.search || u.hash) window.history.replaceState({}, "", "/");
     void refreshSession().catch(() => {});
   }, []);
@@ -80,7 +81,10 @@ export function Arena() {
         <span className="hidden text-bg/80 sm:inline">Safe training environment</span>
       </div>
       <UpdateBar />
-      <div inert={needsOnboarding || !session.loaded} className="flex min-h-0 flex-1">
+      {TESTING_MODE && session.error && <div role="alert" className="flex shrink-0 flex-wrap items-center justify-center gap-3 border-b border-line bg-bg-2 px-4 py-3 text-[13px]">
+        <span>{session.error}</span><button onClick={() => void refreshSession().catch(() => {})} className="min-h-10 rounded-lg border border-line-2 px-3 font-medium hover:bg-bg-3">Retry connection</button>
+      </div>}
+      <div inert={needsOnboarding || !session.loaded || (TESTING_MODE && !session.me)} className="flex min-h-0 flex-1">
         {sidebarOpen && <div className="hidden h-full md:block"><Sidebar /></div>}
         <MobileNavigation />
         <main inert={mobileSidebarOpen} className="flex min-w-0 flex-1 flex-col">

@@ -1,4 +1,5 @@
 "use client";
+import { TESTING_MODE } from "@/lib/testing-mode";
 import { SubscriptionCard } from "../subscription-card";
 import { EmailSignIn } from "../email-signin";
 import { useEffect, useRef, useState } from "react";
@@ -239,8 +240,8 @@ function Account() {
         </div>
       </section>
       <section>
-        <Label>Sign-in</Label>
-        {session.me ? (
+        <Label>{TESTING_MODE ? "Testing session" : "Sign-in"}</Label>
+        {TESTING_MODE ? <p className="rounded-lg border border-line bg-bg-2 px-3 py-3 text-[13px] leading-relaxed text-ink-2">No signup needed while we’re testing. {session.me?.guest ? "Your scores and streaks are saved for this browser. Use the same browser to keep your progress." : "Your existing account and progress are still saved."}</p> : session.me ? (
           <div className="flex flex-col items-start justify-between gap-2 rounded-lg border border-line px-3 py-2 text-[13.5px] md:flex-row md:items-center">
             <span className="min-w-0">Signed in as <span className="break-all font-medium">{session.me.email}</span>. Scores are saved to the board.</span>
             <form action="/auth/signout" method="post"><Button type="submit" variant="ghost">Sign out</Button></form>
