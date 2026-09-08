@@ -9,6 +9,13 @@ import { fmtClock } from "@/lib/utils";
 import { recommendPractice } from "@/lib/practice";
 import { useSession } from "@/lib/session";
 
+// Public action labels describe completed work. Use the same requirement as
+// an instruction on failure; preserve the original label in grading details.
+function nextStep(label: string): string {
+  const verbs: Record<string, string> = { Sent: "Send", Pinned: "Pin", Renamed: "Rename", Added: "Add", Attached: "Attach", Asked: "Ask", Used: "Use", Invoked: "Invoke", Created: "Create", Started: "Start", Saved: "Save", Dictated: "Dictate", Answered: "Answer", Turned: "Turn", Moved: "Move", Exported: "Export", Scheduled: "Schedule" };
+  return label.replace(/^\w+/, (word) => verbs[word] ?? word);
+}
+
 export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
   const c = getChallenge(slug);
   const r = useStore((s) => s.latestResult?.slug === slug ? s.latestResult : s.results[slug]);
@@ -30,13 +37,12 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
       footer={
         <>
           <Button variant="ghost" onClick={() => openDialog({ kind: "challenges" })}>All challenges</Button>
-          {!r?.passed && <Button variant="outline" onClick={() => openDialog({ kind: "brief", slug })}>Try again</Button>}
           {r?.passed && next ? (
             <Button onClick={() => openDialog({ kind: "brief", slug: next.slug })}>Next challenge</Button>
           ) : r?.passed ? (
             <Button onClick={() => openDialog({ kind: "leaderboard" })}>See the board</Button>
           ) : (
-            <Button onClick={closeDialog}>Done</Button>
+            <Button onClick={() => openDialog({ kind: "brief", slug })}>Try again</Button>
           )}
         </>
       }
@@ -49,7 +55,7 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
             <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${r.passed ? "practice-success bg-ok/10 text-ok" : "bg-bg-3 text-ink-2"}`}>{r.passed ? <Check size={20} /> : <Swords size={18} />}</div>
             <div>
               <div className="font-serif text-[22px]">{r.passed ? "Challenge complete" : `${steps.filter((s) => s.pass).length} of ${steps.length} steps complete`}</div>
-              <p className="mt-1 text-[15px] leading-relaxed text-ink-2">{r.passed ? c.hook : missing ? `Next: ${missing.label}` : r.feedback}</p>
+              <p className="mt-1 text-[15px] leading-relaxed text-ink-2">{r.passed ? c.hook : missing ? `Next: ${nextStep(missing.label)}` : r.feedback}</p>
               {!r.passed && missing?.evidence && <p className="mt-1 text-[13px] text-ink-3">{missing.evidence}</p>}
             </div>
           </div>
