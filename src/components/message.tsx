@@ -58,7 +58,7 @@ export function Message({ m, streaming, onToolOutput, onExport }: { m: UIMessage
     const text = m.parts.filter((p) => p.type === "text").map((p) => p.text).join("\n");
     return (
       <div className="fade-up flex justify-end">
-        <div className="max-w-[80%]">
+        <div className="min-w-0 max-w-[90%] md:max-w-[80%]">
           {files.length > 0 && (
             <div className="mb-1.5 flex flex-wrap justify-end gap-1.5">
               {files.map((f, i) =>
@@ -66,14 +66,14 @@ export function Message({ m, streaming, onToolOutput, onExport }: { m: UIMessage
                   // eslint-disable-next-line @next/next/no-img-element
                   <img key={i} src={f.url} alt={f.filename ?? "image"} className="max-h-48 rounded-xl border border-line object-cover" />
                 ) : (
-                  <span key={i} className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-[12.5px]">
+                  <span key={i} className="inline-flex max-w-full break-all items-center gap-1.5 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-[12.5px]">
                     <FileText size={13} /> {f.filename ?? "file"}
                   </span>
                 ),
               )}
             </div>
           )}
-          {text && <div className="whitespace-pre-wrap rounded-2xl bg-user px-4 py-2.5 text-[15px] leading-relaxed">{text}</div>}
+          {text && <div className="whitespace-pre-wrap break-words rounded-2xl bg-user px-4 py-2.5 text-[15px] leading-relaxed">{text}</div>}
         </div>
       </div>
     );
@@ -108,14 +108,14 @@ export function Message({ m, streaming, onToolOutput, onExport }: { m: UIMessage
           return null;
         })}
         {!streaming && hasText && (
-          <div className="flex items-center gap-1 pt-0.5 opacity-0 transition group-hover:opacity-100">
+          <div className="flex items-center gap-1 pt-0.5 opacity-100 transition md:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
             <button
               onClick={async () => {
                 const md = m.parts.filter((p) => p.type === "text").map((p) => p.text).join("\n\n");
                 try { await navigator.clipboard.writeText(md); } catch { return; }
                 onExport?.();
               }}
-              className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11.5px] text-ink-3 hover:bg-bg-3 hover:text-ink"
+              className="flex min-h-10 items-center gap-1 rounded-md px-2.5 md:min-h-0 md:px-1.5 py-0.5 text-[11.5px] text-ink-3 hover:bg-bg-3 hover:text-ink"
               title="Copy as Markdown"
             >
               <Copy size={12} /> Copy
@@ -130,7 +130,7 @@ export function Message({ m, streaming, onToolOutput, onExport }: { m: UIMessage
                 setTimeout(() => URL.revokeObjectURL(a.href), 1000);
                 onExport?.();
               }}
-              className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11.5px] text-ink-3 hover:bg-bg-3 hover:text-ink"
+              className="flex min-h-10 items-center gap-1 rounded-md px-2.5 md:min-h-0 md:px-1.5 py-0.5 text-[11.5px] text-ink-3 hover:bg-bg-3 hover:text-ink"
               title="Download as a Markdown file"
             >
               <Download size={12} /> Export
@@ -178,7 +178,7 @@ function AskCard({ question, options, allowOther, answer, onPick }: { question: 
             if (other.trim()) onPick(other.trim());
           }}
         >
-          <input value={other} onChange={(e) => setOther(e.target.value)} placeholder="Something else…" className="h-9 flex-1 rounded-lg border border-line bg-bg px-3 text-[13px] outline-none placeholder:text-ink-3 focus:border-ink-3" />
+          <input value={other} onChange={(e) => setOther(e.target.value)} placeholder="Something else…" className="h-10 min-w-0 flex-1 rounded-lg border border-line bg-bg px-3 text-[13px] outline-none placeholder:text-ink-3 focus:border-ink-3" />
           <button type="submit" disabled={!other.trim()} className="h-9 rounded-lg bg-ink px-3 text-[13px] font-medium text-bg disabled:opacity-40">Send</button>
         </form>
       )}

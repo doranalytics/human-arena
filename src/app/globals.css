@@ -215,3 +215,38 @@ html, body { height: 100%; width: 100%; }
 }
 .practice-success { animation: practice-success 350ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .practice-success, .fade-up { animation: none; } }
+
+/* Phone layout uses the visible screen, including when Safari opens a keyboard.
+   Desktop dimensions and the browser's pinch zoom remain unchanged. */
+@media (max-width: 767px) {
+  .app-shell, .viewport-overlay {
+    position: fixed;
+    top: var(--app-top, 0px);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    height: var(--app-height, 100dvh);
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+  .viewport-overlay { padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .mobile-drawer { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  .mobile-popover {
+    position: fixed;
+    top: calc(var(--app-top, 0px) + var(--app-height, 100dvh) - max(12px, env(safe-area-inset-bottom)));
+    bottom: auto;
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    width: auto;
+    max-height: calc(var(--app-height, 100dvh) - 48px - env(safe-area-inset-top));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transform: translateY(-100%);
+    animation: none;
+    z-index: 60;
+  }
+  .mobile-popover button { min-height: 40px; }
+  input:not([type="checkbox"]):not([type="radio"]), textarea, select { font-size: 16px; }
+  .prose-chat { overflow-wrap: anywhere; }
+  .prose-chat table { display: block; max-width: 100%; overflow-x: auto; }
+}

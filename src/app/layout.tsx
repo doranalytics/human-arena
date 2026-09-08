@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "How to AI Games", description: DESCRIPTION },
 };
 
-export const viewport: Viewport = { themeColor: "#faf9f5" };
+export const viewport: Viewport = { themeColor: "#faf9f5", width: "device-width", initialScale: 1, viewportFit: "cover", interactiveWidget: "resizes-content" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

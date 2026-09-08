@@ -9,6 +9,8 @@ import { practiceDate } from "@/lib/practice";
 import { OLD_LINK_NOTICE } from "@/lib/email-auth";
 import { ONBOARDING_VERSION } from "@/lib/onboarding";
 import { Sidebar } from "./sidebar";
+import { MobileNavigation } from "./mobile-navigation";
+import { useMobileViewport } from "@/lib/use-mobile-viewport";
 import { TopBar } from "./topbar";
 import { ChatView } from "./chat-view";
 import { ProjectView } from "./project-view";
@@ -24,6 +26,7 @@ import { QuitDialog } from "./dialogs/quit";
 import { OnboardingDialog } from "./dialogs/onboarding";
 
 export function Arena() {
+  useMobileViewport();
   const session = useSession();
   const hydrated = useStore((s) => s.hydrated);
   const activeChatId = useStore((s) => s.activeChatId);
@@ -32,6 +35,7 @@ export function Arena() {
   const project = useStore((s) => s.projects.find((p) => p.id === s.activeProjectId) ?? null);
   const dialog = useUI((s) => s.dialog);
   const sidebarOpen = useUI((s) => s.sidebarOpen);
+  const mobileSidebarOpen = useUI((s) => s.mobileSidebarOpen);
   const page = useUI((s) => s.page);
   const needsOnboarding = hydrated && session.loaded && (!session.me || !session.onboardedAt || (session.onboardingVersion ?? 0) < ONBOARDING_VERSION);
 
@@ -68,17 +72,18 @@ export function Arena() {
   const title = page === "projects" ? "Projects" : page === "scheduled" ? "Scheduled" : chat ? (chat.projectId ? `${project?.name ?? "Project"} / ${chat.title}` : chat.title) : project ? project.name : "";
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-bg">
-      <div className="relative flex h-8 shrink-0 items-center justify-center gap-2 bg-[#2c2b28] px-3 text-[12px] text-bg">
+    <div className="app-shell flex h-full w-full flex-col overflow-hidden bg-bg">
+      <div className="relative flex h-8 shrink-0 items-center justify-center gap-2 overflow-hidden bg-[#2c2b28] px-3 text-[12px] text-bg">
         <Logo size={17} />
-        <span className="font-serif text-[13px] font-semibold tracking-tight">How to AI Games</span>
-        <span className="text-bg/40">·</span>
-        <span className="text-bg/80">Safe training environment</span>
+        <span className="shrink-0 font-serif text-[13px] font-semibold tracking-tight">How to AI Games</span>
+        <span className="hidden text-bg/40 sm:inline">·</span>
+        <span className="hidden text-bg/80 sm:inline">Safe training environment</span>
       </div>
       <UpdateBar />
       <div inert={needsOnboarding || !session.loaded} className="flex min-h-0 flex-1">
-        {sidebarOpen && <Sidebar />}
-        <main className="flex min-w-0 flex-1 flex-col">
+        {sidebarOpen && <div className="hidden h-full md:block"><Sidebar /></div>}
+        <MobileNavigation />
+        <main inert={mobileSidebarOpen} className="flex min-w-0 flex-1 flex-col">
           <TopBar title={title} />
           <div className="min-h-0 flex-1 overflow-y-auto">
             {!hydrated ? null : page === "projects" ? <ProjectsPage /> : page === "scheduled" ? <ScheduledPage /> : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}

@@ -68,7 +68,7 @@ export function OnboardingDialog() {
   const freeAccount = !!session.me && !session.subscription?.paid;
   const answered = OnboardingSchema.safeParse(answers).success;
   const title = q?.title ?? (step === 0 ? "Learn to use AI." : session.me ? "You’re signed up." : pending ? "Check your email." : answered ? "Sign up to play." : "Sign in to play.");
-  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]">
+  return <div className="viewport-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 backdrop-blur-[2px] md:p-4">
     <div ref={panel} role="dialog" aria-modal="true" aria-labelledby="welcome-title" className="fade-up max-h-full w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-bg p-6 shadow-2xl sm:p-7" onKeyDown={(e) => {
       if (e.key !== "Tab") return;
       const items = panel.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled)');

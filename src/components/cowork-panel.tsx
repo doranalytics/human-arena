@@ -27,13 +27,14 @@ export function CoworkPanel({ chat, compact = false }: { chat: Chat; compact?: b
   const shown = more ? active : active.slice(0, 5);
   return (
     <div className="mt-3 w-full max-w-[760px]" onClick={() => open && setOpen(null)}>
-      <div className="flex items-center gap-1 text-[14px]">
-        <div className="relative" onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => setOpen(open === "project" ? null : "project")} className={cn("flex items-center gap-1 rounded-md px-2 py-1 hover:bg-bg-3", open === "project" && "bg-bg-3")}>
-            {project ? <><FolderOpen size={14} className="text-ink-3" /> {project.name}</> : "Project"} <ChevronDown size={13} className="text-ink-3" />
+      <div className="flex flex-wrap items-center gap-1 text-[14px]">
+        <div className="relative min-w-0 max-w-full" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => setOpen(open === "project" ? null : "project")} className={cn("flex min-h-10 max-w-full items-center gap-1 rounded-md px-2 py-1 hover:bg-bg-3 md:min-h-0", open === "project" && "bg-bg-3")}>
+            {project ? <><FolderOpen size={14} className="text-ink-3" /> <span className="truncate">{project.name}</span></> : "Project"} <ChevronDown size={13} className="text-ink-3" />
           </button>
           {open === "project" && (
-            <div className="fade-up absolute left-0 top-9 z-30 w-64 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10">
+            <div className="mobile-popover fade-up absolute left-0 top-9 z-30 w-64 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10">
+              <button onClick={() => setOpen(null)} className="mb-1 w-full rounded-lg py-2 text-[13px] text-ink-2 md:hidden">Close projects</button>
               {projects.length === 0 && <div className="px-2.5 py-2 text-[13px] text-ink-3">No projects yet.</div>}
               {projects.map((p) => (
                 <button key={p.id} onClick={() => { setChatProject(chat.id, p.id); setOpen(null); }} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13.5px] hover:bg-bg-2">
@@ -46,12 +47,13 @@ export function CoworkPanel({ chat, compact = false }: { chat: Chat; compact?: b
             </div>
           )}
         </div>
-        <div className="relative" onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => setOpen(open === "mode" ? null : "mode")} className={cn("flex items-center gap-1 rounded-md px-2 py-1 hover:bg-bg-3", open === "mode" && "bg-bg-3")}>
+        <div className="relative min-w-0 max-w-full" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => setOpen(open === "mode" ? null : "mode")} className={cn("flex min-h-10 max-w-full items-center gap-1 rounded-md px-2 py-1 hover:bg-bg-3 md:min-h-0", open === "mode" && "bg-bg-3")}>
             {mode === "manual" ? "Manual" : mode === "skip" ? "Skip approvals" : "Auto"} <ChevronDown size={13} className="text-ink-3" />
           </button>
           {open === "mode" && (
-            <div className="fade-up absolute left-0 top-9 z-30 w-64 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10">
+            <div className="mobile-popover fade-up absolute left-0 top-9 z-30 w-64 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10">
+              <button onClick={() => setOpen(null)} className="mb-1 w-full rounded-lg py-2 text-[13px] text-ink-2 md:hidden">Close approvals</button>
               {MODES.map((m) => (
                 <button key={m.id} onClick={() => { updateSettings({ coworkApproval: m.id }); setOpen(null); }} className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-[14px] hover:bg-bg-2">
                   <span className="text-ink-2">{m.icon}</span> <span className="flex-1">{m.label}</span> {mode === m.id && <Check size={15} className="text-[#1a56db]" />}
@@ -60,15 +62,16 @@ export function CoworkPanel({ chat, compact = false }: { chat: Chat; compact?: b
             </div>
           )}
         </div>
-        <div className="relative" onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => setOpen(open === "schedule" ? null : "schedule")} className={cn("flex items-center gap-1 rounded-md px-2 py-1 hover:bg-bg-3", open === "schedule" && "bg-bg-3")}>
+        <div className="relative min-w-0 max-w-full" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => setOpen(open === "schedule" ? null : "schedule")} className={cn("flex min-h-10 max-w-full items-center gap-1 rounded-md px-2 py-1 hover:bg-bg-3 md:min-h-0", open === "schedule" && "bg-bg-3")}>
             <Clock size={14} className="text-ink-3" /> Schedule <ChevronDown size={13} className="text-ink-3" />
           </button>
           {open === "schedule" && (
-            <div className={cn("fade-up absolute left-0 z-30 w-80 rounded-xl border border-line bg-bg p-3 shadow-lg shadow-black/10", compact ? "bottom-9" : "top-9")}>
+            <div className={cn("mobile-popover fade-up absolute left-0 z-30 w-80 rounded-xl border border-line bg-bg p-3 shadow-lg shadow-black/10", compact ? "bottom-9" : "top-9")}>
+              <button onClick={() => setOpen(null)} className="mb-1 w-full rounded-lg py-2 text-[13px] text-ink-2 md:hidden">Close schedule</button>
               <div className="text-[13px] font-medium">Run a task on a schedule</div>
               <textarea value={schedPrompt} onChange={(e) => setSchedPrompt(e.target.value)} rows={3} placeholder="What should it do each time? e.g. find three new electric bike deals" className="mt-2 w-full resize-none rounded-lg border border-line bg-bg px-2.5 py-2 text-[13px] outline-none placeholder:text-ink-3 focus:border-ink-3" />
-              <div className="mt-2 flex items-center gap-1">
+              <div className="mt-2 flex flex-wrap items-center gap-1">
                 {(["hourly", "daily", "weekly"] as const).map((c) => (
                   <button key={c} onClick={() => setCadence(c)} className={cn("rounded-md px-2 py-1 text-[12.5px]", cadence === c ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>{c[0].toUpperCase() + c.slice(1)}</button>
                 ))}

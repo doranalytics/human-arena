@@ -27,26 +27,27 @@ interface UIState {
   dialog: DialogKind | null;
   toasts: Toast[];
   sidebarOpen: boolean;
+  mobileSidebarOpen: boolean;
   /** full-screen pages that replace the chat area */
   page: Page;
 }
 
-let ui: UIState = { dialog: null, toasts: [], sidebarOpen: true, page: null };
+let ui: UIState = { dialog: null, toasts: [], sidebarOpen: true, mobileSidebarOpen: false, page: null };
 const ls = new Set<() => void>();
 const emit = () => ls.forEach((l) => l());
 const sub = (l: () => void) => (ls.add(l), () => void ls.delete(l));
-const server: UIState = { dialog: null, toasts: [], sidebarOpen: true, page: null };
+const server: UIState = { dialog: null, toasts: [], sidebarOpen: true, mobileSidebarOpen: false, page: null };
 
 export function useUI<T>(sel: (s: UIState) => T): T {
   return useSyncExternalStore(sub, () => sel(ui), () => sel(server));
 }
 export function openDialog(d: DialogKind) {
   if (d.kind === "challenges") void dismissChallengeGuide();
-  ui = { ...ui, dialog: d };
+  ui = { ...ui, dialog: d, mobileSidebarOpen: false };
   emit();
 }
 export function setPage(page: Page) {
-  ui = { ...ui, page };
+  ui = { ...ui, page, mobileSidebarOpen: false };
   emit();
 }
 export function closeDialog() {
@@ -54,7 +55,14 @@ export function closeDialog() {
   emit();
 }
 export function toggleSidebar() {
-  ui = { ...ui, sidebarOpen: !ui.sidebarOpen };
+  ui = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches
+    ? { ...ui, mobileSidebarOpen: !ui.mobileSidebarOpen }
+    : { ...ui, sidebarOpen: !ui.sidebarOpen };
+  emit();
+}
+export function closeMobileSidebar() {
+  if (!ui.mobileSidebarOpen) return;
+  ui = { ...ui, mobileSidebarOpen: false };
   emit();
 }
 let toastId = 0;

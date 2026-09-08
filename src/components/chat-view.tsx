@@ -171,7 +171,7 @@ export function ChatView({ chat }: { chat: Chat }) {
 
   if (empty && attempt && challenge)
     return (
-      <div className="flex h-full flex-col items-center justify-center px-6 py-8">
+      <div className="flex min-h-full flex-col items-center justify-center px-4 py-6 md:px-6 md:py-8">
         <ChallengeStage c={challenge} attempt={attempt} />
         <div className="mt-5 w-full max-w-[760px]">{composer}{cowork && <CoworkPanel chat={chat} />}</div>
       </div>
@@ -179,10 +179,10 @@ export function ChatView({ chat }: { chat: Chat }) {
 
   if (empty)
     return (
-      <div className="flex h-full flex-col items-center justify-center px-6 pb-24">
-        <div className="mb-8 flex items-center gap-3 text-clay">
-          <Spark size={30} className="spark-in" />
-          <h1 className="font-serif text-[40px] font-normal tracking-tight text-ink">{greeting(name)}</h1>
+      <div className="flex min-h-full flex-col items-center justify-center px-4 py-8 md:px-6 md:pb-24">
+        <div className="mb-6 flex max-w-full items-center gap-3 text-clay md:mb-8">
+          <Spark size={30} className="spark-in shrink-0" />
+          <h1 className="min-w-0 break-words font-serif text-[30px] font-normal leading-tight tracking-tight text-ink md:text-[40px]">{greeting(name)}</h1>
         </div>
         <div className="w-full max-w-[760px]">{composer}</div>
         {cowork ? <CoworkPanel chat={chat} /> : project && <div className="mt-3 text-[12.5px] text-ink-3">In project {project.name}. Its instructions apply to this chat.</div>}
@@ -191,10 +191,10 @@ export function ChatView({ chat }: { chat: Chat }) {
     );
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
       {attempt && challenge && <ChallengeStrip c={challenge} attempt={attempt} />}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-[760px] space-y-7 px-6 pb-8 pt-8">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto w-full max-w-[760px] space-y-6 px-4 py-5 md:space-y-7 md:px-6 md:py-8">
           {messages.map((m, i) => (
             <Message key={m.id} m={m} onExport={() => track("exported", undefined, chat.id)} onToolOutput={(toolCallId, output) => addToolOutput({ tool: "ask_user", toolCallId, output })} streaming={busy && i === messages.length - 1 && m.role === "assistant"} />
           ))}
@@ -203,7 +203,7 @@ export function ChatView({ chat }: { chat: Chat }) {
           <div ref={bottomRef} />
         </div>
       </div>
-      <div className="mx-auto w-full max-w-[760px] px-6 pb-4">
+      <div className="mx-auto w-full max-w-[760px] shrink-0 px-3 pb-3 md:px-6 md:pb-4">
         {composer}
         {cowork && !chat.closed && <CoworkPanel chat={chat} compact />}
       </div>
@@ -214,12 +214,12 @@ export function ChatView({ chat }: { chat: Chat }) {
 export function StopOrSend({ busy, canSend, onStop }: { busy: boolean; canSend: boolean; onStop: () => void }) {
   if (busy)
     return (
-      <button type="button" onClick={onStop} className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-bg" title="Stop">
+      <button type="button" onClick={onStop} className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-bg md:h-8 md:w-8" title="Stop">
         <Square size={12} fill="currentColor" />
       </button>
     );
   return (
-    <button type="submit" disabled={!canSend} className="flex h-8 w-8 items-center justify-center rounded-full bg-clay text-white transition disabled:bg-bg-3 disabled:text-ink-3" title="Send">
+    <button type="submit" disabled={!canSend} className="flex h-10 w-10 items-center justify-center rounded-full bg-clay text-white transition disabled:bg-bg-3 disabled:text-ink-3 md:h-8 md:w-8" title="Send">
       <ArrowUp size={16} strokeWidth={2.5} />
     </button>
   );

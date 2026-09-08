@@ -27,9 +27,9 @@ export function ProjectView({ project }: { project: Project }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[900px] px-8 py-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <div className="mx-auto w-full max-w-[900px] px-4 py-6 md:px-8 md:py-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 break-words">
           <div className="flex items-center gap-2 text-[12px] text-ink-3"><FolderOpen size={13} /> Project</div>
           <h1 className="mt-1 font-serif text-[32px] leading-tight">{project.name}</h1>
           {project.description && <div className="mt-1 text-[14px] text-ink-2">{project.description}</div>}
@@ -40,12 +40,12 @@ export function ProjectView({ project }: { project: Project }) {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-8 md:grid-cols-[1fr_320px]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div>
           <div className="mb-2 text-[12px] font-medium text-ink-3">Chats in this project</div>
           {chats.length === 0 ? (
             <button onClick={() => newChat(project.id)} className="flex w-full items-center gap-3 rounded-xl border border-dashed border-line-2 px-4 py-6 text-[13.5px] text-ink-2 hover:bg-bg-2">
-              <MessageSquare size={16} /> Start the first chat. It will follow the instructions on the right.
+              <MessageSquare size={16} /> Start the first chat. It will follow the project instructions.
             </button>
           ) : (
             <div className="divide-y divide-line rounded-xl border border-line">

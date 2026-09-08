@@ -1,5 +1,6 @@
 "use client";
-import { FileText, Image as ImageIcon, GripVertical, Table2, Quote, Swords } from "lucide-react";
+import { FileText, Image as ImageIcon, GripVertical, Table2, Quote, Swords, ChevronDown } from "lucide-react";
+import { useId, useState } from "react";
 import { LearnCard } from "./learn-card";
 import type { ChallengeDef, Material } from "@/lib/arena/types";
 import type { Attempt } from "@/lib/types";
@@ -14,12 +15,15 @@ function Card({ m, compact }: { m: Material; compact?: boolean }) {
   const hint = m.kind === "file" ? "Drag into the message box" : "Drag or click to drop in";
   return (
     <div
+      role="button"
+      tabIndex={0}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData(MATERIAL_MIME, JSON.stringify(m));
         e.dataTransfer.effectAllowed = "copy";
       }}
       onClick={() => sendToComposer(m)}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); sendToComposer(m); } }}
       title={hint}
       className={cn("group flex cursor-grab select-none items-start gap-2.5 rounded-xl border border-line bg-bg text-left shadow-sm transition hover:border-clay/60 hover:shadow-md active:cursor-grabbing", compact ? "px-2.5 py-1.5" : "w-[240px] max-w-full px-3 py-2.5")}
     >
@@ -36,7 +40,7 @@ function Card({ m, compact }: { m: Material; compact?: boolean }) {
             </table>
           </div>
         )}
-        {!compact && <div className="mt-1.5 text-[11px] text-ink-3 opacity-0 transition group-hover:opacity-100">{hint}</div>}
+        {!compact && <div className="mt-1.5 text-[11px] text-ink-3 transition md:opacity-0 md:group-hover:opacity-100"><span className="md:hidden">Tap to add to your message</span><span className="hidden md:inline">{hint}</span></div>}
       </div>
       <GripVertical size={14} className="mt-0.5 shrink-0 text-ink-3 opacity-40" />
     </div>
@@ -50,7 +54,7 @@ export function ChallengeStage({ c }: { c: ChallengeDef; attempt: Attempt }) {
     <div className="w-full max-w-[760px]">
       <div className="mb-4">
         <div className="flex items-center gap-2 text-[12px] font-medium text-ink-3"><Swords size={13} className="text-clay" /> Challenge {c.order}</div>
-        <h1 className="mt-1 font-serif text-[34px] leading-tight tracking-tight text-ink">{c.title}</h1>
+        <h1 className="mt-1 font-serif text-[28px] leading-tight tracking-tight text-ink md:text-[34px]">{c.title}</h1>
         <LearnCard text={c.hook} className="mt-2" />
       </div>
       <div className="px-1"><BriefBody brief={c.brief} /><ChallengeCriteria challenge={c} /></div>
@@ -69,6 +73,8 @@ export function ChallengeStage({ c }: { c: ChallengeDef; attempt: Attempt }) {
 
 /** Collapsed strip: sits above the messages once the conversation has started. The rules, minimal, plus the material. No clock (the top bar has one). */
 export function ChallengeStrip({ c }: { c: ChallengeDef; attempt: Attempt }) {
+  const [expanded, setExpanded] = useState(false);
+  const contentId = useId();
   const materials = c.materials ?? [];
   const steps = c.brief
     .split(/\n\s*\n/)
@@ -76,8 +82,9 @@ export function ChallengeStrip({ c }: { c: ChallengeDef; attempt: Attempt }) {
     .filter((b) => b && !b.startsWith(">") && !/^https?:\/\/\S+$/.test(b))
     .map((b) => b.replace(/\*\*(.+?)\*\*/g, "$1").replace(/\*(.+?)\*/g, "$1"));
   return (
-    <div className="sticky top-0 z-10 border-b border-line bg-bg/95 px-5 py-2 backdrop-blur">
-      <div className="mx-auto flex max-w-[760px] items-start gap-4">
+    <div className="sticky top-0 z-10 max-h-[40%] shrink-0 overflow-y-auto border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:px-5">
+      <button onClick={() => setExpanded((v) => !v)} aria-expanded={expanded} aria-controls={contentId} className="flex min-h-9 w-full items-center gap-2 text-left text-[13px] text-ink-2 md:hidden"><Swords size={14} className="text-clay" /><span className="min-w-0 flex-1 truncate">Instructions{materials.length ? " and files" : ""}</span><ChevronDown size={15} className={cn("shrink-0 transition", expanded && "rotate-180")} /></button>
+      <div id={contentId} className={cn("mx-auto max-w-[760px] flex-col items-start gap-3 md:flex md:flex-row md:gap-4", expanded ? "flex pb-2" : "hidden")}>
         <div className="min-w-0 flex-1">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-clay-dark">{c.title}</div>
           <ol className="mt-0.5 space-y-0.5">
@@ -89,7 +96,7 @@ export function ChallengeStrip({ c }: { c: ChallengeDef; attempt: Attempt }) {
             ))}
           </ol>
         </div>
-        {materials.length > 0 && <div className="flex shrink-0 flex-wrap justify-end gap-1.5 pt-1">{materials.map((m) => <Card key={m.id} m={m} compact />)}</div>}
+        {materials.length > 0 && <div className="flex max-w-full flex-wrap gap-1.5 pt-1 md:max-w-[45%] md:justify-end">{materials.map((m) => <Card key={m.id} m={m} compact />)}</div>}
       </div>
     </div>
   );

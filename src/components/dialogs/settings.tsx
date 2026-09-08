@@ -48,10 +48,10 @@ export function SettingsDialog({ section }: { section: SettingsSection }) {
   const items = group.items;
   const single = group.items.length === 1;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]" onMouseDown={(e) => e.target === e.currentTarget && closeDialog()}>
-      <div role="dialog" aria-modal className={cn("fade-up flex h-[84%] w-full overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl shadow-black/10", single ? "max-w-2xl" : "max-w-4xl")}>
+    <div className="viewport-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-3 md:p-4 backdrop-blur-[2px]" onMouseDown={(e) => e.target === e.currentTarget && closeDialog()}>
+      <div role="dialog" aria-modal className={cn("fade-up flex h-full md:h-[84%] w-full overflow-hidden rounded-2xl border border-line bg-bg shadow-2xl shadow-black/10", single ? "max-w-2xl" : "max-w-4xl")}>
         {!single && (
-          <aside className="flex w-[220px] shrink-0 flex-col border-r border-line bg-side p-3">
+          <aside className="hidden md:flex w-[220px] shrink-0 flex-col border-r border-line bg-side p-3">
             <div className="mb-1 px-2 text-[11.5px] font-medium text-ink-3">{group.group}</div>
             {items.map((i) => (
               <button key={i.id} onClick={() => openDialog({ kind: "settings", section: i.id })} className={cn("flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] hover:bg-bg-3", section === i.id && "bg-bg-3 font-medium")}>
@@ -60,12 +60,15 @@ export function SettingsDialog({ section }: { section: SettingsSection }) {
             ))}
           </aside>
         )}
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-center justify-between gap-3 px-6 py-4">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-2 md:px-6 md:py-4">
             <div className="text-[16px] font-medium">{TITLE[section]}</div>
-            <button onClick={closeDialog} className="rounded-lg p-1.5 text-ink-2 hover:bg-bg-3" aria-label="Close"><X size={16} /></button>
+            <button onClick={closeDialog} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-7 md:w-7" aria-label="Close"><X size={16} /></button>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+          <nav aria-label={group.group} className="mb-4 flex shrink-0 gap-1 overflow-x-auto border-b border-line px-3 md:hidden">
+            {items.map((i) => <button key={i.id} aria-current={section === i.id ? "page" : undefined} onClick={() => openDialog({ kind: "settings", section: i.id })} className={cn("min-h-11 shrink-0 border-b-2 px-2 text-[13px]", section === i.id ? "border-clay font-medium text-ink" : "border-transparent text-ink-2")}>{i.label}</button>)}
+          </nav>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 md:px-6">
             {section === "general" && <General />}
             {section === "instructions" && <Instructions />}
             {section === "account" && <Account />}
@@ -274,7 +277,7 @@ function Skills() {
   ];
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="text-[13px] text-ink-2">Type <span className="rounded bg-bg-3 px-1 font-mono text-[12px]">/name</span> in the message box to use one.</div>
         <div className="flex items-center gap-1.5">
           <Button variant="outline" onClick={() => { setBrowsing((v) => !v); setCreating(false); }}>Browse</Button>
@@ -319,15 +322,15 @@ function Skills() {
           </div>
         </div>
       )}
-      <div className="grid grid-cols-[1fr_110px_120px_32px] items-center gap-2 border-b border-line pb-2 text-[12.5px] text-ink-3">
-        <span>Skill</span><span>Last updated</span><span>Author</span><span />
+      <div className="grid grid-cols-[minmax(0,1fr)_32px] md:grid-cols-[minmax(0,1fr)_90px_110px_32px] items-center gap-2 border-b border-line pb-2 text-[12.5px] text-ink-3">
+        <span>Skill</span><span className="hidden md:block">Last updated</span><span className="hidden md:block">Author</span><span />
       </div>
       {rows.map((r) => (
         <div key={r.id} className="border-b border-line">
-          <div role="button" tabIndex={0} onClick={() => setOpenId(openId === r.id ? null : r.id)} onKeyDown={(e) => e.key === "Enter" && setOpenId(openId === r.id ? null : r.id)} className="grid cursor-pointer grid-cols-[1fr_110px_120px_32px] items-center gap-2 py-3 text-[14px] hover:bg-bg-2/60">
+          <div role="button" tabIndex={0} onClick={() => setOpenId(openId === r.id ? null : r.id)} onKeyDown={(e) => e.key === "Enter" && setOpenId(openId === r.id ? null : r.id)} className="grid cursor-pointer grid-cols-[minmax(0,1fr)_32px] md:grid-cols-[minmax(0,1fr)_90px_110px_32px] items-center gap-2 py-3 text-[14px] hover:bg-bg-2/60">
             <div className="min-w-0"><div className="truncate font-medium">/{r.name}</div><div className="truncate text-[12.5px] text-ink-3">{r.desc}</div></div>
-            <span className="text-ink-2 tabular-nums">{r.date}</span>
-            <span className="text-ink-2">{r.author}</span>
+            <span className="hidden text-ink-2 tabular-nums md:block">{r.date}</span>
+            <span className="hidden text-ink-2 md:block">{r.author}</span>
             {r.custom ? <button onClick={(e) => { e.stopPropagation(); deleteSkill(r.id); }} className="justify-self-end rounded p-1 text-ink-3 hover:bg-bg-3 hover:text-bad" title="Delete"><Trash2 size={14} /></button> : <span />}
           </div>
           {openId === r.id && (
@@ -353,13 +356,14 @@ function Connectors() {
         {CONNECTORS.map((c) => {
           const active = on.includes(c.id);
           return (
-            <div key={c.id} className="flex items-center gap-3 rounded-xl border border-line px-3.5 py-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-white"><ConnectorLogo id={c.id} size={24} /></span>
+            <div key={c.id} className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3 rounded-xl border border-line px-3.5 py-3 md:flex">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-white"><ConnectorLogo id={c.id} size={24} /></span>
               <div className="min-w-0 flex-1">
                 <div className="text-[14px] font-medium">{c.name}{c.vendor && <span className="text-[12px] font-normal text-ink-3"> · {c.vendor}</span>}</div>
                 <div className="text-[12.5px] text-ink-2">{c.blurb}</div>
               </div>
               <Button
+                className="col-start-2 justify-self-start"
                 variant={active ? "outline" : "primary"}
                 onClick={() => {
                   setConnector(c.id, !active);

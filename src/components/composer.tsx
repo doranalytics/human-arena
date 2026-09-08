@@ -134,14 +134,14 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
   return (
     <div className="relative">
       {showSlash && (
-        <div className="fade-up absolute bottom-full left-0 z-30 mb-2 w-80 rounded-xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10">
+        <div className="mobile-popover fade-up absolute bottom-full left-0 z-30 mb-2 w-80 rounded-xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10">
           <div className="px-2 py-1 text-[11.5px] font-medium text-ink-3">Skills</div>
           {slashList.map((s, i) => (
             <button
               key={s.id}
+              onClick={() => { setText(`/${s.name} `); ta.current?.focus(); }}
               onMouseDown={(e) => {
                 e.preventDefault();
-                setText(`/${s.name} `);
               }}
               className={cn("flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left", i === slashIdx && "bg-bg-3")}
             >
@@ -169,7 +169,7 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
       >
         {(files.length > 0 || projectName) && (
           <div className="flex flex-wrap gap-1.5 px-3 pt-3">
-            {projectName && <span className="inline-flex items-center gap-1 rounded-md bg-bg-3 px-2 py-1 text-[12px] text-ink-2">Project · {projectName}</span>}
+            {projectName && <span className="inline-flex max-w-full break-words items-center gap-1 rounded-md bg-bg-3 px-2 py-1 text-[12px] text-ink-2">Project · {projectName}</span>}
             {files.map((f, i) => (
               <span key={i} className="inline-flex max-w-[220px] items-center gap-1.5 rounded-md border border-line bg-bg-2 px-2 py-1 text-[12px]">
                 {f.type.startsWith("image/") ? <ImageIcon size={12} /> : <FileText size={12} />}
@@ -210,22 +210,28 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
           }}
           rows={1}
           placeholder={cowork ? "What should I get done?" : "How can I help you today?"}
-          className="max-h-60 w-full resize-none bg-transparent px-4 pb-1 pt-3.5 text-[16px] leading-6 outline-none placeholder:text-ink-3"
+          className="max-h-[min(15rem,30dvh)] w-full resize-none bg-transparent px-4 pb-1 pt-3.5 text-[16px] leading-6 outline-none placeholder:text-ink-3"
         />
-        <div className="flex items-center gap-1 px-2.5 pb-2.5 pt-1">
+        {(activeSkill || webSearch || research) && <div className="flex flex-wrap gap-1.5 px-3 py-1 md:hidden">
+          {activeSkill && <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-[#e8f0fe] px-2 py-1 text-[12.5px] font-medium text-[#1a56db]"><Zap size={12} className="shrink-0" /><span className="truncate">/{activeSkill}</span></span>}
+          {webSearch && !research && <Chip icon={<Globe size={12} />} label="Web search" onRemove={() => setWebSearch(false)} />}
+          {research && <Chip icon={<Telescope size={12} />} label="Research" onRemove={() => setResearch(false)} />}
+        </div>}
+        <div className="flex flex-wrap items-center gap-1 px-2 pb-2 pt-1 md:px-2.5 md:pb-2.5">
           <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => setPlusOpen((v) => !v)} className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3" title="Add files and tools">
+            <button type="button" onClick={() => { setPlusOpen((v) => !v); setModelOpen(false); }} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-8 md:w-8" title="Add files and tools">
               <Plus size={18} />
             </button>
             {plusOpen && (
-              <div className={cn("fade-up absolute left-0 z-30 w-64 rounded-xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10", menusDown ? "top-10" : "bottom-10")}>
+              <div className={cn("mobile-popover fade-up absolute left-0 z-30 w-64 rounded-xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10", menusDown ? "top-10" : "bottom-10")}>
+                <button type="button" onClick={() => setPlusOpen(false)} className="ml-auto flex h-10 items-center px-3 text-[13px] md:hidden">Close tools</button>
                 <MenuItem icon={<Paperclip size={15} />} label="Upload a file" onClick={() => fileInput.current?.click()} />
                 <MenuItem icon={<ImageIcon size={15} />} label="Add a photo or screenshot" onClick={() => imageInput.current?.click()} />
                 <div className="my-1 border-t border-line" />
                 <MenuItem icon={<Globe size={15} />} label="Web search" checked={webSearch} onClick={() => setWebSearch(!webSearch)} />
                 <MenuItem icon={<Telescope size={15} />} label="Research" hint="Longer, sourced report" checked={research} onClick={() => setResearch(!research)} />
                 <div className="my-1 border-t border-line" />
-                <MenuItem icon={<Zap size={15} />} label="Use a skill" hint="or type /" onClick={() => { setText("/"); ta.current?.focus(); }} />
+                <MenuItem icon={<Zap size={15} />} label="Use a skill" hint="or type /" onClick={() => { setPlusOpen(false); setText("/"); ta.current?.focus(); }} />
                 <MenuItem icon={<Brain size={15} />} label="Memory" hint={memoryOn ? "on" : "off for this chat"} checked={memoryOn} onClick={() => setMemoryOn(!memoryOn)} keep />
                 <div className="my-1 border-t border-line" />
                 <div className="px-2 py-1 text-[11.5px] font-medium text-ink-3">Connectors</div>
@@ -236,21 +242,24 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
               </div>
             )}
           </div>
-          <div className="flex items-center rounded-lg border border-line p-0.5 text-[13px]">
-            <button type="button" onClick={() => setCowork(false)} className={cn("rounded-md px-2.5 py-1", !cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Chat</button>
-            <button type="button" onClick={() => setCowork(true)} title="Hand it a task. It plans the steps and works through them with your connectors." className={cn("rounded-md px-2.5 py-1", cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Cowork</button>
+          <div className="flex shrink-0 items-center rounded-lg border border-line p-0.5 text-[13px]">
+            <button type="button" onClick={() => setCowork(false)} className={cn("min-h-9 rounded-md px-2 py-1 md:min-h-0 md:px-2.5", !cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Chat</button>
+            <button type="button" onClick={() => setCowork(true)} title="Hand it a task. It plans the steps and works through them with your connectors." className={cn("min-h-9 rounded-md px-2 py-1 md:min-h-0 md:px-2.5", cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Cowork</button>
           </div>
-          {activeSkill && <span className="inline-flex h-7 items-center gap-1 rounded-md bg-[#e8f0fe] px-2 text-[12.5px] font-medium text-[#1a56db]"><Zap size={12} /> /{activeSkill}</span>}
-          {webSearch && !research && <Chip icon={<Globe size={12} />} label="Web search" onRemove={() => setWebSearch(false)} />}
-          {research && <Chip icon={<Telescope size={12} />} label="Research" onRemove={() => setResearch(false)} />}
-          <div className="flex-1" />
+          <div className="hidden md:contents">
+            {activeSkill && <span className="ml-1 rounded-md bg-[#e8f0fe] px-2 py-1 text-[12.5px] font-medium text-[#1a56db]">/{activeSkill}</span>}
+            {webSearch && !research && <Chip icon={<Globe size={12} />} label="Web search" onRemove={() => setWebSearch(false)} />}
+            {research && <Chip icon={<Telescope size={12} />} label="Research" onRemove={() => setResearch(false)} />}
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-1">
           <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => { setModelOpen((v) => !v); setEffortOpen(false); }} className={cn("flex h-9 items-center gap-1.5 rounded-lg px-3 text-[14px] hover:bg-bg-2", modelOpen && "bg-bg-2")} title="Model and effort">
+            <button type="button" onClick={() => { setModelOpen((v) => !v); setPlusOpen(false); setEffortOpen(false); }} className={cn("flex h-10 items-center gap-1.5 rounded-lg px-2 text-[14px] hover:bg-bg-2 md:h-9 md:px-3", modelOpen && "bg-bg-2")} title="Model and effort" aria-label={`${modelLabel}: model and effort`}>
               <span className="font-medium">{MODELS[settings.model].label}</span>
-              <span className="text-ink-3">{EFFORTS[settings.effort].label}</span>
+              <span className="hidden text-ink-3 md:inline">{EFFORTS[settings.effort].label}</span>
             </button>
             {modelOpen && (
-              <div className={cn("fade-up absolute right-0 z-30 w-72 rounded-2xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10", menusDown ? "top-11" : "bottom-11")}>
+              <div className={cn("mobile-popover fade-up absolute right-0 z-30 w-72 rounded-2xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10", menusDown ? "top-11" : "bottom-11")}>
+                <button type="button" onClick={() => setModelOpen(false)} className="ml-auto flex h-10 items-center px-3 text-[13px] md:hidden">Close models</button>
                 {(Object.keys(MODELS) as ModelChoice[]).map((k) => (
                   <button key={k} type="button" onClick={() => { updateSettings({ model: k }); setModelOpen(false); }} className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-bg-2">
                     <span className="min-w-0 flex-1">
@@ -286,15 +295,16 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
             onClick={() => (dictation.listening ? dictation.stop() : dictation.start())}
             disabled={!dictation.supported || dictation.transcribing}
             title={!dictation.supported ? "Dictation needs a microphone" : dictation.transcribing ? "Transcribing…" : dictation.listening ? "Stop and transcribe" : "Dictate"}
-            className={cn("flex h-8 items-center justify-center gap-1.5 rounded-lg transition", dictation.listening ? "bg-[#1a56db] px-2.5 text-white" : dictation.transcribing ? "w-8 text-clay" : "w-8 text-ink-3 hover:bg-bg-3 hover:text-ink disabled:opacity-40")}
+            className={cn("flex h-10 items-center justify-center gap-1.5 rounded-lg transition md:h-8", dictation.listening ? "bg-[#1a56db] px-2.5 text-white" : dictation.transcribing ? "w-10 text-clay md:w-8" : "w-10 text-ink-3 hover:bg-bg-3 hover:text-ink disabled:opacity-40 md:w-8")}
           >
             {dictation.transcribing ? <Loader2 size={17} className="animate-spin" /> : dictation.listening ? <><span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70" /><span className="relative inline-flex h-2 w-2 rounded-full bg-white" /></span><span className="text-[12.5px] font-medium">Stop</span></> : <Mic size={17} />}
           </button>
           {grading ? <span className="px-2 text-[12px] text-ink-3">Grading…</span> : <StopOrSend busy={busy} canSend={canSend} onStop={onStop} />}
+          </div>
         </div>
         {locked && (
           <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-bg/85 backdrop-blur-[1px]">
-            <div className="flex items-center gap-3 rounded-xl border border-line bg-bg px-4 py-2.5 text-[13.5px] shadow-sm">
+            <div className="flex max-w-full flex-wrap items-center justify-center gap-2 rounded-xl border border-line bg-bg px-3 py-2 text-center text-[13px] shadow-sm md:flex-nowrap md:gap-3 md:px-4 md:py-2.5 md:text-left md:text-[13.5px]">
               <Lock size={15} className="text-ink-3" />
               <span className="text-ink-2">Free messages are used up for today. Challenges are unlimited.</span>
               <button type="button" onClick={() => openDialog({ kind: "challenges" })} className="rounded-lg bg-clay px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-clay-dark">Pick a challenge</button>

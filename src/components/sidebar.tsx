@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, ChevronRight, PanelLeft, Trash2, Pin, PinOff, Swords, Pencil, Folder, Clock, Check, MoreHorizontal, Archive, ArchiveRestore } from "lucide-react";
+import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, ChevronRight, PanelLeft, Trash2, Pin, PinOff, Swords, Pencil, Folder, Clock, Check, MoreHorizontal, Archive, ArchiveRestore, X } from "lucide-react";
 import { useStore, newChat, openChat, openProject, deleteChat, togglePin, renameChat, moveChatToGroup, createGroup, setChatProject, setArchived, track } from "@/lib/store";
-import { openDialog, toggleSidebar, setPage, useUI } from "@/lib/ui";
+import { openDialog, toggleSidebar, closeMobileSidebar, setPage, useUI } from "@/lib/ui";
 import { useSession } from "@/lib/session";
 import { tierFor } from "@/lib/tiers";
 import { Avatar } from "./avatar";
@@ -13,7 +13,7 @@ import type { Chat } from "@/lib/types";
 
 function NavItem({ icon, label, onClick, active }: { icon: React.ReactNode; label: string; onClick: () => void; active?: boolean }) {
   return (
-    <button onClick={onClick} className={cn("flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] text-ink hover:bg-bg-3", active && "bg-bg-3")}>
+    <button onClick={onClick} className={cn("flex h-11 w-full items-center gap-2.5 rounded-lg px-2 text-[14px] text-ink hover:bg-bg-3 md:h-8 md:text-[13.5px]", active && "bg-bg-3")}>
       <span className="text-ink-2">{icon}</span>
       <span className="truncate">{label}</span>
     </button>
@@ -44,7 +44,7 @@ function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () =
   }
   return (
     <div className="relative">
-      <div className={cn("group flex h-8 items-center rounded-lg pr-1 hover:bg-bg-3", (active || menu) && "bg-bg-3")}>
+      <div className={cn("group flex min-h-11 items-center rounded-lg pr-1 hover:bg-bg-3 md:min-h-8", (active || menu) && "bg-bg-3")}>
         {editing ? (
           <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEditing(false); }} className="mx-1 h-6 min-w-0 flex-1 rounded border border-line bg-bg px-1.5 text-[13px] outline-none" />
         ) : (
@@ -54,7 +54,7 @@ function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () =
           </button>
         )}
         {!editing && (
-          <button onClick={() => setMenu(menu ? null : "root")} className={cn("rounded p-1 text-ink-3 hover:bg-bg-2 hover:text-ink", menu ? "block" : "hidden group-hover:block")} title="More">
+          <button onClick={() => setMenu(menu ? null : "root")} className={cn("rounded p-2.5 text-ink-3 hover:bg-bg-2 hover:text-ink md:p-1", menu ? "block" : "block md:hidden md:group-hover:block md:group-focus-within:block")} title="More">
             <MoreHorizontal size={14} />
           </button>
         )}
@@ -106,7 +106,7 @@ function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () =
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ mobile = false }: { mobile?: boolean }) {
   const chats = useStore((s) => s.chats);
   const projects = useStore((s) => s.projects);
   const activeChatId = useStore((s) => s.activeChatId);
@@ -136,9 +136,10 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-full w-[272px] shrink-0 flex-col border-r border-line bg-side">
-      <div className="flex h-12 items-center px-4">
+    <aside className={cn("flex h-full shrink-0 flex-col border-r border-line bg-side", mobile ? "w-full" : "w-[272px]")}>
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 px-4 md:h-12">
         <button onClick={() => { setPage(null); newChat(activeProjectId); }} className="font-serif text-[19px] font-medium tracking-tight hover:text-clay-dark" title="Home">How to AI Games</button>
+        {mobile && <button aria-label="Close navigation" onClick={closeMobileSidebar} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3"><X size={20} /></button>}
       </div>
 
       <div className="px-2.5 pt-1">
@@ -149,7 +150,7 @@ export function Sidebar() {
         <NavItem icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings", section: "skills" })} />
       </div>
 
-      <div className="mt-4 flex-1 overflow-y-auto px-2.5 pb-2">
+      <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2">
         <div className="mb-1 flex items-center justify-between px-2">
           <span className="text-[12px] font-medium text-ink-3">Projects</span>
           <button onClick={() => openDialog({ kind: "new-project" })} className="rounded p-0.5 text-ink-3 hover:bg-bg-3 hover:text-ink" title="New project">
@@ -201,7 +202,7 @@ export function Sidebar() {
         )}
       </div>
 
-      <div className="flex items-center gap-1 border-t border-line px-2.5 py-2">
+      <div className="flex shrink-0 items-center gap-1 border-t border-line px-2.5 py-2">
         <button onClick={() => openDialog({ kind: "settings", section: "account" })} className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 hover:bg-bg-3" title="Settings">
           <Avatar name={name} src={avatar} size={28} />
           <span className="min-w-0 flex-1 truncate text-left text-[13.5px]">

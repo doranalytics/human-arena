@@ -38,20 +38,20 @@ export function ProjectsPage() {
   const SORT_LABEL: Record<Sort, string> = { updated: "Last updated", name: "Name", created: "Date created" };
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-8 py-10">
+    <div className="mx-auto w-full max-w-[1100px] px-4 py-6 md:px-8 md:py-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-serif text-[34px] font-normal tracking-tight">Projects</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="relative">
             <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects" className="h-10 w-44 rounded-xl border border-line bg-bg pl-9 pr-3 text-[13.5px] outline-none placeholder:text-ink-3 focus:border-line-2 focus:w-56 transition-all" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects" className="h-10 w-44 rounded-xl border border-line bg-bg pl-9 pr-3 text-[13.5px] outline-none placeholder:text-ink-3 focus:border-line-2 md:focus:w-56 transition-all" />
           </label>
           <div className="relative">
             <button onClick={() => setSortOpen((v) => !v)} className="flex h-10 items-center gap-1.5 rounded-xl border border-line bg-bg px-3.5 text-[13.5px] hover:bg-bg-2">
               <span className="text-ink-3">Sort by</span> {SORT_LABEL[sort]} <ChevronDown size={14} className="text-ink-3" />
             </button>
             {sortOpen && (
-              <div className="fade-up absolute right-0 top-11 z-30 w-44 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10">
+              <div className="mobile-popover fade-up absolute right-0 top-11 z-30 w-44 rounded-xl border border-line bg-bg p-1 shadow-lg shadow-black/10">
                 {(Object.keys(SORT_LABEL) as Sort[]).map((k) => (
                   <button key={k} onClick={() => { setSort(k); setSortOpen(false); }} className={cn("flex w-full items-center rounded-lg px-2.5 py-1.5 text-left text-[13.5px] hover:bg-bg-2", sort === k && "font-medium")}>{SORT_LABEL[k]}</button>
                 ))}
@@ -74,7 +74,7 @@ export function ProjectsPage() {
             const blurb = p.description || p.instructions;
             return (
               <button key={p.id} onClick={() => { setPage(null); openProject(p.id); }} className="group flex min-h-[200px] flex-col rounded-2xl border border-line bg-bg-2/40 p-6 text-left transition hover:border-line-2 hover:bg-bg-2">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <div className="text-[16px] font-semibold">{p.name}</div>
                   {p.files.length > 0 && <Pin size={13} className="text-ink-3 opacity-0 transition group-hover:opacity-100" />}
                 </div>

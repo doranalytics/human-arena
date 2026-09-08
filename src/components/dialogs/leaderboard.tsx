@@ -52,8 +52,8 @@ function MemberCard({ row, onClose }: { row: Row; onClose: () => void }) {
   }, [onClose]);
   const tier = tierFor(row.lifetimePoints, row.lifetimeChallenges);
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-modal className="fade-up relative w-full max-w-sm rounded-2xl border border-line bg-bg p-6 text-center shadow-2xl shadow-black/10">
+    <div className="viewport-overlay fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div role="dialog" aria-modal className="fade-up relative max-h-full w-full max-w-sm overflow-y-auto rounded-2xl border border-line bg-bg p-6 text-center shadow-2xl shadow-black/10">
         <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 rounded-lg p-1.5 text-ink-2 hover:bg-bg-3"><X size={16} /></button>
         <div className="flex justify-center">
           {row.you && !row.avatar ? (
@@ -122,10 +122,10 @@ export function LeaderboardDialog({ open, initialTab }: { open: boolean; initial
       onClose={closeDialog}
       wide
       title={
-        <span className="flex items-center gap-1">
+        <span className="flex min-w-0 flex-wrap items-center gap-1">
           {(["board", "progress"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={cn("flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[14px]", tab === t ? "bg-bg-3 font-medium" : "text-ink-2 hover:text-ink")}>
-              {t === "board" ? <Trophy size={15} className="text-clay" /> : <Medal size={15} className="text-clay" />} {t === "board" ? "Leaderboard" : "Your progress"}
+            <button key={t} onClick={() => setTab(t)} className={cn("flex min-h-10 items-center gap-1.5 rounded-lg px-1.5 py-1 text-[13px] md:min-h-0 md:px-2.5 md:text-[14px]", tab === t ? "bg-bg-3 font-medium" : "text-ink-2 hover:text-ink")}>
+              {t === "board" ? <Trophy size={15} className="text-clay" /> : <Medal size={15} className="text-clay" />} {t === "board" ? "Leaderboard" : <><span className="hidden md:inline">Your </span>progress</>}
             </button>
           ))}
         </span>
