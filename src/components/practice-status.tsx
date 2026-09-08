@@ -15,7 +15,7 @@ export function PracticeStatus({ compact = false }: { compact?: boolean }) {
           <span className="font-medium tabular-nums">{practice.current ? `${practice.current} day streak` : "Start a streak"}</span>
           {!compact && <span className="text-ink-3">Best: {practice.best}</span>}
         </div>
-        <ol aria-label="Last seven practice days" className={cn("flex", compact ? "gap-1.5" : "gap-2")}>
+        <ol aria-label="Last seven practice days" className={cn("flex max-w-full", compact ? "gap-1.5" : "w-full justify-between gap-1 md:w-auto md:gap-2")}>
           {practice.days.map(({ date, complete }) => (
             <li key={date} title={`${date}: ${complete ? "complete" : date === practice.today ? "not yet" : "no practice"}`} aria-label={`${date}: ${complete ? "complete" : date === practice.today ? "not yet" : "no practice"}`}>
               <span className={cn("flex items-center justify-center rounded-full border", compact ? "h-5 w-5" : "h-7 w-7", complete ? "border-ok bg-ok text-white" : "border-line bg-bg text-ink-3", date === practice.today && "ring-1 ring-ink-3 ring-offset-2 ring-offset-bg")}>

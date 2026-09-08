@@ -174,7 +174,7 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
               <span key={i} className="inline-flex max-w-[220px] items-center gap-1.5 rounded-md border border-line bg-bg-2 px-2 py-1 text-[12px]">
                 {f.type.startsWith("image/") ? <ImageIcon size={12} /> : <FileText size={12} />}
                 <span className="truncate">{f.name}</span>
-                <button type="button" onClick={() => setFiles((x) => x.filter((_, j) => j !== i))} className="text-ink-3 hover:text-ink">
+                <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles((x) => x.filter((_, j) => j !== i))} className="flex h-8 w-8 shrink-0 items-center justify-center text-ink-3 hover:text-ink md:h-auto md:w-auto">
                   <X size={12} />
                 </button>
               </span>
@@ -344,7 +344,7 @@ function Chip({ icon, label, onRemove }: { icon: React.ReactNode; label: string;
   return (
     <span className="ml-1 inline-flex items-center gap-1 rounded-lg border border-clay/40 bg-[#fbeee7] px-2 py-1 text-[12.5px] text-clay-dark">
       {icon} {label}
-      <button type="button" onClick={onRemove} className="ml-0.5 hover:text-ink">
+      <button type="button" aria-label={`Remove ${label}`} onClick={onRemove} className="ml-0.5 flex h-7 w-7 items-center justify-center hover:text-ink md:h-auto md:w-auto">
         <X size={12} />
       </button>
     </span>

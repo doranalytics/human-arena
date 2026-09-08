@@ -62,7 +62,8 @@ function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () =
       {menu && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setMenu(null)} />
-          <div className="fade-up absolute right-1 top-8 z-40 w-60 rounded-xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10">
+          <div className="mobile-popover fade-up absolute right-1 top-8 z-40 w-60 rounded-xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10">
+            <button onClick={() => setMenu(null)} className="mb-1 w-full rounded-lg py-2 text-[13px] text-ink-2 md:hidden">Close chat actions</button>
             {menu === "root" && (
               <>
                 <Item icon={c.pinned ? <PinOff size={15} /> : <Pin size={15} />} label={c.pinned ? "Unpin" : "Pin"} onClick={() => { togglePin(c.id); setMenu(null); }} />
@@ -142,6 +143,7 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
         {mobile && <button aria-label="Close navigation" onClick={closeMobileSidebar} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3"><X size={20} /></button>}
       </div>
 
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain md:contents">
       <div className="px-2.5 pt-1">
         <NavItem icon={<Plus size={16} />} label="New" onClick={() => { setPage(null); newChat(activeProjectId); }} active={!page && !activeChatId && !activeProjectId && !attempt} />
         <NavItem icon={<Swords size={16} className="text-clay" />} label="Challenges" onClick={() => openDialog({ kind: "challenges" })} />
@@ -150,7 +152,7 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
         <NavItem icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings", section: "skills" })} />
       </div>
 
-      <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2">
+      <div className="mt-4 px-2.5 pb-2 md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-contain">
         <div className="mb-1 flex items-center justify-between px-2">
           <span className="text-[12px] font-medium text-ink-3">Projects</span>
           <button onClick={() => openDialog({ kind: "new-project" })} className="rounded p-0.5 text-ink-3 hover:bg-bg-3 hover:text-ink" title="New project">
@@ -159,7 +161,7 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
         </div>
         {projects.length === 0 && <div className="px-2 py-1 text-[12.5px] text-ink-3">No projects yet</div>}
         {projects.map((p) => (
-          <button key={p.id} onClick={() => { setPage(null); openProject(p.id); }} className={cn("flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] hover:bg-bg-3", !page && activeProjectId === p.id && !activeChatId && "bg-bg-3")}>
+          <button key={p.id} onClick={() => { setPage(null); openProject(p.id); }} className={cn("flex min-h-11 w-full items-center gap-2.5 rounded-lg md:min-h-8 px-2 text-[13.5px] hover:bg-bg-3", !page && activeProjectId === p.id && !activeChatId && "bg-bg-3")}>
             <FolderOpen size={15} className="shrink-0 text-ink-3" />
             <span className="truncate">{p.name}</span>
           </button>
@@ -202,6 +204,7 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
         )}
       </div>
 
+      </div>
       <div className="flex shrink-0 items-center gap-1 border-t border-line px-2.5 py-2">
         <button onClick={() => openDialog({ kind: "settings", section: "account" })} className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 hover:bg-bg-3" title="Settings">
           <Avatar name={name} src={avatar} size={28} />

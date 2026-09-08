@@ -125,7 +125,7 @@ export function LeaderboardDialog({ open, initialTab }: { open: boolean; initial
         <span className="flex min-w-0 flex-wrap items-center gap-1">
           {(["board", "progress"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={cn("flex min-h-10 items-center gap-1.5 rounded-lg px-1.5 py-1 text-[13px] md:min-h-0 md:px-2.5 md:text-[14px]", tab === t ? "bg-bg-3 font-medium" : "text-ink-2 hover:text-ink")}>
-              {t === "board" ? <Trophy size={15} className="text-clay" /> : <Medal size={15} className="text-clay" />} {t === "board" ? "Leaderboard" : <><span className="hidden md:inline">Your </span>progress</>}
+              {t === "board" ? <Trophy size={15} className="text-clay" /> : <Medal size={15} className="text-clay" />} {t === "board" ? "Leaderboard" : <><span className="md:hidden">Progress</span><span className="hidden md:inline">Your progress</span></>}
             </button>
           ))}
         </span>

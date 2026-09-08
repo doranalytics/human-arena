@@ -22,7 +22,7 @@ export function MobileNavigation() {
     return () => { document.removeEventListener("keydown", keydown); previous?.focus(); };
   }, [open]);
   if (!open) return null;
-  return <div className="viewport-overlay mobile-drawer fixed inset-0 z-40 md:hidden">
+  return <div className="viewport-overlay mobile-drawer fixed inset-0 z-[45] md:hidden">
     <button className="absolute inset-0 bg-black/30" aria-label="Dismiss navigation" tabIndex={-1} onClick={closeMobileSidebar} />
     <div ref={panel} id="mobile-navigation" role="dialog" aria-modal="true" aria-label="Navigation" className="relative h-full w-[calc(100%_-_3rem)] max-w-80 shadow-xl">
       <Sidebar mobile />
