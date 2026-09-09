@@ -23,7 +23,7 @@ export function LessonFinish({ lesson }: { lesson: Lesson }) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [review, setReview] = useState(""),
-    [social, setSocial] = useState(""),
+    [social, setSocial] = useState(session.me?.linkedin ?? session.me?.x ?? ""),
     [consent, setConsent] = useState(false);
   async function saveName() {
     setBusy(true);
@@ -74,8 +74,7 @@ export function LessonFinish({ lesson }: { lesson: Lesson }) {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          linkedin: value.includes("linkedin.com") ? value : null,
-          x: value && !value.includes("linkedin.com") ? value : null,
+          ...(value ? value.includes("linkedin.com") ? { linkedin: value } : { x: value } : {}),
           promotionOptIn: consent,
         }),
       });

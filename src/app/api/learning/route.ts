@@ -12,6 +12,7 @@ import {
   type LessonTurn,
 } from "@/lib/learning/catalog";
 import { assessChoice, learnerEvidence } from "@/lib/learning/assessment";
+import { practiceTimezone } from "@/lib/practice";
 import { MODELS, FAST_FALLBACK } from "@/lib/models";
 export const maxDuration = 60;
 const headers = { "Cache-Control": "no-store" };
@@ -25,6 +26,7 @@ const safe = (r: Record<string, unknown>) => {
   return rest;
 };
 const schema = z.object({
+  timezone: z.string().max(100).optional(),
   lesson: z.enum(["shape-answers", "better-context"]),
   action: z.enum(["start", "answer"]),
   revision: z.number().int().nonnegative().optional(),
@@ -63,6 +65,10 @@ export async function POST(req: Request) {
     lesson = lessonById(b.lesson)!;
   const db = adminClient();
   if (b.action === "start") {
+    if (!member.practice_timezone) {
+      const { error: zoneError } = await db.from("members").update({ practice_timezone: practiceTimezone(b.timezone) }).eq("id", member.id).is("practice_timezone", null);
+      if (zoneError) return fail("Could not save your practice timezone. Please retry.", 503);
+    }
     const { error } = await db
       .from("lesson_runs")
       .upsert(

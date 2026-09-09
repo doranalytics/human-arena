@@ -62,7 +62,7 @@ export function LessonPlayer({ id }: { id: LessonId }) {
       const r = await fetch("/api/learning", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ lesson: id, action: "start" }),
+        body: JSON.stringify({ lesson: id, action: "start", timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error);

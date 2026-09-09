@@ -46,11 +46,11 @@ async function main() {
     assert.equal((await a.request("/api/profile")).data.member.id, one.data.member.id);
     assert.equal((await a.request("/api/profile", { name: "Guest API QA" }, "PATCH")).status, 200);
     assert.notEqual((await b.request("/api/profile")).data.member.name, "Guest API QA");
-    assert.equal((await a.request("/api/auth/signin", { email: "not-an-email" })).status, 403);
-    assert.equal((await a.request("/api/auth/verify", { email: "not-an-email", token: "000000" })).status, 403);
+    assert.equal((await a.request("/api/auth/signin", { email: "not-an-email" })).status, 400);
+    assert.equal((await a.request("/api/auth/verify", { email: "not-an-email", token: "000000" })).status, 400);
     const forged = visitor(a.cookie.replace(one.data.member.id, two.data.member.id));
     assert.equal((await forged.request("/api/arena/start", { slug: "pin-it" })).status, 401);
-    console.log("PASS automatic isolated guests, reload, private profile, forged-cookie rejection, signup disabled; no email sent");
+    console.log("PASS automatic isolated guests, reload, private profile, forged-cookie rejection, invalid signup rejected; no email sent");
 
     const started = await a.request("/api/arena/start", { slug: "pin-it", timezone: "America/Los_Angeles" });
     assert.equal(started.status, 200);
