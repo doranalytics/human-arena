@@ -13,7 +13,9 @@ import { setSession } from "@/lib/session";
 import type { PracticeSummary } from "@/lib/practice";
 
 export function TopBar({ title }: { title: string }) {
-  const attempt = useStore((s) => s.attempt);
+  const savedAttempt = useStore((s) => s.attempt);
+  const page = useUI((s) => s.page);
+  const attempt = page === "learning" ? null : savedAttempt;
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const mobileSidebarOpen = useUI((s) => s.mobileSidebarOpen);
   const c = attempt ? attempt.definition ?? getChallenge(attempt.slug) : null;
@@ -57,7 +59,7 @@ export function TopBar({ title }: { title: string }) {
           <PanelLeft size={17} />
         </button>
       <div className="min-w-0 flex-1 basis-0 truncate text-[13.5px] text-ink-2">{title}</div>
-      <ThreadActions />
+      {!page && <ThreadActions />}
 
       {attempt && c ? (
         <div className="order-last flex w-full min-w-0 items-center gap-1.5 pb-1 xl:order-none xl:w-auto xl:pb-0">

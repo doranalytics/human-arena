@@ -9,7 +9,7 @@ import { Avatar } from "../avatar";
 import { ConnectorLogo } from "../connector-logos";
 import { IconLinkedIn, IconX } from "../icons";
 import { closeDialog, openDialog, toast, type SettingsSection } from "@/lib/ui";
-import { useStore, updateSettings, setState, removeMemory, track, createSkill, deleteSkill, setConnector } from "@/lib/store";
+import { useStore, updateSettings, clearWorkspace, removeMemory, track, createSkill, deleteSkill, setConnector } from "@/lib/store";
 import { useSession, setSession } from "@/lib/session";
 import { BUILTIN_SKILLS, SKILL_CATALOGUE } from "@/lib/skills";
 import { CONNECTORS } from "@/lib/connectors";
@@ -89,22 +89,34 @@ function Label({ children }: { children: React.ReactNode }) {
 
 /* ------------------------------------------------------------------ general */
 function General() {
+  const [confirming, setConfirming] = useState<"chats" | "workspace" | null>(null);
+  const busy = useStore((s) => s.busyChatIds.length > 0 || s.grading);
+  const chatCount = useStore((s) => s.chats.filter((c) => !c.draft).length);
   return (
     <div className="space-y-7">
       <section>
-        <Label>Local data</Label>
-        <div className="mb-2 text-[13px] text-ink-2">Your account and challenge results are saved online. Working chats, projects, skills and memories are stored in this browser.</div>
-        <Button
-          variant="danger"
-          onClick={() => {
-            if (!confirm("Clear chats, projects, skills, memories and local results in this browser?")) return;
-            setState((s) => ({ chats: [], projects: [], skills: [], connectors: [], attempt: null, results: {}, activeChatId: null, activeProjectId: null, settings: { ...s.settings, memories: [] } }));
-            toast({ title: "Cleared", tone: "info" });
-          }}
-        >
-          Clear everything in this browser
-        </Button>
+        <Label>Chats and tasks in this browser</Label>
+        <p className="mb-3 text-sm leading-relaxed text-ink-2">Clear old conversations and stop the running challenge. Your account, lesson progress, scores, and streaks stay saved.</p>
+        <Button variant="outline" disabled={busy} onClick={() => setConfirming("chats")}><Trash2 size={15} /> Clear chats and tasks{chatCount > 0 ? ` (${chatCount})` : ""}</Button>
       </section>
+      <section>
+        <Label>Reset practice workspace</Label>
+        <p className="mb-3 text-sm leading-relaxed text-ink-2">Also remove projects, groups, schedules, custom skills, connector selections, instructions, and memories from this browser. Your account and earned progress stay saved.</p>
+        <Button variant="outline" disabled={busy} onClick={() => setConfirming("workspace")}>Reset practice workspace</Button>
+      </section>
+      {busy && <p role="status" className="text-sm text-ink-2">Wait for the current response or grading to finish before clearing.</p>}
+      {confirming && <section className="rounded-xl border border-line-2 bg-bg-2 p-4" aria-label="Confirm clearing browser data">
+        <p className="font-medium">{confirming === "chats" ? "Clear chats and tasks?" : "Reset this practice workspace?"}</p>
+        <p className="mt-2 text-sm leading-relaxed text-ink-2">{confirming === "chats" ? "These conversations will be removed from this browser. The running challenge will end without a score." : "The browser workspace listed above will be removed, including its conversations. This cannot be undone."}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button variant="danger" disabled={busy} onClick={() => {
+            if (!clearWorkspace(confirming)) return;
+            setConfirming(null);
+            toast({ title: confirming === "chats" ? "Chats and tasks cleared" : "Practice workspace reset", body: "Your account and earned progress are still saved.", tone: "ok" });
+          }}>Clear now</Button>
+          <Button variant="ghost" onClick={() => setConfirming(null)}>Cancel</Button>
+        </div>
+      </section>}
     </div>
   );
 }

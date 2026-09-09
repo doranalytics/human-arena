@@ -18,7 +18,10 @@ import {
 import { saveRun, setLearning, useLearning } from "@/lib/learning/client";
 import { refreshSession, useSession } from "@/lib/session";
 import { LessonFinish } from "./lesson-finish";
+import { endAttempt } from "@/lib/store";
 export function LessonPlayer({ id }: { id: LessonId }) {
+  // A guided lesson has its own saved run; legacy challenge events must not leak into it.
+  useEffect(() => { endAttempt(); }, []);
   const session = useSession();
   const learning = useLearning();
   const lesson = lessonById(id)!;

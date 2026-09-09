@@ -11,6 +11,7 @@ import type { ChatGroup, Schedule, ArenaEvent, ArenaEventType, ArenaResult, Atte
 import { uid } from "./utils";
 import { getChallenge } from "./arena/challenges";
 import type { ConnectorId } from "./connectors";
+import { recoverWorkspace, clearedWorkspace } from "./workspace-recovery";
 
 export interface State {
   chats: Chat[];
@@ -78,12 +79,22 @@ export function getState() {
   return state;
 }
 
+/** Reset only this member's browser workspace, keeping identity and earned progress. */
+export function clearWorkspace(scope: "chats" | "workspace") {
+  if (state.busyChatIds.length || state.grading) return false;
+  setState(clearedWorkspace(state, scope));
+  // Save now so an immediate reload cannot bring the cleared workspace back.
+  if (saveTimer) clearTimeout(saveTimer);
+  try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch { /* in-memory only */ }
+  return true;
+}
+
 export function hydrate() {
   if (state.hydrated || typeof window === "undefined") return;
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) {
-      const saved = JSON.parse(raw) as Partial<State>;
+      const saved = recoverWorkspace(JSON.parse(raw) as Partial<State>);
       const chats = (saved.chats ?? []).filter((c) => !c.draft);
       const activeChatId = saved.activeChatId && chats.some((c) => c.id === saved.activeChatId) ? saved.activeChatId : null;
       state = { ...initial, ...saved, chats, activeChatId, groups: saved.groups ?? [], schedules: saved.schedules ?? [], settings: { ...initial.settings, ...(saved.settings ?? {}) }, busyChatIds: [], grading: false, ownerId: null, hydrated: true };
@@ -338,7 +349,7 @@ export function switchWorkspace(ownerId: string | null) {
   try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch { /* in-memory only */ }
   const guest = state.ownerId === null ? state : null;
   let saved: Partial<State> = {};
-  try { saved = JSON.parse(localStorage.getItem(ownerId ? `${KEY}:member:${ownerId}` : KEY) ?? "{}"); } catch { /* fresh workspace */ }
+  try { saved = recoverWorkspace(JSON.parse(localStorage.getItem(ownerId ? `${KEY}:member:${ownerId}` : KEY) ?? "{}")); } catch { /* fresh workspace */ }
   // First sign-in keeps the guest's practice workspace, but only server results enter the account score.
   if (!Object.keys(saved).length && ownerId && guest) saved = { chats: guest.chats, projects: guest.projects, skills: guest.skills, connectors: guest.connectors, settings: guest.settings, groups: guest.groups, schedules: guest.schedules };
   const ownWorkspace = !!ownerId && saved.ownerId === ownerId;

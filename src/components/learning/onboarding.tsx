@@ -4,12 +4,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  MessageSquare,
-  Layers,
-  Target,
-  Flame,
-  Sparkles,
 } from "lucide-react";
+import { OptionIcon } from "./option-icon";
 import {
   EXPERIENCE,
   INTERESTS,
@@ -122,11 +118,12 @@ export function LearningOnboarding() {
       onClick={fn}
       className={`learn-option ${selected ? "selected" : ""}`}
     >
-      <span>
+      <OptionIcon label={label} />
+      <span className="min-w-0 flex-1">
         <span className="block font-medium">{label}</span>
         {sub && <span className="mt-1 block text-sm text-ink-2">{sub}</span>}
       </span>
-      {selected && <Check size={19} className="shrink-0" />}
+      <span className="learn-option-check" aria-hidden="true">{selected && <Check size={14} strokeWidth={3} />}</span>
     </button>
   );
   return (
@@ -134,21 +131,24 @@ export function LearningOnboarding() {
       className="learning-welcome viewport-overlay fixed inset-0 z-50 flex flex-col bg-bg"
       data-surface={d.product}
     >
-      <header className="mx-auto flex w-full max-w-4xl shrink-0 items-center gap-5 px-5 py-5 md:px-8 md:py-7">
-        <span className="shrink-0 text-sm font-semibold">How to AI Games</span>
+      <header className="mx-auto w-full max-w-4xl shrink-0 px-5 py-4 md:px-8 md:py-6">
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <span className="text-sm font-semibold">How to AI Games</span>
+          <span className="text-xs tabular-nums text-ink-3">{d.step + 1} / 10</span>
+        </div>
         <div
-          className="h-1.5 flex-1 rounded-full bg-bg-3"
-          aria-label={`Setup step ${d.step + 1} of 10`}
+          className="learn-setup-progress"
+          role="progressbar" aria-label="Onboarding progress" aria-valuemin={0} aria-valuemax={10} aria-valuenow={d.step + 1}
         >
           <div
-            className="h-full rounded-full bg-clay transition-all"
+            className="learn-setup-progress-fill"
             style={{ width: `${(d.step + 1) * 10}%` }}
           />
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <section
-          className="mx-auto w-full max-w-2xl px-5 py-5 md:px-8 md:py-10"
+          className="learn-setup-step mx-auto w-full max-w-2xl px-5 py-4 md:px-8 md:py-8"
           key={d.step}
         >
           <p className="mb-3 text-xs font-semibold uppercase tracking-[.16em] text-clay">
@@ -165,19 +165,14 @@ export function LearningOnboarding() {
                   the pieces together to do something that matters to you.
                 </p>
                 <div className="mt-8 grid grid-cols-3 gap-3">
-                  {[
-                    [MessageSquare, "Practice"],
-                    [Layers, "Combine"],
-                    [Target, "Create"],
-                  ].map(([Icon, label]) => {
-                    const I = Icon as typeof Target;
+                  {["Practice", "Combine", "Create"].map((label) => {
                     return (
                       <div
                         key={String(label)}
                         className="rounded-2xl border border-line p-4"
                       >
-                        <I size={24} className="mb-3 text-clay" />
-                        <span className="text-sm">{String(label)}</span>
+                        <OptionIcon label={label} />
+                        <span className="mt-3 block text-sm font-medium">{label}</span>
                       </div>
                     );
                   })}
@@ -234,7 +229,7 @@ export function LearningOnboarding() {
               )}
             {d.step === 4 && (
               <>
-                <Sparkles className="my-8 text-clay" size={42} />
+                <OptionIcon label="Progress" />
                 <p className="text-lg leading-relaxed text-ink-2">
                   {d.experience < 2
                     ? "You don’t need special vocabulary or the perfect prompt. We’ll introduce one idea, let you try it, then add another."
@@ -248,7 +243,7 @@ export function LearningOnboarding() {
               )}
             {d.step === 6 && (
               <>
-                <Flame size={34} className="mb-5 text-clay" />
+                <OptionIcon label="Streak" />
                 <p className="pb-3 text-ink-2">
                   Complete a lesson to earn a practice day. Consecutive days
                   build your streak. No daily time target, and you can always
