@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { LESSONS, learningPromise } from "../src/lib/learning/catalog";
-import { assessChoice } from "../src/lib/learning/assessment";
+import { assessChoice, learnerEvidence } from "../src/lib/learning/assessment";
 import { OnboardingSchema } from "../src/lib/onboarding";
 
 test("two independently accessible lessons have ten explicit contracts", () => {
@@ -62,4 +62,8 @@ test("learning projection follows interests without calendar guarantees", () => 
   assert.ok(learningPromise(["Automation"]).join(" ").includes("inbox"));
   assert.ok(learningPromise(["Visuals"]).join(" ").includes("visual"));
   assert.ok(learningPromise(["Research"]).join(" ").includes("sources"));
+});
+
+test("technique grading never receives assistant output or unrelated exercises", () => {
+ assert.deepEqual(learnerEvidence([{role:"user",content:"Pick by least travel",step:7,group:"a"},{role:"assistant",content:"I cannot decide",step:7,group:"a"},{role:"user",content:"Other lesson",step:0,group:"b"}],"a"),[{step:7,request:"Pick by least travel"}]);
 });
