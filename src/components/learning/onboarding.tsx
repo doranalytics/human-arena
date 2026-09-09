@@ -17,12 +17,13 @@ import {
 import { refreshSession, useSession } from "@/lib/session";
 import { setLearning } from "@/lib/learning/client";
 import { setPage } from "@/lib/ui";
+import { onboardingGoals } from "@/lib/onboarding";
 interface Draft {
   step: number;
   product: Surface;
   interests: string[];
   experience: number;
-  motivation: string;
+  motivation: string[];
   commitment: "daily" | "own-pace";
   start: LessonId;
 }
@@ -31,7 +32,7 @@ const fresh: Draft = {
   product: "claude",
   interests: [],
   experience: 0,
-  motivation: "",
+  motivation: [],
   commitment: "daily",
   start: "shape-answers",
 };
@@ -40,7 +41,8 @@ export function LearningOnboarding() {
   const key = `learning-welcome-v1:${session.me?.id}`;
   const [d, setD] = useState<Draft>(() => {
     try {
-      return { ...fresh, ...JSON.parse(localStorage.getItem(key) ?? "{}") };
+      const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
+      return { ...fresh, ...saved, motivation: onboardingGoals(saved.motivation) };
     } catch {
       return fresh;
     }
@@ -72,7 +74,7 @@ export function LearningOnboarding() {
     d.step === 2
       ? d.interests.length > 0
       : d.step === 5
-        ? !!d.motivation
+        ? d.motivation.length > 0
         : true;
   async function finish() {
     setBusy(true);
@@ -110,13 +112,16 @@ export function LearningOnboarding() {
     selected: boolean,
     fn: () => void,
     sub?: string,
+    multiple = false,
   ) => (
     <button
       key={label}
       type="button"
-      aria-pressed={selected}
+      role={multiple ? "checkbox" : undefined}
+      aria-checked={multiple ? selected : undefined}
+      aria-pressed={multiple ? undefined : selected}
       onClick={fn}
-      className={`learn-option ${selected ? "selected" : ""}`}
+      className={`learn-option ${multiple ? "learn-option-multiple" : ""} ${selected ? "selected" : ""}`}
     >
       <OptionIcon label={label} />
       <span className="min-w-0 flex-1">
@@ -237,10 +242,12 @@ export function LearningOnboarding() {
                 </p>
               </>
             )}
-            {d.step === 5 &&
-              MOTIVATIONS.map((x) =>
-                option(x, d.motivation === x, () => change({ motivation: x })),
+            {d.step === 5 && <>
+              <p className="text-ink-2">Choose all that apply.</p>
+              {MOTIVATIONS.map((x) =>
+                option(x, d.motivation.includes(x), () => change({ motivation: d.motivation.includes(x) ? d.motivation.filter((goal) => goal !== x) : [...d.motivation, x] }), undefined, true),
               )}
+            </>}
             {d.step === 6 && (
               <>
                 <OptionIcon label="Streak" />
@@ -264,9 +271,11 @@ export function LearningOnboarding() {
             {d.step === 7 && (
               <>
                 <p className="mb-5 text-ink-2">
-                  {d.motivation}. Start with a few transferable techniques, then
-                  explore what interests you.
+                  Start with a few transferable techniques, then explore what interests you.
                 </p>
+                <div className="flex flex-wrap gap-2" aria-label="Your selected goals">
+                  {d.motivation.map((goal) => <span key={goal} className="rounded-full border border-line bg-bg-2 px-3 py-1.5 text-sm">{goal}</span>)}
+                </div>
                 {learningPromise(d.interests).map((x, i) => (
                   <div
                     key={x}

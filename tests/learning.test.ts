@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { LESSONS, learningPromise } from "../src/lib/learning/catalog";
 import { assessChoice, learnerEvidence } from "../src/lib/learning/assessment";
-import { OnboardingSchema } from "../src/lib/onboarding";
+import { OnboardingSchema, onboardingGoals } from "../src/lib/onboarding";
 
 test("two independently accessible lessons have ten explicit contracts", () => {
   assert.equal(LESSONS.length, 2);
@@ -62,6 +62,17 @@ test("learning projection follows interests without calendar guarantees", () => 
   assert.ok(learningPromise(["Automation"]).join(" ").includes("inbox"));
   assert.ok(learningPromise(["Visuals"]).join(" ").includes("visual"));
   assert.ok(learningPromise(["Research"]).join(" ").includes("sources"));
+});
+
+test("onboarding saves multiple goals and accepts old single-goal drafts and requests", () => {
+  const goals = ["Save time", "Improve my work", "Create something"];
+  const base = { level: "daily", goal: "work" };
+  assert.deepEqual(OnboardingSchema.parse({ ...base, motivation: goals }).motivation, goals);
+  assert.deepEqual(OnboardingSchema.parse({ ...base, motivation: "Save time" }).motivation, ["Save time"]);
+  assert.deepEqual(onboardingGoals(JSON.parse(JSON.stringify(goals))), goals);
+  assert.deepEqual(onboardingGoals("Improve my work"), ["Improve my work"]);
+  assert.deepEqual(onboardingGoals(undefined), []);
+  assert.equal(OnboardingSchema.safeParse({ ...base, motivation: [] }).success, false);
 });
 
 test("technique grading never receives assistant output or unrelated exercises", () => {
