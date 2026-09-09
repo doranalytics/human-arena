@@ -250,7 +250,7 @@ export function deleteGPT(id: string) {
 export function openGPT(id: string) {
   const gpt = state.gpts.find((g) => g.id === id);
   if (!gpt) return;
-  const chat = newChat(null, gpt.name);
+  const chat = newChat(null, state.attempt ? "New chat" : gpt.name);
   setState((s) => ({ chats: s.chats.map((c) => c.id === chat.id ? { ...c, gptId: id } : c) }));
 }
 

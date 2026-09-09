@@ -22,6 +22,10 @@ test("creating and using a GPT does not count as creating a skill or project", (
     assert.equal(getState().chats[0].draft, true);
     assert.equal(getState().skills, before.skills);
     assert.equal(getState().projects, before.projects);
+    setState({ attempt: { id: "test", slug: "ten-words", startedAt: new Date().toISOString(), events: [], hintsUsed: 0, chatIds: [] } });
+    openGPT(gpt.id);
+    assert.equal(getState().chats[0].title, "Constraints");
+    assert.equal(getState().chats[0].attemptId, "test");
   } finally { setState(before); }
 });
 test("surface labels change without changing the instructional requirement", () => {
