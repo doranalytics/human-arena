@@ -238,7 +238,7 @@ export function LearningOnboarding() {
                 <p className="text-lg leading-relaxed text-ink-2">
                   {d.experience < 2
                     ? "You don’t need special vocabulary or the perfect prompt. We’ll introduce one idea, let you try it, then add another."
-                    : "You can skip the first steps and practice combining context, questions, and feedback. Switch to the basics whenever you want."}
+                    : "We’ll suggest a first lesson based on your experience. You’ll choose where to begin before you start."}
                 </p>
               </>
             )}
