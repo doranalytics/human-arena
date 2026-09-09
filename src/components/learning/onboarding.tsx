@@ -97,7 +97,7 @@ export function LearningOnboarding() {
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error);
-      setLearning({ surface: d.product, active: d.start });
+      setLearning({ surface: d.product, active: d.start, preferredStart: d.start });
       setPage("learning");
       await refreshSession();
       localStorage.removeItem(key);

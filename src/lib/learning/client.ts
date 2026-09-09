@@ -7,6 +7,7 @@ interface LearningState {
   runs: LessonRun[];
   surface: Surface;
   active: LessonId | null;
+  preferredStart: LessonId;
 }
 let state: LearningState = {
   loaded: false,
@@ -14,6 +15,7 @@ let state: LearningState = {
   runs: [],
   surface: "claude",
   active: null,
+  preferredStart: "shape-answers",
 };
 const initial = state;
 const listeners = new Set<() => void>();
@@ -43,6 +45,7 @@ export async function loadLearning() {
       loaded: true,
       runs: j.runs,
       surface: j.onboarding?.product ?? "claude",
+      preferredStart: j.onboarding?.start === "better-context" ? "better-context" : "shape-answers",
       error: "",
     });
   } catch (e) {
