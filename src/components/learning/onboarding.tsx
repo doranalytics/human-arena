@@ -270,26 +270,25 @@ export function LearningOnboarding() {
             )}
             {d.step === 7 && (
               <>
-                <p className="mb-5 text-ink-2">
-                  Start with a few transferable techniques, then explore what interests you.
-                </p>
                 <div className="flex flex-wrap gap-2" aria-label="Your selected goals">
+                  <span className="w-full text-xs font-medium text-ink-3">Your goals</span>
                   {d.motivation.map((goal) => <span key={goal} className="rounded-full border border-line bg-bg-2 px-3 py-1.5 text-sm">{goal}</span>)}
                 </div>
-                {learningPromise(d.interests).map((x, i) => (
+                <p className="pt-3 text-ink-2">Based on the interests you selected:</p>
+                {learningPromise(d.interests).map(({ interest, outcome }) => (
                   <div
-                    key={x}
+                    key={interest}
                     className="flex items-center gap-4 rounded-xl border border-line p-4"
                   >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-3 text-sm">
-                      {i + 1}
+                    <OptionIcon label={interest} />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold">{interest}</span>
+                      <span className="mt-1 block text-sm leading-relaxed text-ink-2">{outcome}</span>
                     </span>
-                    <span>{x}</span>
                   </div>
                 ))}
                 <p className="pt-3 text-sm text-ink-2">
-                  Your first lesson includes ten small exercises. Each one
-                  brings you closer to doing more with AI.
+                  You’ll start with ten small exercises in core AI techniques, then explore these areas at your own pace.
                 </p>
               </>
             )}

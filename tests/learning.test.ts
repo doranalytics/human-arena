@@ -58,10 +58,13 @@ test("onboarding accepts both surfaces and both starts, rejects invented ones", 
     false,
   );
 });
-test("learning projection follows interests without calendar guarantees", () => {
-  assert.ok(learningPromise(["Automation"]).join(" ").includes("inbox"));
-  assert.ok(learningPromise(["Visuals"]).join(" ").includes("visual"));
-  assert.ok(learningPromise(["Research"]).join(" ").includes("sources"));
+test("learning projection reflects all selected interests without inventing a project", () => {
+  const selected = ["Automation", "Writing", "Research"];
+  const outcomes = learningPromise(selected);
+  assert.deepEqual(outcomes.map((x) => x.interest), selected);
+  assert.doesNotMatch(JSON.stringify(outcomes), /inbox|briefing/);
+  assert.deepEqual(learningPromise(["Writing", "Writing", "unknown"]).map((x) => x.interest), ["Writing"]);
+  assert.deepEqual(learningPromise([]), []);
 });
 
 test("onboarding saves multiple goals and accepts old single-goal drafts and requests", () => {

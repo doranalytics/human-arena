@@ -297,31 +297,21 @@ export const EXPERIENCE = [
   "I use files and connected tools",
   "I build reusable workflows",
 ];
+const INTEREST_OUTCOMES: Record<string, string> = {
+  "Better answers": "Give clearer instructions and refine AI’s answers.",
+  Writing: "Guide the tone, length, and structure of AI writing.",
+  Research: "Ask focused questions and check answers against sources.",
+  "Connected information": "Bring information from connected tools into a conversation.",
+  Automation: "Turn repeated steps into reusable AI workflows.",
+  Visuals: "Describe what you want and give useful creative feedback.",
+  "Building tools": "Turn an idea into clear requirements for a tool.",
+  Exploring: "Discover useful ways to apply AI.",
+};
+
+/** Reflect every selected interest without inventing a project or choosing one over another. */
 export function learningPromise(interests: string[]) {
-  if (
-    interests.includes("Automation") ||
-    interests.includes("Connected information")
-  )
-    return [
-      "Shape useful answers",
-      "Find information in connected tools",
-      "Work toward a repeatable inbox briefing",
-    ];
-  if (interests.includes("Visuals") || interests.includes("Building tools"))
-    return [
-      "Give clear creative instructions",
-      "Improve a result through feedback",
-      "Work toward a useful visual or tool",
-    ];
-  if (interests.includes("Research"))
-    return [
-      "Ask focused questions",
-      "Bring relevant sources into a conversation",
-      "Work toward a supported recommendation",
-    ];
-  return [
-    "Shape answers for your needs",
-    "Give AI the context that matters",
-    "Combine useful moves independently",
-  ];
+  return [...new Set(interests)].flatMap((interest) => {
+    const outcome = Object.hasOwn(INTEREST_OUTCOMES, interest) ? INTEREST_OUTCOMES[interest] : undefined;
+    return outcome ? [{ interest, outcome }] : [];
+  });
 }
