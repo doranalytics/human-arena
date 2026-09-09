@@ -24,11 +24,17 @@ import { LeaderboardDialog } from "./dialogs/leaderboard";
 import { SettingsDialog } from "./dialogs/settings";
 import { NewProjectDialog } from "./dialogs/new-project";
 import { QuitDialog } from "./dialogs/quit";
-import { OnboardingDialog } from "./dialogs/onboarding";
+import { LearningOnboarding } from "./learning/onboarding";
+import { LearningHome } from "./learning/home";
+import { loadLearning, useLearning } from "@/lib/learning/client";
+import { setPage } from "@/lib/ui";
 
 export function Arena() {
   useMobileViewport();
   const session = useSession();
+  const learning = useLearning();
+  const memberId = session.me?.id;
+  useEffect(() => { if(memberId) { void loadLearning(); setPage("learning"); } }, [memberId]);
   const hydrated = useStore((s) => s.hydrated);
   const activeChatId = useStore((s) => s.activeChatId);
   const activeProjectId = useStore((s) => s.activeProjectId);
@@ -38,7 +44,7 @@ export function Arena() {
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const mobileSidebarOpen = useUI((s) => s.mobileSidebarOpen);
   const page = useUI((s) => s.page);
-  const needsOnboarding = !TESTING_MODE && hydrated && session.loaded && (!session.me || !session.onboardedAt || (session.onboardingVersion ?? 0) < ONBOARDING_VERSION);
+  const needsOnboarding = hydrated && session.loaded && !!session.me && ( !session.onboardedAt || (session.onboardingVersion ?? 0) < ONBOARDING_VERSION);
 
   useEffect(() => {
     hydrate();
@@ -73,7 +79,7 @@ export function Arena() {
   const title = page === "projects" ? "Projects" : page === "scheduled" ? "Scheduled" : chat ? (chat.projectId ? `${project?.name ?? "Project"} / ${chat.title}` : chat.title) : project ? project.name : "";
 
   return (
-    <div className="app-shell flex h-full w-full flex-col overflow-hidden bg-bg">
+    <div data-surface={learning.surface} className="app-shell flex h-full w-full flex-col overflow-hidden bg-bg">
       <div className="relative flex h-8 shrink-0 items-center justify-center gap-2 overflow-hidden bg-[#2c2b28] px-3 text-[12px] text-bg">
         <Logo size={17} />
         <span className="shrink-0 font-serif text-[13px] font-semibold tracking-tight">How to AI Games</span>
@@ -88,9 +94,9 @@ export function Arena() {
         {sidebarOpen && <div className="hidden h-full md:block"><Sidebar /></div>}
         <MobileNavigation />
         <main inert={mobileSidebarOpen} className="flex min-w-0 flex-1 flex-col">
-          <TopBar title={title} />
+          <TopBar title={page === "learning" ? `${learning.surface === "chatgpt" ? "ChatGPT" : "Claude"} · Learning workspace` : title} />
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {!hydrated ? null : page === "projects" ? <ProjectsPage /> : page === "scheduled" ? <ScheduledPage /> : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}
+            {!hydrated ? null : page === "learning" ? <LearningHome /> : page === "projects" ? <ProjectsPage /> : page === "scheduled" ? <ScheduledPage /> : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}
           </div>
         </main>
       </div>
@@ -104,7 +110,7 @@ export function Arena() {
       <NewProjectDialog open={dialog?.kind === "new-project"} chatId={dialog?.kind === "new-project" ? dialog.chatId : undefined} />
       {dialog?.kind === "quit" && <QuitDialog />}
       </>}
-      {needsOnboarding && <OnboardingDialog />}
+      {needsOnboarding && <LearningOnboarding />}
       <span hidden onClick={closeDialog} />
     </div>
   );

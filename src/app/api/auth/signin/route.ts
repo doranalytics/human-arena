@@ -1,4 +1,3 @@
-import { TESTING_MODE } from "@/lib/testing-mode";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseConfigured } from "@/lib/supabase/server";
@@ -6,7 +5,6 @@ import { EmailSignInSchema } from "@/lib/email-auth";
 
 /** Hosted confirmation and magic-link templates both send an email code. */
 export async function POST(req: Request) {
-  if (TESTING_MODE) return NextResponse.json({ error: "Signup is paused while we test. Refresh the app to play without an account." }, { status: 403, headers: { "Cache-Control": "no-store" } });
   if (!supabaseConfigured()) return NextResponse.json({ error: "Sign-in is not configured on this deployment." }, { status: 503 });
   const parsed = EmailSignInSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });

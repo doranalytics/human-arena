@@ -15,7 +15,7 @@ export interface Member {
   linkedin_url: string | null;
   x_url: string | null;
   onboarded_at: string | null;
-  onboarding: { level?: string; goal?: string; version?: number };
+  onboarding: { level?: string; goal?: string; version?: number; product?: "claude" | "chatgpt"; interests?: string[]; motivation?: string; commitment?: string; start?: string };
   challenge_guide_seen_at: string | null;
   is_paid: boolean;
   subscription_checked_at: string | null;

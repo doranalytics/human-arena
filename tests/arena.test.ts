@@ -107,7 +107,10 @@ test("completion guarantees AI-Native even with maximum time and hint deductions
 });
 test("onboarding rejects missing answers and ignores attempted paid status fields", () => {
   assert.equal(OnboardingSchema.safeParse({ level: "starting" }).success, false);
-  assert.deepEqual(OnboardingSchema.parse({ level: "starting", goal: "everyday", is_paid: true }), { level: "starting", goal: "everyday" });
+  const parsed = OnboardingSchema.parse({ level: "starting", goal: "everyday", is_paid: true });
+  assert.equal("is_paid" in parsed, false);
+  assert.equal(parsed.level, "starting");
+  assert.equal(parsed.goal, "everyday");
 });
 
 test("exact word counts do not depend on a model's arithmetic", () => {

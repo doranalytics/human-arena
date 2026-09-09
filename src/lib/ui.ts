@@ -21,7 +21,7 @@ export interface Toast {
   tone?: "ok" | "info" | "bad";
 }
 
-export type Page = "projects" | "scheduled" | null;
+export type Page = "projects" | "scheduled" | "learning" | null;
 
 interface UIState {
   dialog: DialogKind | null;

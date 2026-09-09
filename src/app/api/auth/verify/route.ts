@@ -1,4 +1,4 @@
-import { TESTING_MODE } from "@/lib/testing-mode";
+import { mergeLearningGuest } from "@/lib/learning/merge-guest";
 import { NextResponse } from "next/server";
 import { EmailVerifySchema } from "@/lib/email-auth";
 import { createClient, supabaseConfigured } from "@/lib/supabase/server";
@@ -7,7 +7,6 @@ const reply = (body: { ok?: boolean; error?: string }, status = 200) => NextResp
 
 /** Supabase verifies the code, then writes the session into this browser. */
 export async function POST(request: Request) {
-  if (TESTING_MODE) return NextResponse.json({ error: "Signup is paused while we test. Refresh the app to play without an account." }, { status: 403, headers: { "Cache-Control": "no-store" } });
   if (!supabaseConfigured()) return reply({ error: "Sign-in is temporarily unavailable." }, 503);
   const parsed = EmailVerifySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return reply({ error: "Enter your email and the six-digit code from your latest email." }, 400);
@@ -25,6 +24,7 @@ export async function POST(request: Request) {
     }
     const { error } = await supabase.rpc("claim_member");
     if (error) return reply({ error: "Your email is verified, but we could not finish setting up your account. Please try again." }, 503);
+    await mergeLearningGuest();
     return reply({ ok: true });
   } catch {
     return reply({ error: "Could not verify your code right now. Please try again." }, 503);

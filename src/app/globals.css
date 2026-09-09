@@ -250,3 +250,26 @@ html, body { height: 100%; width: 100%; }
   .prose-chat { overflow-wrap: anywhere; }
   .prose-chat table { display: block; max-width: 100%; overflow-x: auto; }
 }
+
+/* Both learning surfaces share semantics and lessons, with familiar visual shells. */
+[data-surface="chatgpt"] {
+ --bg:#ffffff; --bg-2:#f9f9f9; --bg-3:#ececec; --side:#f7f7f7;
+ --ink:#171717; --ink-2:#575757; --ink-3:#737373;
+ --line:#e9e9e9; --line-2:#d4d4d4; --user:#f1f1f1;
+ --clay:#16765b; --clay-dark:#105943;
+}
+[data-surface="chatgpt"] .font-serif {font-family:var(--font-sans);}
+.learn-option {display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:54px;border:1px solid var(--line-2);border-radius:14px;padding:14px 16px;text-align:left;background:var(--bg);font-size:15px;transition:border-color .15s,background .15s;}
+.learn-option:hover {background:var(--bg-2);border-color:var(--clay);}
+.learn-option.selected {border-color:var(--clay);background:color-mix(in srgb,var(--clay) 7%,var(--bg));box-shadow:inset 0 0 0 1px var(--clay);}
+.learn-primary {display:flex;min-height:48px;align-items:center;justify-content:center;gap:10px;border-radius:12px;padding:12px 20px;background:var(--clay);color:white;font-size:15px;font-weight:600;}
+.learn-primary:hover {background:var(--clay-dark);}
+.learn-primary:disabled,.learn-option:disabled {opacity:.5;cursor:wait;}
+.learn-primary:focus-visible,.learn-option:focus-visible {outline:3px solid var(--clay);outline-offset:3px;}
+.safe-bottom {padding-bottom:max(16px,env(safe-area-inset-bottom));}
+.celebration {position:absolute;pointer-events:none;top:70px;left:50%;}
+.celebration i {position:absolute;width:8px;height:12px;background:var(--clay);border-radius:2px;animation:lesson-burst 1.15s ease-out both;animation-delay:calc(var(--i)*15ms);transform:rotate(calc(var(--i)*20deg));}
+.celebration i:nth-child(3n) {background:#dfb44c;}.celebration i:nth-child(3n + 1){background:#4c967c;}
+@keyframes lesson-burst {0%{opacity:1;transform:rotate(calc(var(--i)*20deg)) translateY(0) scale(.3);}100%{opacity:0;transform:rotate(calc(var(--i)*20deg)) translateY(-180px) rotate(80deg) scale(1);}}
+@media(max-width:767px){.lesson-player{height:100%;}.learning-welcome h1{font-size:29px;}.learn-option{min-height:52px;padding:12px 14px;}.lesson-player textarea{font-size:16px;}}
+@media(prefers-reduced-motion:reduce){.celebration i{animation:none;display:none;}.learn-option{transition:none;}}

@@ -1,0 +1,65 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { LESSONS, learningPromise } from "../src/lib/learning/catalog";
+import { assessChoice } from "../src/lib/learning/assessment";
+import { OnboardingSchema } from "../src/lib/onboarding";
+
+test("two independently accessible lessons have ten explicit contracts", () => {
+  assert.equal(LESSONS.length, 2);
+  for (const l of LESSONS) {
+    assert.equal(l.exercises.length, 10);
+    for (const e of l.exercises) {
+      assert.ok(e.criterion.length > 15);
+      assert.ok(e.instruction);
+      assert.ok(e.group);
+    }
+    assert.equal(l.exercises[9].concept, "Your turn");
+  }
+  assert.ok(LESSONS[1].points > LESSONS[0].points);
+});
+test("recognition questions have one server-side answer and reject other choices", () => {
+  for (const l of LESSONS)
+    for (const [i, e] of l.exercises.entries())
+      if (e.choices) {
+        assert.equal(
+          e.choices.filter((_, c) => assessChoice(l.id, i, c, e)).length,
+          1,
+        );
+        assert.equal(assessChoice(l.id, i, 99, e), false);
+        assert.equal(assessChoice(l.id, i, -1, e), false);
+        assert.equal(assessChoice("unknown", i, 0, e), false);
+      }
+});
+test("independent final scenario does not inherit previous answers", () => {
+  for (const l of LESSONS) {
+    assert.notEqual(l.exercises[9].group, l.exercises[8].group);
+    assert.ok(l.exercises[9].source);
+  }
+  assert.equal(LESSONS[0].exercises[7].group, LESSONS[0].exercises[8].group);
+});
+test("onboarding accepts both surfaces and both starts, rejects invented ones", () => {
+  for (const product of ["claude", "chatgpt"])
+    for (const start of ["shape-answers", "better-context"])
+      assert.equal(
+        OnboardingSchema.safeParse({
+          level: "connected",
+          goal: "work",
+          product,
+          start,
+        }).success,
+        true,
+      );
+  assert.equal(
+    OnboardingSchema.safeParse({
+      level: "daily",
+      goal: "work",
+      product: "other",
+    }).success,
+    false,
+  );
+});
+test("learning projection follows interests without calendar guarantees", () => {
+  assert.ok(learningPromise(["Automation"]).join(" ").includes("inbox"));
+  assert.ok(learningPromise(["Visuals"]).join(" ").includes("visual"));
+  assert.ok(learningPromise(["Research"]).join(" ").includes("sources"));
+});

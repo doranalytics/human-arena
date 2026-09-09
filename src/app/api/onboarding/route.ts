@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Choose an answer for each question." }, { status: 400 });
   const completedAt = member.onboarded_at ?? new Date().toISOString();
   const onboarding = { ...parsed.data, version: ONBOARDING_VERSION };
-  const { error } = await adminClient().from("members").update({ onboarding, onboarded_at: completedAt }).eq("id", member.id);
+  const { error } = await adminClient().from("members").update({ onboarding, product: parsed.data.product, onboarded_at: completedAt }).eq("id", member.id);
   if (error) return NextResponse.json({ error: "Could not save your setup. Please try again." }, { status: 503 });
   return NextResponse.json({ onboarding, onboardedAt: completedAt, subscription: await subscriberStatus(member) });
 }

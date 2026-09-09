@@ -145,7 +145,8 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain md:contents">
       <div className="px-2.5 pt-1">
-        <NavItem icon={<Plus size={16} />} label="New" onClick={() => { setPage(null); newChat(activeProjectId); }} active={!page && !activeChatId && !activeProjectId && !attempt} />
+        <NavItem icon={<Swords size={18} />} label="Learning path" onClick={() => { setPage("learning"); closeMobileSidebar(); }} active={page === "learning"} />
+          <NavItem icon={<Plus size={16} />} label="New" onClick={() => { setPage(null); newChat(activeProjectId); }} active={!page && !activeChatId && !activeProjectId && !attempt} />
         <NavItem icon={<Swords size={16} className="text-clay" />} label="Challenges" onClick={() => openDialog({ kind: "challenges" })} />
         <NavItem icon={<FolderOpen size={16} />} label="Projects" onClick={() => setPage("projects")} active={page === "projects"} />
         <NavItem icon={<Clock size={16} />} label="Scheduled" onClick={() => setPage("scheduled")} active={page === "scheduled"} />

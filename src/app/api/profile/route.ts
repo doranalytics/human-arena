@@ -41,8 +41,9 @@ export async function GET() {
 export async function PATCH(request: Request) {
   const member = await getMember();
   if (!member) return NextResponse.json({ error: SESSION_REQUIRED }, { status: 401 });
-  const b = (await request.json().catch(() => ({}))) as { name?: string; product?: string; avatar?: string | null; linkedin?: string | null; x?: string | null };
+  const b = (await request.json().catch(() => ({}))) as { name?: string; product?: string; avatar?: string | null; linkedin?: string | null; x?: string | null; promotionOptIn?: boolean };
   const patch: Record<string, unknown> = {};
+  if (typeof b.promotionOptIn === "boolean") patch.promotion_opt_in = b.promotionOptIn;
   if ("name" in b) patch.display_name = String(b.name ?? "").trim().slice(0, 80) || null;
   if ("avatar" in b) {
     const a = String(b.avatar ?? "");
