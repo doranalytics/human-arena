@@ -223,7 +223,7 @@ export function LessonPlayer({ id }: { id: LessonId }) {
         </div>
       ) : (
         <>
-          <div className="shrink-0 border-b border-line bg-bg-2 px-4 py-3 md:px-8">
+          <div className="lesson-stage shrink-0 border-b border-line bg-bg-2 px-4 py-3 md:px-8">
             <div className="mx-auto max-w-3xl">
               <button
                 aria-expanded={expanded}
@@ -237,7 +237,7 @@ export function LessonPlayer({ id }: { id: LessonId }) {
                 />
               </button>
               {expanded && (
-                <div className="pb-2">
+                <div className="lesson-instructions pb-2">
                   <span className="mb-2 inline-block rounded-full border border-line-2 px-2 py-0.5 text-xs text-ink-2">
                     {shown.concept}
                   </span>
@@ -374,6 +374,7 @@ export function LessonPlayer({ id }: { id: LessonId }) {
                 </label>
                 <textarea
                   id="lesson-message"
+                  onFocus={() => { if (window.matchMedia("(max-width: 767px)").matches) setExpanded(false); }}
                   rows={2}
                   value={text}
                   disabled={busy}

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import { guestEmail, GUEST_COOKIE } from "../src/lib/guest-cookie";
+import { guestEmail } from "../src/lib/guest-cookie";
 const origin = process.env.VERIFY_ORIGIN ?? "https://howto-ai-games.vercel.app";
 assert.match(
   origin,
@@ -44,7 +44,7 @@ function visitor() {
 }
 const a = visitor(),
   b = visitor();
-async function answer(id: string, run: any, content: string | number) {
+async function answer(id: string, run: import("../src/lib/learning/catalog").LessonRun, content: string | number) {
   const body = {
     lesson: id,
     action: "answer",
@@ -63,7 +63,7 @@ async function main() {
       assert.equal(j.status, 200);
       ids.push(j.member.id);
     }
-    let setup = await a.req("/api/onboarding", {
+    const setup = await a.req("/api/onboarding", {
       level: "daily",
       goal: "work",
       product: "chatgpt",
@@ -160,11 +160,11 @@ async function main() {
     }
     const p = await a.req("/api/profile");
     assert.equal(
-      p.results.filter((r: any) => r.slug.startsWith("lesson-")).length,
+      p.results.filter((r: {slug: string}) => r.slug.startsWith("lesson-")).length,
       2,
     );
     assert.equal(
-      p.results.reduce((n: number, r: any) => n + r.points, 0),
+      p.results.reduce((n: number, r: {points: number}) => n + r.points, 0),
       160,
     );
     assert.equal(p.practice.current, 1);

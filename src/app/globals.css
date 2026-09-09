@@ -273,3 +273,7 @@ html, body { height: 100%; width: 100%; }
 @keyframes lesson-burst {0%{opacity:1;transform:rotate(calc(var(--i)*20deg)) translateY(0) scale(.3);}100%{opacity:0;transform:rotate(calc(var(--i)*20deg)) translateY(-180px) rotate(80deg) scale(1);}}
 @media(max-width:767px){.lesson-player{height:100%;}.learning-welcome h1{font-size:29px;}.learn-option{min-height:52px;padding:12px 14px;}.lesson-player textarea{font-size:16px;}}
 @media(prefers-reduced-motion:reduce){.celebration i{animation:none;display:none;}.learn-option{transition:none;}}
+@media (max-width:767px) and (max-height:600px) {
+ .lesson-stage .lesson-instructions {max-height:75px;overflow-y:auto;}
+ .lesson-player textarea {min-height:40px;max-height:64px;}
+}
