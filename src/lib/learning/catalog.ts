@@ -203,7 +203,7 @@ export const LESSONS: Lesson[] = [
       e(
         "Answer with context",
         "Answer the assistant’s question using this preference card. If it asks for an unspecified detail, say it is flexible.",
-        "Your message answers the preceding question using the card or states that an unspecified detail is flexible.",
+        "Your message supplies relevant preferences from the card, or states that an unspecified detail is flexible.",
         "Context",
         "b4",
         {

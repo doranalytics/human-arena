@@ -284,9 +284,8 @@ export function LearningOnboarding() {
                   </div>
                 ))}
                 <p className="pt-3 text-sm text-ink-2">
-                  Your first lesson includes ten small exercises. Later
-                  capabilities are destinations, not a promise of mastery by a
-                  deadline.
+                  Your first lesson includes ten small exercises. Each one
+                  brings you closer to doing more with AI.
                 </p>
               </>
             )}
@@ -329,7 +328,7 @@ export function LearningOnboarding() {
                   {d.experience >= 2
                     ? "The harder lesson is a good starting point for your experience."
                     : "We recommend the basics for your first visit."}{" "}
-                  This is a starting choice, not a full placement test.
+                  You can switch starting points anytime.
                 </p>
               </>
             )}
