@@ -185,7 +185,7 @@ export function ChatView({ chat }: { chat: Chat }) {
   if (empty)
     return (
       <div className={cn("flex min-h-full flex-col items-center px-4 py-8 md:px-6", chatgpt ? "justify-end" : "justify-center md:pb-24")}>
-        <div className={cn("mb-6 flex max-w-full items-center gap-3 text-clay md:mb-8", chatgpt && "my-auto py-12")}>
+        <div className={cn("mb-6 flex max-w-full items-center gap-3 text-clay md:mb-8", chatgpt && "my-auto py-12 md:my-auto")}>
           {!chatgpt && <Spark size={30} className="spark-in shrink-0" />}
           <h1 className="min-w-0 break-words font-serif text-[30px] font-normal leading-tight tracking-tight text-ink md:text-[40px]">{gpt?.name ?? (chatgpt ? "What can I help with?" : greeting(name))}</h1>
         </div>

@@ -298,6 +298,7 @@ function MenuItem({ icon, label, hint, onClick, checked, keep }: { icon?: React.
   return (
     <button
       type="button"
+      aria-pressed={checked}
       onClick={(e) => {
         if (keep) e.stopPropagation();
         onClick();

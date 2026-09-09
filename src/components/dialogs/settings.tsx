@@ -413,9 +413,9 @@ function Memory() {
   const memories = useStore((s) => s.settings.memories) ?? [];
   return (
     <div>
-      <div className="mb-3 text-[13px] text-ink-2">Facts the assistant has been told to remember. Every new chat starts knowing them.</div>
+      <div className="mb-3 text-[13px] text-ink-2">Facts the assistant can use across chats when memory is on.</div>
       {memories.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-line px-4 py-5 text-center"><Brain size={22} className="mx-auto text-ink-3" /><div className="mt-2 text-[14px] font-medium">Nothing remembered yet</div><div className="mx-auto mt-1 max-w-[36ch] text-[13px] text-ink-2">In any chat, say &ldquo;remember that my favourite trail is the Timberline Trail.&rdquo; It lands here, and every new chat knows it.</div></div>
+        <div className="rounded-xl border border-dashed border-line px-4 py-5 text-center"><Brain size={22} className="mx-auto text-ink-3" /><div className="mt-2 text-[14px] font-medium">Nothing remembered yet</div><div className="mx-auto mt-1 max-w-[36ch] text-[13px] text-ink-2">Ask the assistant to remember a preference, such as how you like your answers. You can review or remove it here.</div></div>
       ) : (
         <ul className="divide-y divide-line rounded-lg border border-line">
           {memories.map((m) => (
