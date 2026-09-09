@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useStore, hydrate, newChat } from "@/lib/store";
 import { Logo } from "./icons";
 import { UpdateBar } from "./update-bar";
-import { useUI, closeDialog, toast } from "@/lib/ui";
+import { useUI, closeDialog, openDialog, toast } from "@/lib/ui";
 import { useSession, refreshSession, refreshPractice, setSession } from "@/lib/session";
 import { practiceDate } from "@/lib/practice";
 import { OLD_LINK_NOTICE } from "@/lib/email-auth";
@@ -44,11 +44,12 @@ export function Arena() {
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const mobileSidebarOpen = useUI((s) => s.mobileSidebarOpen);
   const page = useUI((s) => s.page);
-  const needsOnboarding = hydrated && session.loaded && !!session.me && ( !session.onboardedAt || (session.onboardingVersion ?? 0) < ONBOARDING_VERSION);
+  const needsOnboarding = hydrated && session.loaded && !!session.me && (dialog?.kind === "onboarding" || !session.onboardedAt || (session.onboardingVersion ?? 0) < ONBOARDING_VERSION);
 
   useEffect(() => {
     hydrate();
     const u = new URL(window.location.href);
+    if (u.searchParams.get("onboarding") === "restart") openDialog({ kind: "onboarding", restart: true });
     if (!TESTING_MODE && u.searchParams.get("signed_in")) toast({ title: "Email confirmed", body: "Your account is ready.", tone: "ok" });
     if (!TESTING_MODE && (u.searchParams.has("auth_error") || window.location.hash.includes("error="))) setSession({ authNotice: OLD_LINK_NOTICE });
     if (u.search || u.hash) window.history.replaceState({}, "", "/");
@@ -70,11 +71,11 @@ export function Arena() {
     };
   }, [session.me, session.practice]);
 
-  // A fresh visit lands on a blank chat, like the desktop app.
+  // Only create a chat after the learner deliberately enters the chat workspace.
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !session.loaded || !session.me || page !== null) return;
     if ((!activeChatId && !activeProjectId) || (activeChatId && !chat)) newChat(null);
-  }, [hydrated, activeChatId, activeProjectId, chat]);
+  }, [hydrated, session.loaded, session.me, page, activeChatId, activeProjectId, chat]);
 
   const title = page === "projects" ? "Projects" : page === "scheduled" ? "Scheduled" : chat ? (chat.projectId ? `${project?.name ?? "Project"} / ${chat.title}` : chat.title) : project ? project.name : "";
 
@@ -110,7 +111,7 @@ export function Arena() {
       <NewProjectDialog open={dialog?.kind === "new-project"} chatId={dialog?.kind === "new-project" ? dialog.chatId : undefined} />
       {dialog?.kind === "quit" && <QuitDialog />}
       </>}
-      {needsOnboarding && <LearningOnboarding />}
+      {needsOnboarding && <LearningOnboarding replay={dialog?.kind === "onboarding"} restart={dialog?.kind === "onboarding" && dialog.restart} />}
       <span hidden onClick={closeDialog} />
     </div>
   );

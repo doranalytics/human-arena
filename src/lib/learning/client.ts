@@ -1,6 +1,7 @@
 "use client";
 import { useSyncExternalStore } from "react";
 import type { LessonRun, Surface, LessonId } from "./catalog";
+import type { OnboardingPreferences } from "../onboarding";
 interface LearningState {
   loaded: boolean;
   error: string;
@@ -8,6 +9,7 @@ interface LearningState {
   surface: Surface;
   active: LessonId | null;
   preferredStart: LessonId;
+  onboarding: Partial<OnboardingPreferences> | null;
 }
 let state: LearningState = {
   loaded: false,
@@ -16,6 +18,7 @@ let state: LearningState = {
   surface: "claude",
   active: null,
   preferredStart: "shape-answers",
+  onboarding: null,
 };
 const initial = state;
 const listeners = new Set<() => void>();
@@ -46,6 +49,7 @@ export async function loadLearning() {
       runs: j.runs,
       surface: j.onboarding?.product ?? "claude",
       preferredStart: j.onboarding?.start === "better-context" ? "better-context" : "shape-answers",
+      onboarding: j.onboarding ?? null,
       error: "",
     });
   } catch (e) {

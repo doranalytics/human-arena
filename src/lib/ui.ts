@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 import { dismissChallengeGuide } from "./session";
 
 export type DialogKind =
+  | { kind: "onboarding"; restart?: boolean }
   | { kind: "challenges" }
   | { kind: "brief"; slug: string }
   | { kind: "result"; slug: string }
@@ -32,11 +33,11 @@ interface UIState {
   page: Page;
 }
 
-let ui: UIState = { dialog: null, toasts: [], sidebarOpen: true, mobileSidebarOpen: false, page: null };
+let ui: UIState = { dialog: null, toasts: [], sidebarOpen: true, mobileSidebarOpen: false, page: "learning" };
 const ls = new Set<() => void>();
 const emit = () => ls.forEach((l) => l());
 const sub = (l: () => void) => (ls.add(l), () => void ls.delete(l));
-const server: UIState = { dialog: null, toasts: [], sidebarOpen: true, mobileSidebarOpen: false, page: null };
+const server: UIState = { dialog: null, toasts: [], sidebarOpen: true, mobileSidebarOpen: false, page: "learning" };
 
 export function useUI<T>(sel: (s: UIState) => T): T {
   return useSyncExternalStore(sub, () => sel(ui), () => sel(server));

@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  X,
 } from "lucide-react";
 import { OptionIcon } from "./option-icon";
 import {
@@ -15,8 +16,8 @@ import {
   type Surface,
 } from "@/lib/learning/catalog";
 import { refreshSession, useSession } from "@/lib/session";
-import { setLearning } from "@/lib/learning/client";
-import { setPage } from "@/lib/ui";
+import { setLearning, useLearning } from "@/lib/learning/client";
+import { closeDialog, setPage } from "@/lib/ui";
 import { onboardingGoals } from "@/lib/onboarding";
 interface Draft {
   step: number;
@@ -36,15 +37,22 @@ const fresh: Draft = {
   commitment: "daily",
   start: "shape-answers",
 };
-export function LearningOnboarding() {
+export function LearningOnboarding({ replay = false, restart = false }: { replay?: boolean; restart?: boolean }) {
   const session = useSession();
-  const key = `learning-welcome-v1:${session.me?.id}`;
+  const learning = useLearning();
+  const key = `${replay ? "learning-review-v1" : "learning-welcome-v1"}:${session.me?.id}`;
   const [d, setD] = useState<Draft>(() => {
+    if (restart) return { ...fresh };
+    const prefs = replay ? learning.onboarding : null;
+    const seed: Draft = prefs ? { ...fresh, product: prefs.product ?? learning.surface,
+      interests: prefs.interests ?? [], motivation: onboardingGoals(prefs.motivation),
+      experience: Math.max(0, ["starting", "casual", "daily", "connected", "native"].indexOf(prefs.level ?? "starting")),
+      commitment: prefs.commitment ?? fresh.commitment, start: prefs.start ?? fresh.start } : fresh;
     try {
       const saved = JSON.parse(localStorage.getItem(key) ?? "{}");
-      return { ...fresh, ...saved, motivation: onboardingGoals(saved.motivation) };
+      return { ...seed, ...saved, motivation: onboardingGoals(saved.motivation ?? seed.motivation) };
     } catch {
-      return fresh;
+      return seed;
     }
   });
   const [busy, setBusy] = useState(false),
@@ -97,9 +105,10 @@ export function LearningOnboarding() {
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error);
-      setLearning({ surface: d.product, active: d.start, preferredStart: d.start });
-      setPage("learning");
       await refreshSession();
+      setLearning({ surface: d.product, active: replay && !restart ? null : d.start, preferredStart: d.start, onboarding: j.onboarding });
+      closeDialog();
+      setPage("learning");
       localStorage.removeItem(key);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save setup.");
@@ -139,7 +148,13 @@ export function LearningOnboarding() {
       <header className="mx-auto w-full max-w-4xl shrink-0 px-5 py-4 md:px-8 md:py-6">
         <div className="mb-3 flex items-center justify-between gap-4">
           <span className="text-sm font-semibold">How to AI Games</span>
-          <span className="text-xs tabular-nums text-ink-3">{d.step + 1} / 10</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs tabular-nums text-ink-3">{d.step + 1} / 10</span>
+            {replay && <button aria-label="Exit onboarding review" className="flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-sm text-ink-2 hover:bg-bg-3" disabled={busy} onClick={() => {
+              try { localStorage.removeItem(key); } catch {}
+              closeDialog(); setLearning({ active: null }); setPage("learning");
+            }}><span className="hidden sm:inline">Back to path</span><X size={18} aria-hidden="true" /></button>}
+          </div>
         </div>
         <div
           className="learn-setup-progress"
@@ -370,7 +385,7 @@ export function LearningOnboarding() {
               : d.step === 0
                 ? "Get started"
                 : d.step === 9
-                  ? "Open my lesson"
+                  ? replay && !restart ? "Save choices" : "Open my lesson"
                   : "Continue"}
             <ArrowRight size={18} />
           </button>

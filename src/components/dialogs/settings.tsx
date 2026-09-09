@@ -95,6 +95,11 @@ function General() {
   return (
     <div className="space-y-7">
       <section>
+        <Label>Onboarding</Label>
+        <p className="mb-3 text-sm leading-relaxed text-ink-2">Review your choices or walk through the introduction again. Your lesson progress stays saved.</p>
+        <Button variant="outline" onClick={() => openDialog({ kind: "onboarding" })}>Review onboarding</Button>
+      </section>
+      <section>
         <Label>Chats and tasks in this browser</Label>
         <p className="mb-3 text-sm leading-relaxed text-ink-2">Clear old conversations and stop the running challenge. Your account, lesson progress, scores, and streaks stay saved.</p>
         <Button variant="outline" disabled={busy} onClick={() => setConfirming("chats")}><Trash2 size={15} /> Clear chats and tasks{chatCount > 0 ? ` (${chatCount})` : ""}</Button>

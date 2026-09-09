@@ -97,6 +97,7 @@ export function LearningHome() {
       </div>
       <footer className="mt-4 flex flex-wrap items-center justify-between gap-x-5 gap-y-1 border-t border-line pt-3">
         <button className="flex min-h-11 items-center gap-2 text-sm font-medium text-ink-2 hover:text-clay" onClick={() => openDialog({ kind: "challenges" })}><Compass size={18} /> Explore more challenges <ChevronRight size={15} /></button>
+        <button className="min-h-11 text-xs text-ink-3 hover:text-ink disabled:opacity-50" disabled={!ready} onClick={() => openDialog({ kind: "onboarding" })}>Review onboarding</button>
         <button className="flex min-h-11 items-center gap-2 text-xs text-ink-3 hover:text-ink" onClick={() => {
           const product = l.surface === "claude" ? "chatgpt" : "claude";
           setLearning({ surface: product });

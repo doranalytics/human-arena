@@ -15,6 +15,7 @@ export const OnboardingSchema = z.object({
   start: z.enum(["shape-answers", "better-context"]).default("shape-answers"),
   goal: z.enum(["everyday", "work", "automations"]),
 });
+export type OnboardingPreferences = z.input<typeof OnboardingSchema>;
 export const ONBOARDING_QUESTIONS = [
   { id: "level", title: "How much do you use AI today?", options: [
     { id: "starting", label: "I’m just getting started" }, { id: "casual", label: "Sometimes, for quick questions" },
