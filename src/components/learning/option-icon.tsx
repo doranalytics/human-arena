@@ -1,3 +1,4 @@
+import { ChatGPTMark } from "../chatgpt-mark";
 import { BookOpen, BriefcaseBusiness, Cable, CalendarCheck, Compass, Feather, Flame, GraduationCap, House, Layers, Lightbulb, MessageCircle, Palette, Rocket, Search, SlidersHorizontal, Sparkles, Sprout, Target, Timer, WandSparkles, Workflow, Wrench, type LucideIcon } from "lucide-react";
 
 type Tone = "blue" | "violet" | "peach" | "gold" | "teal" | "rose";
@@ -26,6 +27,7 @@ const icons: Record<string, [LucideIcon, Tone]> = {
 
 /** Decorative SVG icons: labels carry the meaning, so color is never required. */
 export function OptionIcon({ label }: { label: string }) {
+  if (label === "ChatGPT") return <span className="learn-option-icon learn-icon-black" aria-hidden="true"><ChatGPTMark size={25} /></span>;
   const [Icon, tone] = icons[label] ?? [Sparkles, "violet"];
   return <span className={`learn-option-icon learn-icon-${tone}`} aria-hidden="true"><Icon size={24} strokeWidth={1.9} /></span>;
 }

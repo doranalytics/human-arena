@@ -6,6 +6,9 @@ import { ArrowUp, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
 import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn, markCowork, clearPendingPrompt, setState, recordContext, setChatBusy, finishScheduleRun } from "@/lib/store";
 import { Message } from "./message";
+import { chatPreferences } from "@/lib/chat-preferences";
+import { cn } from "@/lib/utils";
+import { useLearning } from "@/lib/learning/client";
 import { Composer, type ComposerSubmit } from "./composer";
 import { Spark } from "./icons";
 import { TOOL_CONNECTOR } from "@/lib/tool-connector";
@@ -40,6 +43,8 @@ async function toFileParts(files: File[]): Promise<FileUIPart[]> {
 }
 
 export function ChatView({ chat }: { chat: Chat }) {
+  const chatgpt = useLearning().surface === "chatgpt";
+  const gpt = useStore((s) => s.gpts.find((g) => g.id === chat.gptId));
   const settings = useStore((s) => s.settings);
   const project = useStore((s) => (chat.projectId ? s.projects.find((p) => p.id === chat.projectId) ?? null : null));
   const customSkills = useStore((s) => s.skills);
@@ -64,7 +69,8 @@ export function ChatView({ chat }: { chat: Chat }) {
   const [webSearch, setWebSearch] = useState(chat.contexts?.at(-1)?.webSearch ?? false);
   const [research, setResearch] = useState(chat.contexts?.at(-1)?.research ?? false);
   const [cowork, setCowork] = useState(!!chat.cowork);
-  const [memoryOn, setMemoryOn] = useState(!chat.contexts?.at(-1)?.memoryOff);
+  const [chatMemoryOn, setMemoryOn] = useState(!chat.contexts?.at(-1)?.memoryOff);
+  const memoryOn = chatMemoryOn && settings.memoryEnabled !== false;
 
   useEffect(() => {
     setChatBusy(chat.id, busy);
@@ -126,8 +132,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       const sk = skill ? (BUILTIN_SKILLS.find((s) => s.name === skill) ?? customSkills.find((s) => s.name === skill)) : null;
       const context = {
         messageId: "", at: new Date().toISOString(), model: st.settings.model, webSearch, research, cowork,
-        customInstructions: st.settings.instructions ?? "", memories: memoryOn ? [...(st.settings.memories ?? []), ...(project?.memories ?? [])] : [],
-        memoryOff: !memoryOn, projectName: project?.name, projectId: project?.id, projectInstructions: project?.instructions,
+        ...chatPreferences(st.settings, gpt, memoryOn, project?.memories), projectName: project?.name, projectId: project?.id, projectInstructions: project?.instructions,
         skill: sk?.name,
       };
       const requestBody = {
@@ -143,7 +148,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       catch { toast({ title: "Could not send", body: "Please try again.", tone: "bad" }); }
       finally { setChatBusy(chat.id, false); }
     },
-    [sendMessage, webSearch, research, cowork, memoryOn, project, customSkills, name, chat.id, chat.attemptId, chat.closed],
+    [sendMessage, webSearch, research, cowork, memoryOn, project, customSkills, gpt, name, chat.id, chat.attemptId, chat.closed],
   );
 
   // Scheduled runs open with a prompt to send on their own.
@@ -166,7 +171,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       <button onClick={() => newChat(null)} className="rounded-lg bg-ink px-3 py-1.5 text-[13px] font-medium text-bg hover:bg-black">New chat</button>
     </div>
   ) : (
-    <Composer onSubmit={onSubmit} busy={busy} grading={grading} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} memoryOn={memoryOn} setMemoryOn={(v) => { setMemoryOn(v); if (!v) track("memory_off"); }} projectName={project?.name ?? null} locked={!attempt && freeLeft <= 0} freeLeft={attempt ? null : freeLeft} clearOn={attempt?.id ?? "none"} menusDown={messages.length === 0} />
+    <Composer onSubmit={onSubmit} busy={busy} grading={grading} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} memoryOn={memoryOn} setMemoryOn={(v) => { setMemoryOn(v); if (!v) track("memory_off"); }} projectName={project?.name ?? null} locked={!attempt && freeLeft <= 0} freeLeft={attempt ? null : freeLeft} clearOn={attempt?.id ?? "none"} menusDown={messages.length === 0 && !chatgpt} />
   );
 
   if (empty && attempt && challenge)
@@ -179,10 +184,10 @@ export function ChatView({ chat }: { chat: Chat }) {
 
   if (empty)
     return (
-      <div className="flex min-h-full flex-col items-center justify-center px-4 py-8 md:px-6 md:pb-24">
-        <div className="mb-6 flex max-w-full items-center gap-3 text-clay md:mb-8">
-          <Spark size={30} className="spark-in shrink-0" />
-          <h1 className="min-w-0 break-words font-serif text-[30px] font-normal leading-tight tracking-tight text-ink md:text-[40px]">{greeting(name)}</h1>
+      <div className={cn("flex min-h-full flex-col items-center px-4 py-8 md:px-6", chatgpt ? "justify-end" : "justify-center md:pb-24")}>
+        <div className={cn("mb-6 flex max-w-full items-center gap-3 text-clay md:mb-8", chatgpt && "my-auto py-12")}>
+          {!chatgpt && <Spark size={30} className="spark-in shrink-0" />}
+          <h1 className="min-w-0 break-words font-serif text-[30px] font-normal leading-tight tracking-tight text-ink md:text-[40px]">{gpt?.name ?? (chatgpt ? "What can I help with?" : greeting(name))}</h1>
         </div>
         <div className="w-full max-w-[760px]">{composer}</div>
         {cowork ? <CoworkPanel chat={chat} /> : project && <div className="mt-3 text-[12.5px] text-ink-3">In project {project.name}. Its instructions apply to this chat.</div>}

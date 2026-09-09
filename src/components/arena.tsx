@@ -17,6 +17,8 @@ import { ChatView } from "./chat-view";
 import { ProjectView } from "./project-view";
 import { ProjectsPage } from "./projects-page";
 import { ScheduledPage } from "./scheduled-page";
+import { GPTsPage } from "./gpts-page";
+import { LibraryPage } from "./library-page";
 import { Toasts } from "./toasts";
 import { ChallengesDialog, BriefDialog } from "./dialogs/challenges";
 import { ResultDialog } from "./dialogs/result";
@@ -97,7 +99,7 @@ export function Arena() {
         <main inert={mobileSidebarOpen} className="flex min-w-0 flex-1 flex-col">
           <TopBar title={page === "learning" ? `${learning.surface === "chatgpt" ? "ChatGPT" : "Claude"} · Learning workspace` : title} />
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {!hydrated ? null : page === "learning" ? <LearningHome /> : page === "projects" ? <ProjectsPage /> : page === "scheduled" ? <ScheduledPage /> : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}
+            {!hydrated ? null : page === "learning" ? <LearningHome /> : page === "library" ? <LibraryPage /> : page === "gpts" ? <GPTsPage /> : page === "projects" ? <ProjectsPage /> : page === "scheduled" ? <ScheduledPage /> : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}
           </div>
         </main>
       </div>

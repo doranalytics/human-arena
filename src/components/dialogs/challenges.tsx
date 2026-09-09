@@ -1,4 +1,6 @@
 "use client";
+import { useLearning } from "@/lib/learning/client";
+import { surfaceCopy } from "@/lib/surface-copy";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { ArrowRight, Check, Lock, Swords, Trophy, FileText, Quote, Table2 } from "lucide-react";
@@ -9,7 +11,7 @@ import { ChallengeCriteria } from "../challenge-criteria";
 import { SkillIcon } from "../skill-icon";
 import { LearnCard } from "../learn-card";
 import { useStore, startAttempt, newChat } from "@/lib/store";
-import { openDialog, closeDialog, toast } from "@/lib/ui";
+import { openDialog, closeDialog, setPage, toast } from "@/lib/ui";
 import { cn } from "@/lib/utils";
 import { recommendPractice } from "@/lib/practice";
 import { useSession } from "@/lib/session";
@@ -83,6 +85,7 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
       setStarting(false); return;
     }
     newChat(null, c.title);
+    setPage(null);
     closeDialog();
     toast({ title: "Challenge started", body: "Submit from the top bar when you are done.", tone: "info" });
     setStarting(false);
@@ -126,7 +129,8 @@ export function BriefDialog({ open, slug }: { open: boolean; slug: string }) {
 
 /** Briefs are short markdown. Paragraphs become numbered steps, quotes become sample cards, bare links become chips. */
 export function BriefBody({ brief }: { brief: string }) {
-  const blocks = brief.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+  const surface = useLearning().surface;
+  const blocks = surfaceCopy(brief, surface).split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
   const steps = blocks.filter((b) => !b.startsWith(">") && !/^https?:\/\/\S+$/.test(b) && !/^Sample \d+:$/.test(b));
   const numbered: { text: string; step: number | null }[] = [];
   for (const b of blocks) {

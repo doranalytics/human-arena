@@ -5,11 +5,12 @@ import { ConnectorLogo } from "./connector-logos";
 import { CONNECTORS } from "@/lib/connectors";
 import { MATERIAL_MIME, materialFile, materialText } from "@/lib/materials";
 import type { Material } from "@/lib/arena/types";
-import { Plus, Paperclip, Image as ImageIcon, Globe, Telescope, Zap, Cable, ChevronDown, X, FileText, Check, Mic, Loader2, Lock, Brain } from "lucide-react";
-import { useStore, updateSettings, setConnector } from "@/lib/store";
+import { Plus, Paperclip, Image as ImageIcon, Globe, Telescope, Zap, Cable, Bot, X, FileText, Check, Mic, Loader2, Lock, Brain } from "lucide-react";
+import { useStore, setConnector } from "@/lib/store";
 import { openDialog } from "@/lib/ui";
 import { BUILTIN_SKILLS } from "@/lib/skills";
-import { MODELS, EFFORTS, type ModelChoice, type Effort } from "@/lib/models";
+import { ModelPicker } from "./model-picker";
+import { useLearning } from "@/lib/learning/client";
 import { cn } from "@/lib/utils";
 import { StopOrSend } from "./chat-view";
 
@@ -45,8 +46,7 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
   const dictation = useDictation((t) => { dictated.current = true; setText((cur) => (cur ? cur.replace(/\s*$/, " ") : "") + t); });
   const [files, setFiles] = useState<File[]>([]);
   const [plusOpen, setPlusOpen] = useState(false);
-  const [modelOpen, setModelOpen] = useState(false);
-  const [effortOpen, setEffortOpen] = useState(false);
+  const [appsOpen, setAppsOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [slashIdx, setSlashIdx] = useState(0);
   const lastClear = useRef(clearOn);
@@ -59,7 +59,7 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
   const fileInput = useRef<HTMLInputElement>(null);
   const imageInput = useRef<HTMLInputElement>(null);
   const ta = useRef<HTMLTextAreaElement>(null);
-  const settings = useStore((s) => s.settings);
+  const chatgpt = useLearning().surface === "chatgpt";
   const connectors = useStore((s) => s.connectors);
   const customSkills = useStore((s) => s.skills);
   const skills = [...BUILTIN_SKILLS, ...customSkills];
@@ -72,7 +72,7 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
   useEffect(() => {
     const close = () => {
       setPlusOpen(false);
-      setModelOpen(false);
+      setAppsOpen(false);
     };
     window.addEventListener("click", close);
     return () => window.removeEventListener("click", close);
@@ -129,7 +129,7 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
     ta.current?.focus();
   }
 
-  const modelLabel = `${MODELS[settings.model].label} ${EFFORTS[settings.effort].label}`;
+
 
   return (
     <div className="relative">
@@ -165,7 +165,7 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        className={cn("relative rounded-2xl border bg-white/70 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition", dragging ? "border-clay bg-[#fff6f1]" : "border-line-2 focus-within:border-ink-3")}
+        className={cn("chat-composer relative rounded-2xl border bg-white/70 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition", dragging ? "border-clay bg-[#fff6f1]" : "border-line-2 focus-within:border-ink-3")}
       >
         {(files.length > 0 || projectName) && (
           <div className="flex flex-wrap gap-1.5 px-3 pt-3">
@@ -209,17 +209,17 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
             if (fs.length) addFiles(fs);
           }}
           rows={1}
-          placeholder={cowork ? "What should I get done?" : "How can I help you today?"}
+          placeholder={chatgpt ? "Ask ChatGPT" : cowork ? "What should I get done?" : "How can I help you today?"}
           className="max-h-[min(15rem,30dvh)] w-full resize-none bg-transparent px-4 pb-1 pt-3.5 text-[16px] leading-6 outline-none placeholder:text-ink-3"
         />
         {(activeSkill || webSearch || research) && <div className="flex flex-wrap gap-1.5 px-3 py-1 md:hidden">
           {activeSkill && <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-[#e8f0fe] px-2 py-1 text-[12.5px] font-medium text-[#1a56db]"><Zap size={12} className="shrink-0" /><span className="truncate">/{activeSkill}</span></span>}
-          {webSearch && !research && <Chip icon={<Globe size={12} />} label="Web search" onRemove={() => setWebSearch(false)} />}
-          {research && <Chip icon={<Telescope size={12} />} label="Research" onRemove={() => setResearch(false)} />}
+          {webSearch && !research && <Chip icon={<Globe size={12} />} label={chatgpt ? "Search" : "Web search"} onRemove={() => setWebSearch(false)} />}
+          {research && <Chip icon={<Telescope size={12} />} label={chatgpt ? "Deep research" : "Research"} onRemove={() => setResearch(false)} />}
         </div>}
         <div className="flex flex-wrap items-center gap-1 px-2 pb-2 pt-1 md:px-2.5 md:pb-2.5">
           <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => { setPlusOpen((v) => !v); setModelOpen(false); }} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-8 md:w-8" title="Add files and tools">
+            <button type="button" onClick={() => { setPlusOpen((v) => !v); }} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-8 md:w-8" title="Add files and tools">
               <Plus size={18} />
             </button>
             {plusOpen && (
@@ -229,67 +229,41 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
                 <MenuItem icon={<ImageIcon size={15} />} label="Add a photo or screenshot" onClick={() => imageInput.current?.click()} />
                 <div className="my-1 border-t border-line" />
                 <MenuItem icon={<Globe size={15} />} label="Web search" checked={webSearch} onClick={() => setWebSearch(!webSearch)} />
-                <MenuItem icon={<Telescope size={15} />} label="Research" hint="Longer, sourced report" checked={research} onClick={() => setResearch(!research)} />
+                <MenuItem icon={<Telescope size={15} />} label={chatgpt ? "Deep research" : "Research"} hint="Longer, sourced report" checked={research} onClick={() => setResearch(!research)} />
                 <div className="my-1 border-t border-line" />
                 <MenuItem icon={<Zap size={15} />} label="Use a skill" hint="or type /" onClick={() => { setPlusOpen(false); setText("/"); ta.current?.focus(); }} />
-                <MenuItem icon={<Brain size={15} />} label="Memory" hint={memoryOn ? "on" : "off for this chat"} checked={memoryOn} onClick={() => setMemoryOn(!memoryOn)} keep />
+                {chatgpt ? <MenuItem icon={<Bot size={15} />} label="Agent mode" checked={cowork} onClick={() => { setCowork(!cowork); setPlusOpen(false); }} /> : <MenuItem icon={<Brain size={15} />} label="Memory" hint={memoryOn ? "on" : "off for this chat"} checked={memoryOn} onClick={() => setMemoryOn(!memoryOn)} keep />}
                 <div className="my-1 border-t border-line" />
-                <div className="px-2 py-1 text-[11.5px] font-medium text-ink-3">Connectors</div>
+                <div className="px-2 py-1 text-[11.5px] font-medium text-ink-3">{chatgpt ? "Apps" : "Connectors"}</div>
                 {CONNECTORS.map((c) => (
                   <MenuItem key={c.id} icon={<ConnectorLogo id={c.id} size={15} />} label={c.name} checked={connectors.includes(c.id)} onClick={() => setConnector(c.id, !connectors.includes(c.id))} keep />
                 ))}
-                <MenuItem icon={<Cable size={15} />} label="Manage connectors" onClick={() => openDialog({ kind: "settings", section: "connectors" })} />
+                <MenuItem icon={<Cable size={15} />} label={chatgpt ? "Connect more apps" : "Manage connectors"} onClick={() => openDialog({ kind: "settings", section: "connectors" })} />
               </div>
             )}
           </div>
-          <div className="flex shrink-0 items-center rounded-lg border border-line p-0.5 text-[13px]">
+          {chatgpt ? <>
+            <button type="button" title="Search the web" aria-pressed={webSearch} onClick={() => setWebSearch(!webSearch)} className={cn("flex h-10 w-10 items-center justify-center rounded-full text-ink-2 hover:bg-bg-3 md:h-8 md:w-8", webSearch && "bg-bg-3 text-ink")}><Globe size={19} /></button>
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <button type="button" title="Apps" aria-expanded={appsOpen} onClick={() => { setAppsOpen(!appsOpen); setPlusOpen(false); }} className="flex h-10 items-center gap-1 rounded-full px-2 text-ink-2 hover:bg-bg-3 md:h-8"><Cable size={19} />{connectors.length > 0 && <span className="text-xs">{connectors.length}</span>}</button>
+              {appsOpen && <div className={cn("mobile-popover absolute left-0 z-30 w-64 rounded-2xl border border-line bg-bg p-2 shadow-lg", menusDown ? "top-10" : "bottom-10")}>
+                <div className="flex items-center justify-between px-2 py-1 text-sm font-medium">Apps<button type="button" aria-label="Close apps" onClick={() => setAppsOpen(false)} className="p-1"><X size={15} /></button></div>
+                {CONNECTORS.map((c) => <MenuItem key={c.id} icon={<ConnectorLogo id={c.id} size={16} />} label={c.name} checked={connectors.includes(c.id)} onClick={() => setConnector(c.id, !connectors.includes(c.id))} keep />)}
+                <div className="my-1 border-t border-line" /><MenuItem label="Connect more apps" onClick={() => { setAppsOpen(false); openDialog({ kind: "settings", section: "connectors" }); }} />
+              </div>}
+            </div>
+            {cowork && <Chip icon={<Bot size={13} />} label="Agent mode" onRemove={() => setCowork(false)} />}
+          </> : <div className="flex shrink-0 items-center rounded-lg border border-line p-0.5 text-[13px]">
             <button type="button" onClick={() => setCowork(false)} className={cn("min-h-9 rounded-md px-2 py-1 md:min-h-0 md:px-2.5", !cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Chat</button>
             <button type="button" onClick={() => setCowork(true)} title="Hand it a task. It plans the steps and works through them with your connectors." className={cn("min-h-9 rounded-md px-2 py-1 md:min-h-0 md:px-2.5", cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Cowork</button>
-          </div>
+          </div>}
           <div className="hidden md:contents">
             {activeSkill && <span className="ml-1 rounded-md bg-[#e8f0fe] px-2 py-1 text-[12.5px] font-medium text-[#1a56db]">/{activeSkill}</span>}
-            {webSearch && !research && <Chip icon={<Globe size={12} />} label="Web search" onRemove={() => setWebSearch(false)} />}
-            {research && <Chip icon={<Telescope size={12} />} label="Research" onRemove={() => setResearch(false)} />}
+            {webSearch && !research && <Chip icon={<Globe size={12} />} label={chatgpt ? "Search" : "Web search"} onRemove={() => setWebSearch(false)} />}
+            {research && <Chip icon={<Telescope size={12} />} label={chatgpt ? "Deep research" : "Research"} onRemove={() => setResearch(false)} />}
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-1">
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => { setModelOpen((v) => !v); setPlusOpen(false); setEffortOpen(false); }} className={cn("flex h-10 items-center gap-1.5 rounded-lg px-2 text-[14px] hover:bg-bg-2 md:h-9 md:px-3", modelOpen && "bg-bg-2")} title="Model and effort" aria-label={`${modelLabel}: model and effort`}>
-              <span className="font-medium">{MODELS[settings.model].label}</span>
-              <span className="hidden text-ink-3 md:inline">{EFFORTS[settings.effort].label}</span>
-            </button>
-            {modelOpen && (
-              <div className={cn("mobile-popover fade-up absolute right-0 z-30 w-72 rounded-2xl border border-line bg-bg p-1.5 shadow-lg shadow-black/10", menusDown ? "top-11" : "bottom-11")}>
-                <button type="button" onClick={() => setModelOpen(false)} className="ml-auto flex h-10 items-center px-3 text-[13px] md:hidden">Close models</button>
-                {(Object.keys(MODELS) as ModelChoice[]).map((k) => (
-                  <button key={k} type="button" onClick={() => { updateSettings({ model: k }); setModelOpen(false); }} className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-bg-2">
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[15px] font-medium">{MODELS[k].label}</span>
-                      <span className="block text-[13px] text-ink-3">{MODELS[k].blurb}</span>
-                    </span>
-                    {settings.model === k && <Check size={16} className="mt-1 shrink-0 text-[#1a56db]" />}
-                  </button>
-                ))}
-                <div className="my-1.5 border-t border-line" />
-                <button type="button" onClick={() => setEffortOpen((v) => !v)} className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-[15px] hover:bg-bg-2">
-                  <span>Effort</span>
-                  <span className="flex items-center gap-1 text-ink-3">{EFFORTS[settings.effort].label} <ChevronDown size={15} className={cn("transition", effortOpen && "rotate-180")} /></span>
-                </button>
-                {effortOpen && (
-                  <div className="pb-1">
-                    {(Object.keys(EFFORTS) as Effort[]).map((k) => (
-                      <button key={k} type="button" onClick={() => { updateSettings({ effort: k }); setModelOpen(false); setEffortOpen(false); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-bg-2">
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-[14px] font-medium">{EFFORTS[k].label}</span>
-                          <span className="block text-[12.5px] text-ink-3">{EFFORTS[k].blurb}</span>
-                        </span>
-                        {settings.effort === k && <Check size={15} className="shrink-0 text-[#1a56db]" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          {!chatgpt && <ModelPicker menusDown={menusDown} />}
           <button
             type="button"
             onClick={() => (dictation.listening ? dictation.stop() : dictation.start())}
@@ -315,7 +289,7 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
         <input ref={imageInput} type="file" multiple hidden accept="image/*" onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
       </form>
       {typeof freeLeft === "number" && !locked && <div className="mt-1.5 text-center text-[12px] text-ink-3">{freeLeft} free message{freeLeft === 1 ? "" : "s"} left today outside challenges. Challenges are unlimited.</div>}
-      <span className="sr-only">{modelLabel}</span>
+
     </div>
   );
 }
@@ -342,7 +316,7 @@ function MenuItem({ icon, label, hint, onClick, checked, keep }: { icon?: React.
 
 function Chip({ icon, label, onRemove }: { icon: React.ReactNode; label: string; onRemove: () => void }) {
   return (
-    <span className="ml-1 inline-flex items-center gap-1 rounded-lg border border-clay/40 bg-[#fbeee7] px-2 py-1 text-[12.5px] text-clay-dark">
+    <span className="ml-1 inline-flex items-center gap-1 rounded-lg border border-clay/40 bg-bg-2 px-2 py-1 text-[12.5px] text-clay-dark">
       {icon} {label}
       <button type="button" aria-label={`Remove ${label}`} onClick={onRemove} className="ml-0.5 flex h-7 w-7 items-center justify-center hover:text-ink md:h-auto md:w-auto">
         <X size={12} />

@@ -1,13 +1,15 @@
 "use client";
 import { useState } from "react";
-import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, ChevronRight, PanelLeft, Trash2, Pin, PinOff, Swords, Pencil, Folder, Clock, Check, MoreHorizontal, Archive, ArchiveRestore, X } from "lucide-react";
-import { useStore, newChat, openChat, openProject, deleteChat, togglePin, renameChat, moveChatToGroup, createGroup, setChatProject, setArchived, track } from "@/lib/store";
+import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, ChevronRight, PanelLeft, Trash2, Pin, PinOff, Swords, Pencil, Folder, Clock, Check, MoreHorizontal, Archive, ArchiveRestore, X, Library, Box, SquarePen, FolderPlus, Settings, Cable, UserRoundPen } from "lucide-react";
+import { useStore, newChat, openChat, openProject, deleteChat, togglePin, renameChat, moveChatToGroup, createGroup, setChatProject, setArchived, track, openGPT } from "@/lib/store";
 import { openDialog, toggleSidebar, closeMobileSidebar, setPage, useUI } from "@/lib/ui";
 import { useSession } from "@/lib/session";
 import { tierFor } from "@/lib/tiers";
 import { Avatar } from "./avatar";
 import { TierBadge } from "./icons";
 import { totalPoints } from "@/lib/store";
+import { ChatGPTMark } from "./chatgpt-mark";
+import { useLearning, setLearning } from "@/lib/learning/client";
 import { cn } from "@/lib/utils";
 import type { Chat } from "@/lib/types";
 
@@ -108,6 +110,9 @@ function ChatRow({ c, active, onOpen }: { c: Chat; active: boolean; onOpen: () =
 }
 
 export function Sidebar({ mobile = false }: { mobile?: boolean }) {
+  const chatgpt = useLearning().surface === "chatgpt";
+  const gpts = useStore((s) => s.gpts);
+  const [profileOpen, setProfileOpen] = useState(false);
   const chats = useStore((s) => s.chats);
   const projects = useStore((s) => s.projects);
   const activeChatId = useStore((s) => s.activeChatId);
@@ -137,20 +142,32 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
   };
 
   return (
-    <aside className={cn("flex h-full shrink-0 flex-col border-r border-line bg-side", mobile ? "w-full" : "w-[272px]")}>
-      <div className="flex h-14 shrink-0 items-center justify-between gap-2 px-4 md:h-12">
-        <button onClick={() => { setPage(null); newChat(activeProjectId); }} className="font-serif text-[19px] font-medium tracking-tight hover:text-clay-dark" title="Home">How to AI Games</button>
+    <aside className={cn("workspace-sidebar flex h-full shrink-0 flex-col border-r border-line bg-side", mobile ? "w-full" : "w-[272px]")}>
+      {chatgpt ? <div className="flex h-14 shrink-0 items-center justify-between px-3">
+        <button aria-label={mobile ? "Close navigation" : "Collapse sidebar"} title="Toggle sidebar" onClick={mobile ? closeMobileSidebar : toggleSidebar} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3">{mobile ? <X size={20} /> : <PanelLeft size={20} />}</button>
+        <button aria-label="New chat" title="New chat" onClick={() => { setPage(null); newChat(null); }} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3"><SquarePen size={21} /></button>
+      </div> : <div className="flex h-14 shrink-0 items-center justify-between gap-2 px-4 md:h-12">
+        <button onClick={() => { setLearning({ active: null }); setPage("learning"); }} className="font-serif text-[19px] font-medium tracking-tight hover:text-clay-dark" title="Home">How to AI Games</button>
         {mobile && <button aria-label="Close navigation" onClick={closeMobileSidebar} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3"><X size={20} /></button>}
-      </div>
+      </div>}
+      {chatgpt && <label className="mx-3 mb-2 flex h-10 shrink-0 items-center gap-2 rounded-xl border border-line bg-bg-2 px-3 text-ink-3"><Search size={16} /><input aria-label="Search chats" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="w-full min-w-0 bg-transparent text-sm text-ink outline-none" /></label>}
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain md:contents">
       <div className="px-2.5 pt-1">
-        <NavItem icon={<Swords size={18} />} label="Learning path" onClick={() => { setPage("learning"); closeMobileSidebar(); }} active={page === "learning"} />
+        {chatgpt && <NavItem icon={<ChatGPTMark size={20} />} label="ChatGPT" onClick={() => { setPage(null); newChat(null); }} active={page === null} />}
+        <NavItem icon={<Swords size={18} />} label="Learning path" onClick={() => { setLearning({ active: null }); setPage("learning"); }} active={page === "learning"} />
+        {chatgpt ? <>
+          <NavItem icon={<Library size={18} />} label="Library" onClick={() => setPage("library")} active={page === "library"} />
+          <div className="mb-1 mt-5 px-2 text-xs font-semibold">GPTs</div>
+          {gpts.slice(0, 5).map((g) => <NavItem key={g.id} icon={<Box size={17} />} label={g.name} onClick={() => { setPage(null); openGPT(g.id); }} />)}
+          <NavItem icon={<Box size={18} />} label="Explore GPTs" onClick={() => setPage("gpts")} active={page === "gpts"} />
+        </> : <>
           <NavItem icon={<Plus size={16} />} label="New" onClick={() => { setPage(null); newChat(activeProjectId); }} active={!page && !activeChatId && !activeProjectId && !attempt} />
-        <NavItem icon={<Swords size={16} className="text-clay" />} label="Challenges" onClick={() => openDialog({ kind: "challenges" })} />
-        <NavItem icon={<FolderOpen size={16} />} label="Projects" onClick={() => setPage("projects")} active={page === "projects"} />
-        <NavItem icon={<Clock size={16} />} label="Scheduled" onClick={() => setPage("scheduled")} active={page === "scheduled"} />
-        <NavItem icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings", section: "skills" })} />
+          <NavItem icon={<Swords size={16} className="text-clay" />} label="Challenges" onClick={() => openDialog({ kind: "challenges" })} />
+          <NavItem icon={<FolderOpen size={16} />} label="Projects" onClick={() => setPage("projects")} active={page === "projects"} />
+          <NavItem icon={<Clock size={16} />} label="Scheduled" onClick={() => setPage("scheduled")} active={page === "scheduled"} />
+          <NavItem icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings", section: "skills" })} />
+        </>}
       </div>
 
       <div className="mt-4 px-2.5 pb-2 md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-contain">
@@ -160,7 +177,8 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
             <Plus size={14} />
           </button>
         </div>
-        {projects.length === 0 && <div className="px-2 py-1 text-[12.5px] text-ink-3">No projects yet</div>}
+        {chatgpt && <NavItem icon={<FolderPlus size={18} />} label="New project" onClick={() => openDialog({ kind: "new-project" })} />}
+        {!chatgpt && projects.length === 0 && <div className="px-2 py-1 text-[12.5px] text-ink-3">No projects yet</div>}
         {projects.map((p) => (
           <button key={p.id} onClick={() => { setPage(null); openProject(p.id); }} className={cn("flex min-h-11 w-full items-center gap-2.5 rounded-lg md:min-h-8 px-2 text-[13.5px] hover:bg-bg-3", !page && activeProjectId === p.id && !activeChatId && "bg-bg-3")}>
             <FolderOpen size={15} className="shrink-0 text-ink-3" />
@@ -187,10 +205,10 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
         ))}
 
         <div className="mb-1 mt-5 flex items-center justify-between px-2">
-          <span className="text-[12px] font-medium text-ink-3">Chats and tasks</span>
-          <button onClick={() => setSearching((v) => !v)} className="rounded p-0.5 text-ink-3 hover:bg-bg-3 hover:text-ink" title="Search chats">
+          <span className="text-[12px] font-medium text-ink-3">{chatgpt ? "Recents" : "Chats and tasks"}</span>
+          {!chatgpt && <button onClick={() => setSearching((v) => !v)} className="rounded p-0.5 text-ink-3 hover:bg-bg-3 hover:text-ink" title="Search chats">
             <Search size={14} />
-          </button>
+          </button>}
         </div>
         {searching && <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search chats" className="mb-1 h-8 w-full rounded-lg border border-line bg-bg px-2 text-[13px] outline-none" />}
         {rest.length === 0 && <div className="px-2 py-1 text-[12.5px] text-ink-3">{q ? "No matches" : "Your chats will show up here"}</div>}
@@ -206,8 +224,8 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
       </div>
 
       </div>
-      <div className="flex shrink-0 items-center gap-1 border-t border-line px-2.5 py-2">
-        <button onClick={() => openDialog({ kind: "settings", section: "account" })} className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 hover:bg-bg-3" title="Settings">
+      <div className="relative flex shrink-0 items-center gap-1 border-t border-line px-2.5 py-2">
+        <button onClick={() => chatgpt ? setProfileOpen(!profileOpen) : openDialog({ kind: "settings", section: "account" })} aria-expanded={chatgpt ? profileOpen : undefined} className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 hover:bg-bg-3" title="Settings">
           <Avatar name={name} src={avatar} size={28} />
           <span className="min-w-0 flex-1 truncate text-left text-[13.5px]">
             {name}{" "}
@@ -218,9 +236,20 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
           </span>
           <ChevronDown size={14} className="text-ink-3" />
         </button>
-        <button onClick={toggleSidebar} className="rounded-lg border border-line-2 p-1.5 text-ink-2 hover:bg-bg-3" title="Collapse sidebar">
+        {!chatgpt && <button onClick={toggleSidebar} className="rounded-lg border border-line-2 p-1.5 text-ink-2 hover:bg-bg-3" title="Collapse sidebar">
           <PanelLeft size={16} />
-        </button>
+        </button>}
+        {chatgpt && profileOpen && <>
+          <button aria-label="Close profile menu" className="fixed inset-0 z-30 cursor-default" onClick={() => setProfileOpen(false)} />
+          <div className="absolute bottom-full left-2 right-2 z-40 mb-2 rounded-2xl border border-line bg-bg p-2 shadow-lg" onKeyDown={(e) => e.key === "Escape" && setProfileOpen(false)}>
+            <div className="truncate border-b border-line px-3 py-2 text-sm font-medium">{name}</div>
+            <Item icon={<Settings size={17} />} label="Settings" onClick={() => { setProfileOpen(false); openDialog({ kind: "settings", section: "general" }); }} />
+            <Item icon={<UserRoundPen size={17} />} label="Personalization" onClick={() => { setProfileOpen(false); openDialog({ kind: "settings", section: "personalization" }); }} />
+            <Item icon={<Cable size={17} />} label="Apps" onClick={() => { setProfileOpen(false); openDialog({ kind: "settings", section: "connectors" }); }} />
+            <Item icon={<Clock size={17} />} label="Tasks" onClick={() => { setProfileOpen(false); setPage("scheduled"); }} />
+            <Item icon={<MessageSquare size={17} />} label="Your account" onClick={() => { setProfileOpen(false); openDialog({ kind: "settings", section: "account" }); }} />
+          </div>
+        </>}
       </div>
     </aside>
   );

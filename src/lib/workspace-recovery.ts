@@ -19,7 +19,7 @@ export function clearedWorkspace(state: State, scope: "chats" | "workspace"): Pa
     latestResult: null, busyChatIds: [], grading: false,
     // Runs point at the chats being removed; keep the schedule itself for the narrow reset.
     schedules: scope === "workspace" ? [] : state.schedules.map((s) => ({ ...s, runs: [] })),
-    ...(scope === "workspace" ? { projects: [], groups: [], skills: [], connectors: [],
+    ...(scope === "workspace" ? { projects: [], groups: [], skills: [], gpts: [], connectors: [],
       settings: { ...state.settings, memories: [], instructions: "" } } : {}),
   };
 }

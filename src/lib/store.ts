@@ -7,7 +7,7 @@
  */
 import { useSyncExternalStore } from "react";
 import type { UIMessage } from "ai";
-import type { ChatGroup, Schedule, ArenaEvent, ArenaEventType, ArenaResult, Attempt, Chat, CustomSkill, Project, Settings, TurnContext } from "./types";
+import type { ChatGroup, Schedule, ArenaEvent, ArenaEventType, ArenaResult, Attempt, Chat, CustomSkill, Project, Settings, TurnContext, PracticeGPT } from "./types";
 import { uid } from "./utils";
 import { getChallenge } from "./arena/challenges";
 import type { ConnectorId } from "./connectors";
@@ -17,6 +17,7 @@ export interface State {
   chats: Chat[];
   projects: Project[];
   skills: CustomSkill[];
+  gpts: PracticeGPT[];
   connectors: ConnectorId[];
   groups: ChatGroup[];
   schedules: Schedule[];
@@ -41,6 +42,7 @@ const initial: State = {
   schedules: [],
   projects: [],
   skills: [],
+  gpts: [],
   connectors: [],
   settings: { name: "", product: "claude", model: "fast", effort: "medium" },
   attempt: null,
@@ -236,6 +238,22 @@ export function deleteSkill(id: string) {
   setState((s) => ({ skills: s.skills.filter((x) => x.id !== id) }));
 }
 
+/** Practice GPTs are saved assistants, separate from skills and project grading. */
+export function saveGPT(gpt: Omit<PracticeGPT, "id"> & { id?: string }) {
+  const saved: PracticeGPT = { ...gpt, id: gpt.id ?? uid("gpt") };
+  setState((s) => ({ gpts: [...s.gpts.filter((g) => g.id !== saved.id), saved] }));
+  return saved;
+}
+export function deleteGPT(id: string) {
+  setState((s) => ({ gpts: s.gpts.filter((g) => g.id !== id) }));
+}
+export function openGPT(id: string) {
+  const gpt = state.gpts.find((g) => g.id === id);
+  if (!gpt) return;
+  const chat = newChat(null, gpt.name);
+  setState((s) => ({ chats: s.chats.map((c) => c.id === chat.id ? { ...c, gptId: id } : c) }));
+}
+
 /* ------------------------------------------------------------- connectors */
 export function setConnector(id: ConnectorId, on: boolean) {
   setState((s) => ({ connectors: on ? Array.from(new Set([...s.connectors, id])) : s.connectors.filter((x) => x !== id) }));
@@ -351,7 +369,7 @@ export function switchWorkspace(ownerId: string | null) {
   let saved: Partial<State> = {};
   try { saved = recoverWorkspace(JSON.parse(localStorage.getItem(ownerId ? `${KEY}:member:${ownerId}` : KEY) ?? "{}")); } catch { /* fresh workspace */ }
   // First sign-in keeps the guest's practice workspace, but only server results enter the account score.
-  if (!Object.keys(saved).length && ownerId && guest) saved = { chats: guest.chats, projects: guest.projects, skills: guest.skills, connectors: guest.connectors, settings: guest.settings, groups: guest.groups, schedules: guest.schedules };
+  if (!Object.keys(saved).length && ownerId && guest) saved = { chats: guest.chats, projects: guest.projects, skills: guest.skills, gpts: guest.gpts, connectors: guest.connectors, settings: guest.settings, groups: guest.groups, schedules: guest.schedules };
   const ownWorkspace = !!ownerId && saved.ownerId === ownerId;
   const activeChatId = ownWorkspace && saved.chats?.some((c) => c.id === saved.activeChatId) ? saved.activeChatId! : null;
   state = { ...initial, ...saved, ownerId, hydrated: true, attempt: ownWorkspace ? saved.attempt ?? null : null, busyChatIds: [], grading: false, activeChatId, activeProjectId: ownWorkspace ? saved.activeProjectId ?? null : null, settings: { ...initial.settings, ...saved.settings } };

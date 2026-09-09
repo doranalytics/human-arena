@@ -2,24 +2,26 @@
 import { Clock, Play, Trash2, Workflow } from "lucide-react";
 import { useStore, runSchedule, deleteSchedule, openChat } from "@/lib/store";
 import { setPage } from "@/lib/ui";
+import { useLearning } from "@/lib/learning/client";
 import { relTime } from "@/lib/utils";
 
 const CADENCE = { hourly: "Every hour", daily: "Every day", weekly: "Every week" } as const;
 
 /** Scheduled Cowork tasks and their runs. Runs happen when you press Run now (the arena does not run clocks in the background). */
 export function ScheduledPage() {
+  const chatgpt = useLearning().surface === "chatgpt";
   const schedules = useStore((s) => s.schedules);
   const busyIds = useStore((s) => s.busyChatIds);
   const chats = useStore((s) => s.chats);
   return (
     <div className="mx-auto w-full max-w-[900px] px-4 py-6 md:px-8 md:py-10">
-      <h1 className="font-serif text-[34px] font-normal tracking-tight">Scheduled</h1>
-      <p className="mt-1 text-[13.5px] text-ink-2">Cowork tasks that run on a schedule. In the arena they run when you press Run now.</p>
+      <h1 className="font-serif text-[34px] font-normal tracking-tight">{chatgpt ? "Tasks" : "Scheduled"}</h1>
+      <p className="mt-1 text-[13.5px] text-ink-2">{chatgpt ? "Tasks" : "Cowork tasks"} that run on a schedule. In the arena they run when you press Run now.</p>
       {schedules.length === 0 ? (
         <div className="mt-10 flex flex-col items-center text-center">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-bg-3 text-ink-2"><Clock size={20} /></span>
           <div className="mt-3 font-serif text-[22px]">Nothing scheduled yet.</div>
-          <div className="mt-1 max-w-[44ch] text-[13.5px] text-ink-2">Switch the composer to Cowork, type a task, and use Schedule to run it hourly, daily or weekly.</div>
+          <div className="mt-1 max-w-[44ch] text-[13.5px] text-ink-2">{chatgpt ? "Choose Agent mode from the + menu, type a task, and use Schedule" : "Switch the composer to Cowork, type a task, and use Schedule"} to run it hourly, daily or weekly.</div>
         </div>
       ) : (
         <div className="mt-6 space-y-3">

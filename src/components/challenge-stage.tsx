@@ -1,4 +1,6 @@
 "use client";
+import { useLearning } from "@/lib/learning/client";
+import { surfaceCopy } from "@/lib/surface-copy";
 import { FileText, Image as ImageIcon, GripVertical, Table2, Quote, Swords, ChevronDown } from "lucide-react";
 import { useId, useState } from "react";
 import { LearnCard } from "./learn-card";
@@ -73,10 +75,11 @@ export function ChallengeStage({ c }: { c: ChallengeDef; attempt: Attempt }) {
 
 /** Collapsed strip: sits above the messages once the conversation has started. The rules, minimal, plus the material. No clock (the top bar has one). */
 export function ChallengeStrip({ c }: { c: ChallengeDef; attempt: Attempt }) {
+  const surface = useLearning().surface;
   const [expanded, setExpanded] = useState(false);
   const contentId = useId();
   const materials = c.materials ?? [];
-  const steps = c.brief
+  const steps = surfaceCopy(c.brief, surface)
     .split(/\n\s*\n/)
     .map((b) => b.trim())
     .filter((b) => b && !b.startsWith(">") && !/^https?:\/\/\S+$/.test(b))

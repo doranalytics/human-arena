@@ -14,6 +14,7 @@ import { useSession, setSession } from "@/lib/session";
 import { BUILTIN_SKILLS, SKILL_CATALOGUE } from "@/lib/skills";
 import { CONNECTORS } from "@/lib/connectors";
 import { xHandle, linkedinSlug, xUrl, linkedinUrl } from "@/lib/social";
+import { useLearning } from "@/lib/learning/client";
 import { cn } from "@/lib/utils";
 
 /** Three windows share one component: Settings (personal), Customize (what the assistant can do), Progress (standalone). */
@@ -36,7 +37,7 @@ const NAV: { group: string; items: { id: SettingsSection; label: string; icon: R
   },
 ];
 const groupOf = (section: SettingsSection) => NAV.find((g) => g.items.some((i) => i.id === section)) ?? NAV[0];
-const TITLE: Record<SettingsSection, string> = { general: "General", account: "Account", instructions: "Instructions", skills: "Skills", connectors: "Connectors", memory: "Memory" };
+const TITLE: Record<SettingsSection, string> = { general: "General", account: "Account", instructions: "Instructions", skills: "Skills", connectors: "Connectors", memory: "Memory", personalization: "Personalization" };
 
 /** Two-pane settings window in the desktop-app style: Settings on top, Customize below. */
 export function SettingsDialog({ section }: { section: SettingsSection }) {
@@ -45,7 +46,15 @@ export function SettingsDialog({ section }: { section: SettingsSection }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-  const group = groupOf(section);
+  const chatgpt = useLearning().surface === "chatgpt";
+  const selected = chatgpt && (section === "instructions" || section === "memory") ? "personalization" : section;
+  const group = chatgpt ? { group: "Settings", items: [
+    { id: "general" as const, label: "General", icon: <Gear size={16} /> },
+    { id: "personalization" as const, label: "Personalization", icon: <SlidersHorizontal size={16} /> },
+    { id: "connectors" as const, label: "Apps", icon: <Cable size={16} /> },
+    { id: "skills" as const, label: "Skills", icon: <Zap size={16} /> },
+    { id: "account" as const, label: "Account", icon: <CircleUser size={16} /> },
+  ] } : groupOf(section);
   const items = group.items;
   const single = group.items.length === 1;
   return (
@@ -55,7 +64,7 @@ export function SettingsDialog({ section }: { section: SettingsSection }) {
           <aside className="hidden md:flex w-[220px] shrink-0 flex-col border-r border-line bg-side p-3">
             <div className="mb-1 px-2 text-[11.5px] font-medium text-ink-3">{group.group}</div>
             {items.map((i) => (
-              <button key={i.id} onClick={() => openDialog({ kind: "settings", section: i.id })} className={cn("flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] hover:bg-bg-3", section === i.id && "bg-bg-3 font-medium")}>
+              <button key={i.id} onClick={() => openDialog({ kind: "settings", section: i.id })} className={cn("flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] hover:bg-bg-3", selected === i.id && "bg-bg-3 font-medium")}>
                 <span className="text-ink-2">{i.icon}</span> {i.label}
               </button>
             ))}
@@ -63,19 +72,20 @@ export function SettingsDialog({ section }: { section: SettingsSection }) {
         )}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-2 md:px-6 md:py-4">
-            <div className="text-[16px] font-medium">{TITLE[section]}</div>
+            <div className="text-[16px] font-medium">{chatgpt && section === "connectors" ? "Apps" : TITLE[selected]}</div>
             <button onClick={closeDialog} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-7 md:w-7" aria-label="Close"><X size={16} /></button>
           </div>
           <nav aria-label={group.group} className="mb-4 flex shrink-0 gap-1 overflow-x-auto border-b border-line px-3 md:hidden">
-            {items.map((i) => <button key={i.id} aria-current={section === i.id ? "page" : undefined} onClick={() => openDialog({ kind: "settings", section: i.id })} className={cn("min-h-11 shrink-0 border-b-2 px-2 text-[13px]", section === i.id ? "border-clay font-medium text-ink" : "border-transparent text-ink-2")}>{i.label}</button>)}
+            {items.map((i) => <button key={i.id} aria-current={selected === i.id ? "page" : undefined} onClick={() => openDialog({ kind: "settings", section: i.id })} className={cn("min-h-11 shrink-0 border-b-2 px-2 text-[13px]", selected === i.id ? "border-clay font-medium text-ink" : "border-transparent text-ink-2")}>{i.label}</button>)}
           </nav>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 md:px-6">
             {section === "general" && <General />}
-            {section === "instructions" && <Instructions />}
+            {!chatgpt && section === "instructions" && <Instructions />}
+            {selected === "personalization" && <Personalization />}
             {section === "account" && <Account />}
             {section === "skills" && <Skills />}
             {section === "connectors" && <Connectors />}
-            {section === "memory" && <Memory />}
+            {!chatgpt && section === "memory" && <Memory />}
           </div>
         </div>
       </div>
@@ -418,4 +428,17 @@ function Memory() {
       )}
     </div>
   );
+}
+
+function Personalization() {
+  const memoryEnabled = useStore((s) => s.settings.memoryEnabled !== false);
+  return <div className="space-y-8">
+    <section><h2 className="mb-3 text-base font-semibold">Custom instructions</h2><Instructions /></section>
+    <section>
+      <div className="mb-4 flex items-center justify-between gap-4"><div><h2 className="text-base font-semibold">Memory</h2><p className="mt-1 text-sm text-ink-2">Reference your saved memories in chats.</p></div>
+        <button type="button" role="switch" aria-checked={memoryEnabled} aria-label="Reference saved memories" onClick={() => { updateSettings({ memoryEnabled: !memoryEnabled }); if (memoryEnabled) track("memory_off"); }} className={cn("flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition", memoryEnabled ? "justify-end bg-ink" : "justify-start bg-line-2")}><span className="h-5 w-5 rounded-full bg-white shadow" /></button>
+      </div>
+      <Memory />
+    </section>
+  </div>;
 }

@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { ModelPicker } from "./model-picker";
+import { useLearning } from "@/lib/learning/client";
 import { useElapsed } from "@/lib/use-elapsed";
 import { PanelLeft, Swords, Trophy, Settings, Lightbulb, Flag, X, FolderPlus, Zap, ChevronDown } from "lucide-react";
 import { useStore, useHint, endAttempt, attemptChats, getState, newChat, setChatProject, createSkill, track, setState } from "@/lib/store";
@@ -13,6 +15,7 @@ import { setSession } from "@/lib/session";
 import type { PracticeSummary } from "@/lib/practice";
 
 export function TopBar({ title }: { title: string }) {
+  const chatgpt = useLearning().surface === "chatgpt";
   const savedAttempt = useStore((s) => s.attempt);
   const page = useUI((s) => s.page);
   const attempt = page === "learning" ? null : savedAttempt;
@@ -58,7 +61,7 @@ export function TopBar({ title }: { title: string }) {
         <button onClick={toggleSidebar} className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-auto md:w-auto md:p-1.5", sidebarOpen && "md:hidden")} title="Open sidebar" aria-expanded={mobileSidebarOpen} aria-controls="mobile-navigation">
           <PanelLeft size={17} />
         </button>
-      <div className="min-w-0 flex-1 basis-0 truncate text-[13.5px] text-ink-2">{title}</div>
+      <div className="min-w-0 flex-1 basis-0 text-[13.5px] text-ink-2">{chatgpt ? <ModelPicker header menusDown /> : <div className="truncate">{title}</div>}</div>
       {!page && <ThreadActions />}
 
       {attempt && c ? (
@@ -113,13 +116,13 @@ export function TopBar({ title }: { title: string }) {
           </button>
           <div className="relative">
           <button onClick={() => openDialog({ kind: "challenges" })} className="flex h-10 items-center gap-1.5 rounded-lg bg-clay px-3 text-[13px] font-semibold text-white shadow-sm shadow-clay/30 hover:bg-clay-dark md:h-8">
-            <Swords size={14} /> Challenges
+            <Swords size={14} /> <span className={chatgpt ? "sr-only sm:not-sr-only" : ""}>Challenges</span>
           </button>
           <ChallengePointer />
           </div>
-          <button onClick={() => openDialog({ kind: "settings", section: "account" })} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-auto md:w-auto md:p-1.5" title="Your profile and settings">
+          {!chatgpt && <button onClick={() => openDialog({ kind: "settings", section: "account" })} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-auto md:w-auto md:p-1.5" title="Your profile and settings">
             <Settings size={17} />
-          </button>
+          </button>}
         </div>
       )}
     </header>

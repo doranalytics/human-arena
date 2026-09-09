@@ -4,6 +4,7 @@ import { ChevronDown, Hand, FastForward, TriangleAlert, ListChecks, Check, Folde
 import { useStore, updateSettings, setChatProject, openChat, createSchedule } from "@/lib/store";
 import { toast } from "@/lib/ui";
 import { openDialog, setPage } from "@/lib/ui";
+import { useLearning } from "@/lib/learning/client";
 import { relTime, cn } from "@/lib/utils";
 import type { Chat } from "@/lib/types";
 
@@ -15,6 +16,7 @@ const MODES = [
 
 /** Under the composer in Cowork mode: which project it works in, how much it asks, and the active Cowork threads. */
 export function CoworkPanel({ chat, compact = false }: { chat: Chat; compact?: boolean }) {
+  const chatgpt = useLearning().surface === "chatgpt";
   const projects = useStore((s) => s.projects);
   const chats = useStore((s) => s.chats);
   const mode = useStore((s) => s.settings.coworkApproval ?? "auto");
@@ -80,7 +82,7 @@ export function CoworkPanel({ chat, compact = false }: { chat: Chat; compact?: b
                   onClick={() => {
                     const name = schedPrompt.trim().slice(0, 48);
                     createSchedule({ name, prompt: schedPrompt.trim(), cadence, projectId: chat.projectId });
-                    toast({ title: "Scheduled", body: "Open Scheduled in the sidebar to run it now.", tone: "ok" }, 4000);
+                    toast({ title: "Scheduled", body: chatgpt ? "Open Tasks from your profile menu to run it now." : "Open Scheduled in the sidebar to run it now.", tone: "ok" }, 4000);
                     setSchedPrompt("");
                     setOpen(null);
                   }}

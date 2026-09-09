@@ -58,6 +58,15 @@ export interface Chat {
   archived?: boolean;
   /** a prompt to send automatically when the chat opens (scheduled runs) */
   pendingPrompt?: string;
+  /** A saved practice GPT supplies instructions to this conversation. */
+  gptId?: string;
+}
+
+export interface PracticeGPT {
+  id: string;
+  name: string;
+  description: string;
+  instructions: string;
 }
 
 export interface ChatGroup {
@@ -102,6 +111,7 @@ export interface Settings {
   freeTurns?: { day: string; used: number };
   /** Cowork approval mode */
   coworkApproval?: "manual" | "auto" | "skip";
+  memoryEnabled?: boolean;
 }
 
 /** Everything the environment can observe. Challenges are graded against these. */

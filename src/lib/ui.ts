@@ -13,7 +13,7 @@ export type DialogKind =
   | { kind: "new-project"; chatId?: string }
   | { kind: "quit" };
 
-export type SettingsSection = "general" | "account" | "instructions" | "skills" | "connectors" | "memory";
+export type SettingsSection = "general" | "account" | "instructions" | "skills" | "connectors" | "memory" | "personalization";
 
 export interface Toast {
   id: number;
@@ -22,7 +22,7 @@ export interface Toast {
   tone?: "ok" | "info" | "bad";
 }
 
-export type Page = "projects" | "scheduled" | "learning" | null;
+export type Page = "projects" | "scheduled" | "learning" | "library" | "gpts" | null;
 
 interface UIState {
   dialog: DialogKind | null;

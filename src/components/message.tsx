@@ -5,6 +5,8 @@ import remarkGfm from "remark-gfm";
 import { getToolName, isToolUIPart, type UIMessage } from "ai";
 import { FileText, Globe, Loader2, ListChecks, Copy, Download } from "lucide-react";
 import { useState } from "react";
+import { useLearning } from "@/lib/learning/client";
+import { ChatGPTMark } from "./chatgpt-mark";
 import { Spark } from "./icons";
 import { TOOL_CONNECTOR } from "@/lib/tool-connector";
 import { ConnectorLogo } from "./connector-logos";
@@ -53,6 +55,7 @@ function toolSummary(name: string, input: unknown): string {
 }
 
 export function Message({ m, streaming, onToolOutput, onExport }: { m: UIMessage; streaming?: boolean; onToolOutput?: (toolCallId: string, output: string) => void; onExport?: () => void }) {
+  const chatgpt = useLearning().surface === "chatgpt";
   if (m.role === "user") {
     const files = m.parts.filter((p) => p.type === "file");
     const text = m.parts.filter((p) => p.type === "text").map((p) => p.text).join("\n");
@@ -82,7 +85,7 @@ export function Message({ m, streaming, onToolOutput, onExport }: { m: UIMessage
   return (
     <div className="group fade-up flex gap-3">
       <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center text-clay">
-        <Spark size={18} />
+        {chatgpt ? <ChatGPTMark size={20} /> : <Spark size={18} />}
       </div>
       <div className="min-w-0 flex-1 space-y-2">
         {m.parts.map((p, i) => {
