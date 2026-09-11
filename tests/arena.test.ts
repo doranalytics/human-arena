@@ -8,6 +8,8 @@ import { gradeBehaviors, type WorkspaceEvidence } from "../src/lib/arena/evidenc
 import { advanceHistory } from "../src/lib/arena/server-history";
 import { countExplanationWords } from "../src/lib/arena/measurements";
 import { OnboardingSchema } from "../src/lib/onboarding";
+import { EMAILS } from "../src/lib/company/gmail";
+import { matchesGmailQuery } from "../src/lib/company/gmail-search";
 import { tierFor } from "../src/lib/tiers";
 import { transcriptOf } from "../src/lib/transcript";
 import { setState, getState, startAttempt, newChat, endAttempt, saveMessages, attemptChats, importResults, switchWorkspace } from "../src/lib/store";
@@ -18,6 +20,16 @@ const chat = (messages: UIMessage[] = [text("u", "user")]): Chat => ({ id: "c", 
 const world = (chats = [chat()]): WorkspaceEvidence => ({ chats, projects: [], skills: [], schedules: [], groups: [] });
 const ev = (type: ArenaEvent["type"], detail?: string): ArenaEvent => ({ type, detail, at: new Date().toISOString(), chatId: "c" });
 const result = (passed: boolean, points: number): ArenaResult => ({ slug: "ten-words", passed, points, maxPoints: 25, seconds: 5, speedMult: 1, hintsUsed: 0, behaviors: [], checks: [], feedback: "", badges: passed ? ["constraints"] : [], at: new Date().toISOString() });
+
+test("Gmail practice understands unread qualifiers instead of treating them as text", () => {
+  const unread = EMAILS.filter((email) => matchesGmailQuery(email, "is:unread"));
+  assert.ok(unread.length > 0);
+  assert.ok(unread.every((email) => email.unread));
+  assert.deepEqual(
+    EMAILS.filter((email) => matchesGmailQuery(email, "is:unread board")).map((email) => email.id),
+    ["m-1101"],
+  );
+});
 
 test("all46 challenges have unique public criteria and versions change with instructions", () => {
   assert.equal(CHALLENGES.length, 46);

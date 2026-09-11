@@ -2,6 +2,7 @@ import "server-only";
 import { tool, type ToolSet } from "ai";
 import { z } from "zod";
 import { EMAILS } from "./company/gmail";
+import { matchesGmailQuery } from "./company/gmail-search";
 import { DRIVE } from "./company/drive";
 import { TABLES, tableToCsv } from "./company/warehouse";
 import { CALENDAR } from "./company/calendar";
@@ -22,7 +23,7 @@ export function connectorTools(connected: ConnectorId[]): ToolSet {
       description: "Search the user's Gmail inbox. Returns matching emails (id, from, subject, date, snippet). Use read_email for the full body.",
       inputSchema: z.object({ query: z.string().describe("Free-text search: sender, subject words, or topic. Empty string lists recent mail.") }),
       execute: async ({ query }) => {
-        const rows = EMAILS.filter((e) => hit(`${e.fromName} ${e.from} ${e.subject} ${e.body}`, query))
+        const rows = EMAILS.filter((e) => matchesGmailQuery(e, query))
           .sort((a, b) => b.date.localeCompare(a.date))
           .slice(0, 10)
           .map((e) => ({ id: e.id, from: `${e.fromName} <${e.from}>`, subject: e.subject, date: e.date, unread: !!e.unread, snippet: e.body.slice(0, 110).replace(/\s+/g, " ") + "…" }));
