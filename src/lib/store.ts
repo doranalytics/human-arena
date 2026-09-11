@@ -321,16 +321,23 @@ export function startPractice(slug: string) {
   if (!exercise || state.grading || state.busyChatIds.length) return false;
   endAttempt();
   startAttempt(slug, undefined, new Date().toISOString(), undefined, exercise, "playground");
-  newChat(null, exercise.title);
+  const chat = newChat(null, exercise.title);
+  setState((s) => ({ chats: s.chats.map((c) => c.id === chat.id ? { ...c, practiceSlug: exercise.slug } : c) }));
+  saveMessages(chat.id, [{
+    id: uid("m"),
+    role: "assistant",
+    parts: [{ type: "text", text: `### ${exercise.title}\n\n${exercise.brief}\n\n**Your goal:** ${exercise.deliverable}` }],
+  }]);
   return true;
 }
-export function finishPractice() {
+export function finishPractice(stayInChat = false) {
   const attempt = state.attempt;
   const exercise = attempt?.mode === "playground" ? getPractice(attempt.slug) : null;
   if (!attempt || !exercise || state.grading || state.busyChatIds.length) return false;
   if (!practiceChecks(exercise, attempt.events, state).every((c) => c.pass)) return false;
-  setState({ practiceCompleted: { ...state.practiceCompleted, [exercise.slug]: new Date().toISOString() } });
-  endAttempt();
+  const completed = { ...state.practiceCompleted, [exercise.slug]: new Date().toISOString() };
+  if (stayInChat) setState({ practiceCompleted: completed, attempt: null });
+  else { setState({ practiceCompleted: completed }); endAttempt(); }
   return true;
 }
 /** Mode changes close the current session; chats and earned progress are kept. */

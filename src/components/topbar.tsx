@@ -17,7 +17,8 @@ export function TopBar({ title }: { title: string }) {
   const state = useStore((s) => s);
   const page = useUI((s) => s.page);
   const attempt = state.attempt;
-  const practice = attempt?.mode === "playground" ? getPractice(attempt.slug) : null;
+  const activeChat = state.chats.find((chat) => chat.id === state.activeChatId);
+  const practice = attempt?.mode === "playground" ? getPractice(attempt.slug) : activeChat?.practiceSlug ? getPractice(activeChat.practiceSlug) : null;
   const ready = !!practice && !!attempt && practiceChecks(practice, attempt.events, state).every((c) => c.pass);
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const mobileSidebarOpen = useUI((s) => s.mobileSidebarOpen);
@@ -39,19 +40,19 @@ export function TopBar({ title }: { title: string }) {
     } catch { toast({ title: "Network problem", body: "Your attempt is still running. Try Submit again.", tone: "bad" }); }
     finally { setSubmitting(false); if (getState().attempt?.id === attempt.id) setState({ grading: false }); }
   }
-  return <header className="games-topbar flex shrink-0 flex-wrap items-center gap-2 border-b border-line/70 px-2 py-2 md:px-3">
+  return <header className={cn("games-topbar flex shrink-0 flex-wrap items-center gap-2 border-b border-line/70 px-2 py-2 md:px-3", practice && "min-h-12 py-1.5")}>
     <button data-guide="navigation" onClick={toggleSidebar} className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-9 md:w-9", sidebarOpen && "md:hidden")} title="Open sidebar" aria-expanded={mobileSidebarOpen} aria-controls="mobile-navigation"><PanelLeft size={18} /></button>
-    <ModeSwitch />
-    <div className="hidden min-w-0 flex-1 truncate px-2 text-[13px] text-ink-3 lg:block">{title}</div>
+    {!practice && <ModeSwitch />}
+    <div className={cn("hidden min-w-0 flex-1 truncate px-2 text-[13px] text-ink-3 lg:block", practice && "lg:hidden")}>{title}</div>
     <div className="ml-auto flex items-center gap-1.5">
       {state.gameMode === "arena" && <button onClick={() => openDialog({ kind: "leaderboard" })} className="flex h-10 items-center gap-1.5 rounded-lg border border-line px-2.5 text-[13px] hover:bg-bg-2" title="Leaderboard"><Trophy size={15} className="text-clay" /><span className="hidden sm:inline">Leaderboard</span></button>}
-      {!attempt && <button onClick={() => state.gameMode === "arena" ? openDialog({ kind: "challenges" }) : setPage("learning")} className="flex h-10 items-center gap-1.5 rounded-lg bg-clay px-2.5 text-[13px] font-medium text-white">{state.gameMode === "arena" ? <Swords size={15} /> : <Compass size={15} />}<span className="hidden sm:inline">{state.gameMode === "arena" ? "Challenges" : "Exercises"}</span><span className="sr-only sm:hidden">{state.gameMode === "arena" ? "Challenges" : "Exercises"}</span></button>}
+      {!attempt && !practice && <button onClick={() => state.gameMode === "arena" ? openDialog({ kind: "challenges" }) : setPage("learning")} className="flex h-10 items-center gap-1.5 rounded-lg bg-clay px-2.5 text-[13px] font-medium text-white">{state.gameMode === "arena" ? <Swords size={15} /> : <Compass size={15} />}<span className="hidden sm:inline">{state.gameMode === "arena" ? "Challenges" : "Exercises"}</span><span className="sr-only sm:hidden">{state.gameMode === "arena" ? "Challenges" : "Exercises"}</span></button>}
     </div>
-    {attempt && c && <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 border-t border-line/60 pt-2">
-      <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{c.title}</span>
+    {attempt && c && <div className={cn("flex min-w-0 flex-wrap items-center gap-1.5", practice ? "ml-auto" : "w-full border-t border-line/60 pt-2")}>
+      {!practice && <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{c.title}</span>}
       {practice ? <>
-        <button onClick={() => setPracticeHints(!hints)} aria-pressed={hints} className="flex min-h-10 items-center gap-1 rounded-lg px-2 text-xs text-ink-2 hover:bg-bg-3" title="Show pointers"><Lightbulb size={15} /><span className="hidden sm:inline">Pointers</span></button>
-        <button disabled={!ready || busy} title={ready ? "Save this practice as completed" : "Complete the actions shown in the practice instructions"} onClick={() => { if (finishPractice()) { setPage("learning"); toast({ title: "Practice complete", body: "Your progress is saved. Explore another feature whenever you like.", tone: "ok" }); } }} className="flex min-h-10 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-medium text-bg disabled:opacity-40"><Check size={15} /> Finish practice</button>
+        <button onClick={() => setPracticeHints(!hints)} aria-pressed={hints} className={cn("flex h-9 w-9 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3", hints && "bg-bg-3 text-clay-dark")} title={hints ? "Hide pointers" : "Show pointers"}><Lightbulb size={15} /><span className="sr-only">Pointers</span></button>
+        <button disabled={!ready || busy} title={ready ? "Save this practice as completed" : "Complete the practice first"} onClick={() => { if (finishPractice()) { setPage("learning"); toast({ title: "Practice complete", body: "Your progress is saved.", tone: "ok" }); } }} className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-2.5 text-[11.5px] font-medium text-bg disabled:opacity-40"><Check size={14} /> Finish</button>
         <button disabled={busy} onClick={() => { endAttempt(); setPage("learning"); }} title="Leave practice" className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-3 hover:bg-bg-3"><X size={16} /></button>
       </> : <>
         <span className="px-2 text-sm tabular-nums text-clay-dark" aria-label="Elapsed time">{fmtClock(elapsed)}</span>
@@ -62,7 +63,7 @@ export function TopBar({ title }: { title: string }) {
         <button disabled={submitting || busy} onClick={() => openDialog({ kind: "quit" })} title="Quit challenge" className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-3 hover:bg-bg-3"><X size={16} /></button>
       </>}
     </div>}
-    {!page && <ThreadActions />}
+    {!page && !practice && <ThreadActions />}
   </header>;
 }
 

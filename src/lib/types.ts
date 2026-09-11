@@ -60,6 +60,8 @@ export interface Chat {
   pendingPrompt?: string;
   /** A saved practice GPT supplies instructions to this conversation. */
   gptId?: string;
+  /** Keeps a Playground thread visually focused after its practice auto-completes. */
+  practiceSlug?: string;
 }
 
 export interface PracticeGPT {

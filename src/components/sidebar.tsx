@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, ChevronRight, PanelLeft, Trash2, Pin, PinOff, Swords, Pencil, Folder, Clock, Check, MoreHorizontal, Archive, ArchiveRestore, X, Library, Box, SquarePen, FolderPlus, Settings, Cable, UserRoundPen, Compass } from "lucide-react";
 import { useStore, newChat, openChat, openProject, deleteChat, togglePin, renameChat, moveChatToGroup, createGroup, setChatProject, setArchived, track, openGPT } from "@/lib/store";
-import { openDialog, toggleSidebar, closeMobileSidebar, setPage, useUI } from "@/lib/ui";
+import { openDialog, toggleSidebar, closeMobileSidebar, setPage, useUI, enterMode } from "@/lib/ui";
 import { useSession } from "@/lib/session";
 import { tierFor } from "@/lib/tiers";
 import { Avatar } from "./avatar";
@@ -156,7 +156,8 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain md:contents">
       <div className="px-2.5 pt-1">
         {chatgpt && <NavItem icon={<ChatGPTMark size={20} />} label="ChatGPT" onClick={() => { setPage(null); newChat(null); }} active={page === null} />}
-        <NavItem icon={mode === "playground" ? <Compass size={18} /> : <Swords size={18} />} label={mode === "playground" ? "Playground" : "Arena"} onClick={() => { setLearning({ active: null }); setPage("learning"); }} active={page === "learning"} />
+        <NavItem icon={<Compass size={18} />} label="Playground" onClick={() => { setLearning({ active: null }); if (mode === "playground") setPage("learning"); else enterMode("playground"); }} active={page === "learning" && mode === "playground"} />
+        <NavItem icon={<Swords size={18} />} label="Arena" onClick={() => { setLearning({ active: null }); if (mode === "arena") setPage("learning"); else enterMode("arena"); }} active={page === "learning" && mode === "arena"} />
         {chatgpt ? <>
           <NavItem icon={<Library size={18} />} label="Library" onClick={() => setPage("library")} active={page === "library"} />
           <div className="mb-1 mt-5 px-2 text-xs font-semibold">GPTs</div>

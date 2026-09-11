@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage, lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { ArrowUp, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
-import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn, markCowork, clearPendingPrompt, setState, recordContext, setChatBusy, finishScheduleRun } from "@/lib/store";
+import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn, markCowork, clearPendingPrompt, setState, recordContext, setChatBusy, finishScheduleRun, finishPractice } from "@/lib/store";
 import { Message } from "./message";
 import { chatPreferences } from "@/lib/chat-preferences";
 import { needsReply } from "@/lib/chat-failure";
@@ -15,11 +15,12 @@ import { Spark } from "./icons";
 import { TOOL_CONNECTOR } from "@/lib/tool-connector";
 import { BUILTIN_SKILLS } from "@/lib/skills";
 import { getChallenge } from "@/lib/arena/challenges";
-import { PracticeStage, PromptChips } from "./playground/practice-stage";
+import { PracticeMaterials, PromptChips } from "./playground/practice-stage";
 import { ChallengeStage, ChallengeStrip } from "./challenge-stage";
 import { CoworkPanel } from "./cowork-panel";
 import { toast } from "@/lib/ui";
 import { useSession } from "@/lib/session";
+import { getPractice, practiceChecks } from "@/lib/playground";
 
 function greeting(name: string) {
   const h = new Date().getHours();
@@ -75,6 +76,9 @@ export function ChatView({ chat }: { chat: Chat }) {
   const [cowork, setCowork] = useState(!!chat.cowork);
   const [chatMemoryOn, setMemoryOn] = useState(!chat.contexts?.at(-1)?.memoryOff);
   const memoryOn = chatMemoryOn && settings.memoryEnabled !== false;
+  const practice = practicing && attempt ? getPractice(attempt.slug) : null;
+  const practiceReady = !!practice && !!attempt && practiceChecks(practice, attempt.events, getState()).every((c) => c.pass);
+  const completedPractice = useRef<string | null>(null);
 
   useEffect(() => {
     setChatBusy(chat.id, busy);
@@ -114,6 +118,11 @@ export function ChatView({ chat }: { chat: Chat }) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages, status]);
+  useEffect(() => {
+    if (!practiceReady || busy || !attempt || completedPractice.current === attempt.id) return;
+    completedPractice.current = attempt.id;
+    if (finishPractice(true)) toast({ title: "Practice complete", body: "Your progress is saved. You can keep exploring this conversation.", tone: "ok" }, 4500);
+  }, [practiceReady, busy, attempt]);
 
   const onSubmit = useCallback<ComposerSubmit>(
     async ({ text, files, skill, dictated }) => {
@@ -182,13 +191,8 @@ export function ChatView({ chat }: { chat: Chat }) {
     <Composer onSubmit={onSubmit} busy={busy} grading={grading} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} memoryOn={memoryOn} setMemoryOn={(v) => { setMemoryOn(v); if (!v) track("memory_off"); }} projectName={project?.name ?? null} locked={gameMode === "arena" && !attempt && freeLeft <= 0} freeLeft={gameMode === "playground" || attempt ? null : freeLeft} clearOn={attempt?.id ?? "none"} menusDown={messages.length === 0 && !chatgpt} />
   );
 
-  if (empty && attempt && challenge)
-    return (
-      <div className="flex min-h-full flex-col items-center justify-center px-4 py-6 md:px-6 md:py-8">
-        {practicing ? <PracticeStage /> : <ChallengeStage c={challenge} attempt={attempt} />}
-        <div className="mt-5 w-full max-w-[760px]">{attempt?.slug === "practice-prompting" && <PromptChips disabled={busy} />}{composer}{cowork && <CoworkPanel chat={chat} />}</div>
-      </div>
-    );
+  if (empty && attempt && challenge && !practicing)
+    return <div className="flex min-h-full flex-col items-center justify-center px-4 py-6 md:px-6 md:py-8"><ChallengeStage c={challenge} attempt={attempt} /><div className="mt-5 w-full max-w-[760px]">{composer}{cowork && <CoworkPanel chat={chat} />}</div></div>;
 
   if (empty)
     return (
@@ -205,7 +209,7 @@ export function ChatView({ chat }: { chat: Chat }) {
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
-      {attempt && challenge && (practicing ? <PracticeStage compact /> : <ChallengeStrip c={challenge} attempt={attempt} />)}
+      {attempt && challenge && !practicing && <ChallengeStrip c={challenge} attempt={attempt} />}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-[760px] space-y-6 px-4 py-5 md:space-y-7 md:px-6 md:py-8">
           {messages.map((m, i) => (
@@ -217,6 +221,7 @@ export function ChatView({ chat }: { chat: Chat }) {
         </div>
       </div>
       <div className="mx-auto w-full max-w-[760px] shrink-0 px-3 pb-3 md:px-6 md:pb-4">
+        {practicing && <PracticeMaterials />}
         {attempt?.slug === "practice-prompting" && <PromptChips disabled={busy} />}
         {composer}
         {cowork && !chat.closed && <CoworkPanel chat={chat} compact />}
