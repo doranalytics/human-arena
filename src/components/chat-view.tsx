@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart, type FileUIPart, type UIMessage, lastAssistantMessageIsCompleteWithToolCalls } from "ai";
-import { ArrowUp, Square } from "lucide-react";
+import { ArrowUp, Check, Sparkles, Square } from "lucide-react";
 import type { Chat } from "@/lib/types";
 import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn, markCowork, clearPendingPrompt, setState, recordContext, setChatBusy, finishScheduleRun, finishPractice } from "@/lib/store";
 import { Message } from "./message";
@@ -79,6 +79,7 @@ export function ChatView({ chat }: { chat: Chat }) {
   const practice = practicing && attempt ? getPractice(attempt.slug) : null;
   const practiceReady = !!practice && !!attempt && practiceChecks(practice, attempt.events, getState()).every((c) => c.pass);
   const completedPractice = useRef<string | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
 
   useEffect(() => {
     setChatBusy(chat.id, busy);
@@ -121,8 +122,16 @@ export function ChatView({ chat }: { chat: Chat }) {
   useEffect(() => {
     if (!practiceReady || busy || !attempt || completedPractice.current === attempt.id) return;
     completedPractice.current = attempt.id;
-    if (finishPractice(true)) toast({ title: "Practice complete", body: "Your progress is saved. You can keep exploring this conversation.", tone: "ok" }, 4500);
+    if (finishPractice(true)) {
+      window.setTimeout(() => setCelebrating(true), 0);
+      toast({ title: "Practice complete", body: "You learned the move. Keep experimenting with it here.", tone: "ok" }, 4500);
+    }
   }, [practiceReady, busy, attempt]);
+  useEffect(() => {
+    if (!celebrating) return;
+    const timer = window.setTimeout(() => setCelebrating(false), 2200);
+    return () => window.clearTimeout(timer);
+  }, [celebrating]);
 
   const onSubmit = useCallback<ComposerSubmit>(
     async ({ text, files, skill, dictated }) => {
@@ -209,6 +218,7 @@ export function ChatView({ chat }: { chat: Chat }) {
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
+      {celebrating && <PlaygroundCelebration />}
       {attempt && challenge && !practicing && <ChallengeStrip c={challenge} attempt={attempt} />}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-[760px] space-y-6 px-4 py-5 md:space-y-7 md:px-6 md:py-8">
@@ -225,6 +235,24 @@ export function ChatView({ chat }: { chat: Chat }) {
         {attempt?.slug === "practice-prompting" && <PromptChips disabled={busy} />}
         {composer}
         {cowork && !chat.closed && <CoworkPanel chat={chat} compact />}
+      </div>
+    </div>
+  );
+}
+
+function PlaygroundCelebration() {
+  return (
+    <div className="playground-celebration" role="status" aria-label="Practice complete">
+      <div className="playground-celebration-flash" />
+      <div className="playground-celebration-burst" aria-hidden="true">
+        {Array.from({ length: 24 }, (_, i) => (
+          <i key={i} style={{ "--angle": `${i * 15}deg`, "--distance": `${125 + (i % 4) * 22}px`, "--delay": `${(i % 6) * 22}ms` } as React.CSSProperties} />
+        ))}
+      </div>
+      <div className="playground-celebration-card">
+        <span className="playground-celebration-mark"><Check size={30} strokeWidth={3} /></span>
+        <span className="playground-celebration-copy"><strong>Practice complete</strong><small>You learned the move.</small></span>
+        <Sparkles className="playground-celebration-spark" size={22} aria-hidden="true" />
       </div>
     </div>
   );

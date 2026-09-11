@@ -120,7 +120,7 @@ test("exact word counts do not depend on a model's arithmetic", () => {
   assert.equal(countExplanationWords("A well-known idea"), 3);
 });
 
-test("all eight action-only challenges accept completed work and reject empty work", () => {
+test("all action-only challenges accept completed work and reject empty work", () => {
   const p = { id: "p", name: "Weekend", description: "", instructions: "", files: [], memories: ["The deadline is Friday"], createdAt: "" };
   const s = { id: "s", name: "weekend", description: "", prompt: "Give three ideas" };
   const examples: Record<string, { w: WorkspaceEvidence; events: ArenaEvent[] }> = {};
@@ -131,7 +131,6 @@ test("all eight action-only challenges accept completed work and reject empty wo
   examples["export-it"] = { w: world([chat([text("u", "user"), text("a", "assistant", "Packing list")])]), events: [ev("exported")] };
   const skillWorld = () => { const w = world(); w.skills = [s]; w.chats[0].contexts = [{ ...context(), skill: s.name, at: "2026-09-06T02:00:00Z" }]; return w; };
   examples["browse-skills"] = { w: skillWorld(), events: [{ ...ev("skill_added", s.name), at: "2026-09-06T01:00:00Z" }] };
-  examples["cowork-to-skill"] = { w: skillWorld(), events: [{ ...ev("skill_from_cowork", s.name), at: "2026-09-06T01:00:00Z" }] };
   const memory = world([chat([{ id: "a", role: "assistant", parts: [{ type: "tool-remember", toolCallId: "r", state: "output-available", input: { fact: p.memories[0] }, output: { saved: true, fact: p.memories[0] } }] }])]);
   memory.projects = [p]; memory.chats[0].projectId = p.id; memory.chats[0].contexts = [{ ...context(), projectId: p.id }];
   examples["project-memory"] = { w: memory, events: [] };
@@ -141,7 +140,7 @@ test("all eight action-only challenges accept completed work and reject empty wo
   const grouped = world(); grouped.groups = [{ id: "g", name: "Trips" }]; grouped.chats[0].groupId = "g";
   examples["groups"] = { w: grouped, events: [ev("chat_grouped", "g")] };
   const actionOnly = CHALLENGES.filter((c) => !c.checks.length);
-  assert.equal(actionOnly.length, 8);
+  assert.equal(actionOnly.length, 7);
   for (const c of actionOnly) {
     const example = examples[c.slug]; assert.ok(example, c.slug);
     assert.ok(gradeBehaviors(c, example.events, example.w).every((b) => b.pass), c.slug);

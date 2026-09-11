@@ -296,6 +296,27 @@ html, body { height: 100%; width: 100%; }
 @keyframes lesson-burst {0%{opacity:1;transform:rotate(calc(var(--i)*20deg)) translateY(0) scale(.3);}100%{opacity:0;transform:rotate(calc(var(--i)*20deg)) translateY(-180px) rotate(80deg) scale(1);}}
 @media(max-width:767px){.lesson-player{height:100%;}.learning-welcome h1{font-size:29px;}.learn-option{min-height:52px;padding:12px 14px;}.lesson-player textarea{font-size:16px;}}
 @media(prefers-reduced-motion:reduce){.celebration i{animation:none;display:none;}.learn-option{transition:none;}}
+
+/* Playground completion: a short, tactile reward that never blocks the workspace. */
+.playground-celebration {position:fixed;inset:0;z-index:70;pointer-events:none;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;padding-top:28vh;}
+.playground-celebration-flash {position:absolute;inset:0;background:radial-gradient(circle at 50% 34%,color-mix(in srgb,var(--clay) 15%,transparent),transparent 42%);animation:playground-flash 1.8s ease-out both;}
+.playground-celebration-burst {position:absolute;left:50%;top:34%;width:1px;height:1px;}
+.playground-celebration-burst i {--angle:0deg;--distance:150px;--delay:0ms;position:absolute;left:-4px;top:-6px;width:8px;height:13px;border-radius:3px;background:var(--clay);animation:playground-confetti 1.45s cubic-bezier(.16,.72,.3,1) var(--delay) both;}
+.playground-celebration-burst i:nth-child(3n) {width:10px;height:10px;border-radius:50%;background:#d7a839;}
+.playground-celebration-burst i:nth-child(3n + 1) {background:#3b8a72;}
+.playground-celebration-card {position:relative;display:flex;align-items:center;gap:13px;min-width:270px;border:1px solid color-mix(in srgb,var(--clay) 35%,var(--line));border-radius:20px;background:var(--bg);padding:14px 18px 14px 14px;box-shadow:0 18px 60px #2f251d2b,0 4px 0 color-mix(in srgb,var(--clay) 20%,var(--line));animation:playground-card-pop 2.05s cubic-bezier(.2,.85,.25,1) both;}
+.playground-celebration-mark {display:flex;width:50px;height:50px;flex:0 0 50px;align-items:center;justify-content:center;border-radius:17px;background:var(--clay);color:white;box-shadow:0 4px 0 var(--clay-dark);animation:playground-mark-bounce .62s .12s cubic-bezier(.2,1.5,.35,1) both;}
+.playground-celebration-copy {display:flex;min-width:0;flex:1;flex-direction:column;gap:1px;color:var(--ink);}
+.playground-celebration-copy strong {font-size:17px;line-height:1.2;}
+.playground-celebration-copy small {font-size:12.5px;color:var(--ink-2);}
+.playground-celebration-spark {color:#d09a22;animation:playground-spark-spin .8s .18s ease-out both;}
+@keyframes playground-confetti {0%{opacity:0;transform:rotate(var(--angle)) translateY(0) rotate(0) scale(.25);}15%{opacity:1;}80%{opacity:1;}100%{opacity:0;transform:rotate(var(--angle)) translateY(calc(var(--distance) * -1)) rotate(210deg) scale(1);}}
+@keyframes playground-card-pop {0%{opacity:0;transform:translateY(18px) scale(.72);}14%{opacity:1;transform:translateY(0) scale(1.05);}24%{transform:scale(1);}78%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-12px) scale(.96);}}
+@keyframes playground-mark-bounce {0%{transform:scale(.4) rotate(-18deg);}65%{transform:scale(1.15) rotate(4deg);}100%{transform:scale(1) rotate(0);}}
+@keyframes playground-spark-spin {0%{opacity:0;transform:scale(.3) rotate(-70deg);}100%{opacity:1;transform:scale(1) rotate(0);}}
+@keyframes playground-flash {0%{opacity:0;}12%{opacity:1;}100%{opacity:0;}}
+@media(max-width:767px){.playground-celebration{padding-top:23vh;}.playground-celebration-burst{top:26%;}.playground-celebration-card{min-width:250px;padding:12px 15px 12px 12px;}.playground-celebration-mark{width:46px;height:46px;flex-basis:46px;}}
+@media(prefers-reduced-motion:reduce){.playground-celebration-burst,.playground-celebration-flash{display:none;}.playground-celebration-card,.playground-celebration-mark,.playground-celebration-spark{animation:none;}}
 @media (max-width:767px) and (max-height:600px) {
  .lesson-stage .lesson-instructions {max-height:75px;overflow-y:auto;}
  .lesson-player textarea {min-height:40px;max-height:64px;}
