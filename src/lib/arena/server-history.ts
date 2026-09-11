@@ -1,4 +1,14 @@
 import { isToolUIPart, getToolName, type UIMessage } from "ai";
+import { needsReply } from "../chat-failure";
+
+/** Retry only the latest failed turn, reusing the server's original user message. */
+export function retryHistory(previous: UIMessage[], incoming: UIMessage[]): UIMessage[] {
+  const index = previous.findLastIndex((m) => m.role === "user");
+  const last = incoming.at(-1);
+  if (index < 0 || last?.role !== "user" || last.id !== previous[index].id) throw new Error("The message to retry was not found. Send a new message.");
+  if (!needsReply(previous)) throw new Error("This reply already finished. Send a new message to continue.");
+  return previous.slice(0, index + 1);
+}
 
 /** Reuse server replies verbatim. Only a new user message or an answer to a pending question may be added. */
 export function advanceHistory(previous: UIMessage[], incoming: UIMessage[]): UIMessage[] {

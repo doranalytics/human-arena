@@ -10,13 +10,15 @@ import { isConnectorId, type ConnectorId } from "@/lib/connectors";
 import { BUILTIN_SKILLS } from "@/lib/skills";
 import { getMember } from "@/lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
-import { advanceHistory } from "@/lib/arena/server-history";
+import { advanceHistory, retryHistory } from "@/lib/arena/server-history";
 import type { TurnContext } from "@/lib/types";
 import { repairChatHistory } from "@/lib/chat-history";
+import { chatFailure } from "@/lib/chat-failure";
 
 export const maxDuration = 120;
 
 interface Body {
+  trigger?: string;
   messages: UIMessage[];
   id?: string;
   attemptId?: string;
@@ -124,10 +126,10 @@ export async function POST(req: Request) {
     const { data: old, error: historyError } = await db.from("attempt_chats").select("messages,contexts,pending").eq("attempt_id", attempt.id).eq("chat_id", b.id).maybeSingle();
     if (historyError) return NextResponse.json({ error: "Could not load your conversation" }, { status: 503 });
     if (old?.pending) return NextResponse.json({ error: "A reply is still running" }, { status: 409 });
-    try { b.messages = advanceHistory(old?.messages ?? [], b.messages); }
+    try { b.messages = b.trigger === "regenerate-message" ? retryHistory(old?.messages ?? [], b.messages) : advanceHistory(old?.messages ?? [], b.messages); }
     catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "Invalid conversation" }, { status: 409 }); }
     const lastUser = b.messages.findLast((m) => m.role === "user");
-    contexts = old?.contexts ?? [];
+    contexts = (old?.contexts ?? []).filter((x: TurnContext) => b.trigger !== "regenerate-message" || x.messageId !== lastUser?.id);
     if (lastUser && !contexts.some((x) => x.messageId === lastUser.id)) contexts.push({
       messageId: lastUser.id, at: new Date().toISOString(), model, webSearch: !!b.webSearch, research: !!b.research,
       memoryOff: !!b.memoryOff, cowork: !!b.cowork, customInstructions: b.instructions?.trim().slice(0, 2000) ?? "",
@@ -140,7 +142,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Fast runs on OpenAI (GPT-5.6 Luna) when its key is present, else Claude stands in. Smart is Claude.
+    // Both learner presets use Luna; provider fallback is only for missing configuration.
     const wanted = MODELS[model];
     const useOpenAI = wanted.provider === "openai" && !!openaiKey;
     const tools: ToolSet = { ...connectorTools(connected), ...baseTools() };
@@ -172,21 +174,26 @@ export async function POST(req: Request) {
       maxOutputTokens: b.research ? 8000 : 4000,
       providerOptions,
       onError: async ({ error }) => {
-        console.error("[chat]", error instanceof Error ? error.message : error);
+        const failure = chatFailure(error);
+        console.error("[chat]", { provider: useOpenAI ? "openai" : "anthropic", model: useOpenAI ? wanted.id : FAST_FALLBACK, kind: failure.kind, status: failure.status });
         if (savedAttempt) await adminClient().from("attempt_chats").update({ pending: false }).eq("attempt_id", savedAttempt).eq("chat_id", b.id!);
       },
     });
     return result.toUIMessageStreamResponse({ originalMessages: b.messages, sendReasoning: true, sendSources: true,
-      onEnd: async ({ messages }) => {
+      onError: (error) => chatFailure(error).message,
+      onEnd: async ({ messages, responseMessage, outcome, isAborted }) => {
         if (!savedAttempt) return;
-        const { error } = await adminClient().from("attempt_chats").update({ messages, contexts, pending: false }).eq("attempt_id", savedAttempt).eq("chat_id", b.id!);
+        const failed = outcome.status === "failed" || isAborted;
+        const recorded = failed ? messages.map((m) => m.id === responseMessage.id ? { ...m, metadata: { replyFailed: true } } : m) : messages;
+        const { error } = await adminClient().from("attempt_chats").update({ messages: recorded, contexts, pending: false }).eq("attempt_id", savedAttempt).eq("chat_id", b.id!);
         if (error) console.error("[chat] Could not save completed response");
       },
     });
   } catch (error) {
-    console.error("[chat] Could not start response", error instanceof Error ? error.message : "Unknown error");
+    const failure = chatFailure(error);
+    console.error("[chat] Could not start response", { kind: failure.kind, status: failure.status });
     if (savedAttempt) await adminClient().from("attempt_chats").update({ pending: false }).eq("attempt_id", savedAttempt).eq("chat_id", b.id!);
-    return NextResponse.json({ error: "Could not start the reply. Please try again." }, { status: 503 });
+    return NextResponse.json({ error: failure.message }, { status: 503 });
   }
 }
 

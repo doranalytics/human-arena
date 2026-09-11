@@ -7,6 +7,7 @@ import type { Chat } from "@/lib/types";
 import { useStore, saveMessages, track, getState, addMemory, newChat, freeTurnsLeft, consumeFreeTurn, markCowork, clearPendingPrompt, setState, recordContext, setChatBusy, finishScheduleRun } from "@/lib/store";
 import { Message } from "./message";
 import { chatPreferences } from "@/lib/chat-preferences";
+import { needsReply } from "@/lib/chat-failure";
 import { cn } from "@/lib/utils";
 import { useLearning } from "@/lib/learning/client";
 import { Composer, type ComposerSubmit } from "./composer";
@@ -65,7 +66,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       return { body: { ...b, messages, id, trigger, messageId } };
     },
   }), [chat.id]);
-  const { messages, sendMessage, status, stop, error, addToolOutput } = useChat({ id: chat.id, messages: chat.messages, transport, sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls });
+  const { messages, sendMessage, status, stop, error, addToolOutput, regenerate } = useChat({ id: chat.id, messages: chat.messages, transport, sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls });
   const busy = status === "submitted" || status === "streaming";
   const bottomRef = useRef<HTMLDivElement>(null);
   const trackedTools = useRef<Set<string>>(new Set(chat.messages.flatMap((m) => m.parts.filter(isToolUIPart).filter((p) => p.state === "output-available").map((p) => p.toolCallId))));
@@ -168,6 +169,10 @@ export function ChatView({ chat }: { chat: Chat }) {
   const empty = messages.length === 0;
   const grading = useStore((s) => s.grading);
   const historical = !!attempt && chat.attemptId !== attempt.id;
+  // Recover an interrupted reply after a reload, while leaving tool questions open.
+  const interrupted = !busy && !empty && !chat.closed && !historical && needsReply(messages)
+    && !messages.at(-1)?.parts.some((p) => isToolUIPart(p) && p.state !== "output-available" && p.state !== "output-error");
+  const replyError = error || interrupted ? (error?.message && error.message !== "An error occurred." ? error.message : "The AI reply could not finish. Your message is saved. Please retry.") : null;
   const composer = chat.closed || historical ? (
     <div className="flex items-center justify-between gap-3 rounded-2xl border border-ok/40 bg-ok/[0.06] px-4 py-3 text-[13.5px]">
       <span>{historical ? "This saved thread belongs to a different session." : "This session is complete. Your thread is saved."}</span>
@@ -207,7 +212,7 @@ export function ChatView({ chat }: { chat: Chat }) {
             <Message key={m.id} m={m} onExport={() => track("exported", undefined, chat.id)} onToolOutput={(toolCallId, output) => addToolOutput({ tool: "ask_user", toolCallId, output })} streaming={busy && i === messages.length - 1 && m.role === "assistant"} />
           ))}
           {busy && messages[messages.length - 1]?.role === "user" && <Message m={{ id: "pending", role: "assistant", parts: [] }} streaming />}
-          {error && <div className="rounded-lg border border-bad/30 bg-red-50 px-3 py-2 text-[13px] text-bad">Something went wrong: {error.message}</div>}
+          {replyError && <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-bad/30 bg-red-50 px-3 py-3 text-[13px] text-bad"><span className="min-w-0 flex-1">{replyError}</span><button disabled={busy || grading || chat.closed || historical} onClick={() => void regenerate()} className="min-h-10 rounded-lg border border-bad/30 px-3 font-medium hover:bg-red-100 disabled:opacity-50">Retry reply</button></div>}
           <div ref={bottomRef} />
         </div>
       </div>

@@ -13,6 +13,7 @@ import { transcriptOf } from "@/lib/transcript";
 import type { ArenaEvent, ArenaResult, Chat, TurnContext } from "@/lib/types";
 import { readPractice } from "@/lib/practice-server";
 import { isArenaChallenge } from "@/lib/game-mode";
+import { needsReply } from "@/lib/chat-failure";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
@@ -47,6 +48,8 @@ export async function POST(req: Request) {
     const { data: saved, error: chatError } = await db.from("attempt_chats").select("*").eq("attempt_id", a.id);
     if (chatError) return fail("Could not load the saved conversation. Try again.");
     if (saved?.some((ch) => ch.pending)) return fail("Wait for the assistant to finish before submitting.", 409);
+    const latest = [...(saved ?? [])].sort((a, b) => ((b.contexts as TurnContext[])?.at(-1)?.at ?? "").localeCompare((a.contexts as TurnContext[])?.at(-1)?.at ?? ""))[0];
+    if (!latest || needsReply(latest.messages)) return fail("The latest AI reply has not finished. Retry your message before submitting. Your attempt is still open.", 409);
     // The content grader uses server-recorded conversations, not client-reported assistant replies.
     chats = (saved ?? []).map((ch) => {
       const workspaceChat = chats.find((x) => x.id === ch.chat_id);

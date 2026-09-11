@@ -19,7 +19,7 @@ Switching areas closes an active attempt and retains its chat. Finishing practic
 
 ## Workspace
 
-Chat supports files, images, dictation, model settings, web search, research, projects, custom instructions, skills and Cowork. Fast uses the configured Luna model when an OpenAI key is available, with a Claude fallback; see `src/lib/models.ts` for exact configuration.
+Chat supports files, images, dictation, model settings, web search, research, projects, custom instructions, skills and Cowork. Fast and Smart both use Luna; selecting Smart defaults to higher effort. A Claude fallback remains for installations without an OpenAI key; see `src/lib/models.ts` for configuration. Failed replies can be retried with the original prompt and attachments. Submission waits for the latest reply to finish, so a connection error does not become a failed grade.
 
 The assistant starts without company context. Connected sources are synthetic training data. Email sending is simulated. Saved schedules support manual test runs; no background scheduler is running. The practice instructions explain those boundaries.
 
