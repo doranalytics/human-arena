@@ -9,7 +9,7 @@ Production: https://howto-ai-games.vercel.app/
 
 ## Current entry flow
 
-Six onboarding screens introduce the product, collect interests, experience and goals, explain both areas, and let the learner choose either one. Both remain available from the mode switch. There is no daily commitment, required lesson order, ChatGPT surface, or sign-in gate while testing. “Review onboarding” reopens the flow.
+Five onboarding screens introduce the product, collect interests, proficiency (a five-bar scale) and goals, then explain both areas once as the learner chooses. Choosing Playground opens the untimed “Create a skill” exercise directly in the chat sandbox with optional pointers; choosing Arena opens its challenge list. Both remain available from the mode switch. There is no daily commitment, required lesson order, ChatGPT surface, or sign-in gate while testing. “Review onboarding” reopens the flow.
 
 Playground currently has nine exercises in `src/lib/playground.ts`. All use the actual chat workspace. Prompt chips fill the composer for the learner to edit or send. Feature exercises check observable actions and completed replies; these are practice markers, not assessments of output quality.
 

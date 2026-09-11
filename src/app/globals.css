@@ -360,6 +360,11 @@ html, body { height: 100%; width: 100%; }
 .games-option-grid .learn-option-icon svg {width:20px;height:20px;}
 .games-option-grid .learn-option-check {width:17px;height:17px;}
 .learning-welcome .games-mode-option {min-height:112px;}
+.proficiency-bars {display:flex;width:48px;height:36px;flex-shrink:0;align-items:flex-end;gap:3px;}
+.proficiency-bars > span {width:6px;border-radius:3px;background:var(--line);}
+.proficiency-bars > span[data-filled="true"] {background:var(--clay);}
+.learning-welcome .proficiency-option {min-height:68px;gap:12px;padding:9px 12px;}
+.proficiency-option:focus-within {outline:3px solid var(--clay);outline-offset:3px;}
 @media(max-width:767px) {
   .games-setup-compact {padding-top:8px;padding-bottom:12px;}
   .games-setup-compact h1 {font-size:25px;}

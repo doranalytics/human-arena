@@ -293,9 +293,9 @@ export const MOTIVATIONS = [
 export const EXPERIENCE = [
   "I’ve barely tried AI",
   "I ask basic questions",
-  "I regularly refine answers",
+  "I’m confident with prompting",
   "I use files and connected tools",
-  "I build reusable workflows",
+  "I use coding agents",
 ];
 const INTEREST_OUTCOMES: Record<string, string> = {
   "Better answers": "Give clearer instructions and refine AI’s answers.",
