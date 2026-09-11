@@ -58,7 +58,7 @@ export function ProjectsPage() {
               </div>
             )}
           </div>
-          <button onClick={() => openDialog({ kind: "new-project" })} className="flex h-10 items-center rounded-xl bg-ink px-4 text-[13.5px] font-medium text-bg hover:bg-black">New project</button>
+          <button data-guide="new-project" onClick={() => openDialog({ kind: "new-project" })} className="flex h-10 items-center rounded-xl bg-ink px-4 text-[13.5px] font-medium text-bg hover:bg-black">New project</button>
         </div>
       </div>
 
@@ -66,7 +66,7 @@ export function ProjectsPage() {
         <div className="mt-16 flex flex-col items-center text-center">
           <div className="font-serif text-[22px]">{q ? "No projects match." : "No projects yet."}</div>
           <div className="mt-1 max-w-[42ch] text-[13.5px] text-ink-2">A project keeps related chats, files and standing instructions together. Every chat inside it starts with that context.</div>
-          {!q && <button onClick={() => openDialog({ kind: "new-project" })} className="mt-5 flex h-10 items-center rounded-xl bg-ink px-4 text-[13.5px] font-medium text-bg hover:bg-black">New project</button>}
+          {!q && <button data-guide="new-project" onClick={() => openDialog({ kind: "new-project" })} className="mt-5 flex h-10 items-center rounded-xl bg-ink px-4 text-[13.5px] font-medium text-bg hover:bg-black">New project</button>}
         </div>
       ) : (
         <div className="mt-8 grid gap-5 md:grid-cols-2">

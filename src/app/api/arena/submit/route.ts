@@ -12,6 +12,7 @@ import { SubmissionSchema } from "@/lib/arena/submission";
 import { transcriptOf } from "@/lib/transcript";
 import type { ArenaEvent, ArenaResult, Chat, TurnContext } from "@/lib/types";
 import { readPractice } from "@/lib/practice-server";
+import { isArenaChallenge } from "@/lib/game-mode";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
@@ -25,6 +26,7 @@ export async function POST(req: Request) {
   const b = parsed.data;
   let c = getChallenge(b.slug);
   if (!c) return NextResponse.json({ error: "Unknown challenge" }, { status: 400 });
+  if (!isArenaChallenge(c.slug)) return NextResponse.json({ error: "This exercise is no longer scored in Arena." }, { status: 400 });
   const now = new Date();
   let startedAt = new Date(b.startedAt);
   let reference: string | undefined;

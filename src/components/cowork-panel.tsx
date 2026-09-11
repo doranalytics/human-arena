@@ -65,7 +65,7 @@ export function CoworkPanel({ chat, compact = false }: { chat: Chat; compact?: b
           )}
         </div>
         <div className="relative min-w-0 max-w-full" onClick={(e) => e.stopPropagation()}>
-          <button onClick={() => setOpen(open === "schedule" ? null : "schedule")} className={cn("flex min-h-10 max-w-full items-center gap-1 rounded-md px-2 py-1 hover:bg-bg-3 md:min-h-0", open === "schedule" && "bg-bg-3")}>
+          <button data-guide="schedule" onClick={() => setOpen(open === "schedule" ? null : "schedule")} className={cn("flex min-h-10 max-w-full items-center gap-1 rounded-md px-2 py-1 hover:bg-bg-3 md:min-h-0", open === "schedule" && "bg-bg-3")}>
             <Clock size={14} className="text-ink-3" /> Schedule <ChevronDown size={13} className="text-ink-3" />
           </button>
           {open === "schedule" && (

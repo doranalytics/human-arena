@@ -12,6 +12,7 @@ import { getMember } from "@/lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { advanceHistory } from "@/lib/arena/server-history";
 import type { TurnContext } from "@/lib/types";
+import { repairChatHistory } from "@/lib/chat-history";
 
 export const maxDuration = 120;
 
@@ -165,7 +166,7 @@ export async function POST(req: Request) {
     const result = streamText({
       model: languageModel,
       system: systemPrompt(b, connected),
-      messages: await convertToModelMessages(inlineTextFiles(b.messages)),
+      messages: await convertToModelMessages(inlineTextFiles(repairChatHistory(b.messages))),
       tools,
       stopWhen: stepCountIs(b.research || b.cowork ? 20 : 8),
       maxOutputTokens: b.research ? 8000 : 4000,
@@ -175,7 +176,7 @@ export async function POST(req: Request) {
         if (savedAttempt) await adminClient().from("attempt_chats").update({ pending: false }).eq("attempt_id", savedAttempt).eq("chat_id", b.id!);
       },
     });
-    return result.toUIMessageStreamResponse({ originalMessages: b.messages, sendReasoning: false, sendSources: true,
+    return result.toUIMessageStreamResponse({ originalMessages: b.messages, sendReasoning: true, sendSources: true,
       onEnd: async ({ messages }) => {
         if (!savedAttempt) return;
         const { error } = await adminClient().from("attempt_chats").update({ messages, contexts, pending: false }).eq("attempt_id", savedAttempt).eq("chat_id", b.id!);

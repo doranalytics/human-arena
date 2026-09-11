@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, ChevronRight, PanelLeft, Trash2, Pin, PinOff, Swords, Pencil, Folder, Clock, Check, MoreHorizontal, Archive, ArchiveRestore, X, Library, Box, SquarePen, FolderPlus, Settings, Cable, UserRoundPen } from "lucide-react";
+import { Plus, FolderOpen, SlidersHorizontal, Search, MessageSquare, ChevronDown, ChevronRight, PanelLeft, Trash2, Pin, PinOff, Swords, Pencil, Folder, Clock, Check, MoreHorizontal, Archive, ArchiveRestore, X, Library, Box, SquarePen, FolderPlus, Settings, Cable, UserRoundPen, Compass } from "lucide-react";
 import { useStore, newChat, openChat, openProject, deleteChat, togglePin, renameChat, moveChatToGroup, createGroup, setChatProject, setArchived, track, openGPT } from "@/lib/store";
 import { openDialog, toggleSidebar, closeMobileSidebar, setPage, useUI } from "@/lib/ui";
 import { useSession } from "@/lib/session";
@@ -13,9 +13,9 @@ import { useLearning, setLearning } from "@/lib/learning/client";
 import { cn } from "@/lib/utils";
 import type { Chat } from "@/lib/types";
 
-function NavItem({ icon, label, onClick, active }: { icon: React.ReactNode; label: string; onClick: () => void; active?: boolean }) {
+function NavItem({ icon, label, onClick, active, guide }: { guide?: string; icon: React.ReactNode; label: string; onClick: () => void; active?: boolean }) {
   return (
-    <button onClick={onClick} className={cn("flex h-11 w-full items-center gap-2.5 rounded-lg px-2 text-[14px] text-ink hover:bg-bg-3 md:h-8 md:text-[13.5px]", active && "bg-bg-3")}>
+    <button data-guide={guide} onClick={onClick} className={cn("flex h-11 w-full items-center gap-2.5 rounded-lg px-2 text-[14px] text-ink hover:bg-bg-3 md:h-8 md:text-[13.5px]", active && "bg-bg-3")}>
       <span className="text-ink-2">{icon}</span>
       <span className="truncate">{label}</span>
     </button>
@@ -120,6 +120,7 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
   const settings = useStore((s) => s.settings);
   const results = useStore((s) => s.results);
   const attempt = useStore((s) => s.attempt);
+  const mode = useStore((s) => s.gameMode);
   const session = useSession();
   const page = useUI((s) => s.page);
   const [q, setQ] = useState("");
@@ -155,7 +156,7 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain md:contents">
       <div className="px-2.5 pt-1">
         {chatgpt && <NavItem icon={<ChatGPTMark size={20} />} label="ChatGPT" onClick={() => { setPage(null); newChat(null); }} active={page === null} />}
-        <NavItem icon={<Swords size={18} />} label="Learning path" onClick={() => { setLearning({ active: null }); setPage("learning"); }} active={page === "learning"} />
+        <NavItem icon={mode === "playground" ? <Compass size={18} /> : <Swords size={18} />} label={mode === "playground" ? "Playground" : "Arena"} onClick={() => { setLearning({ active: null }); setPage("learning"); }} active={page === "learning"} />
         {chatgpt ? <>
           <NavItem icon={<Library size={18} />} label="Library" onClick={() => setPage("library")} active={page === "library"} />
           <div className="mb-1 mt-5 px-2 text-xs font-semibold">GPTs</div>
@@ -163,17 +164,17 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
           <NavItem icon={<Box size={18} />} label="Explore GPTs" onClick={() => setPage("gpts")} active={page === "gpts"} />
         </> : <>
           <NavItem icon={<Plus size={16} />} label="New" onClick={() => { setPage(null); newChat(activeProjectId); }} active={!page && !activeChatId && !activeProjectId && !attempt} />
-          <NavItem icon={<Swords size={16} className="text-clay" />} label="Challenges" onClick={() => openDialog({ kind: "challenges" })} />
-          <NavItem icon={<FolderOpen size={16} />} label="Projects" onClick={() => setPage("projects")} active={page === "projects"} />
-          <NavItem icon={<Clock size={16} />} label="Scheduled" onClick={() => setPage("scheduled")} active={page === "scheduled"} />
-          <NavItem icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings", section: "skills" })} />
+
+          <NavItem guide="projects" icon={<FolderOpen size={16} />} label="Projects" onClick={() => setPage("projects")} active={page === "projects"} />
+          <NavItem guide="scheduled" icon={<Clock size={16} />} label="Scheduled" onClick={() => setPage("scheduled")} active={page === "scheduled"} />
+          <NavItem guide="customize" icon={<SlidersHorizontal size={16} />} label="Customize" onClick={() => openDialog({ kind: "settings", section: "skills" })} />
         </>}
       </div>
 
       <div className="mt-4 px-2.5 pb-2 md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-contain">
         <div className="mb-1 flex items-center justify-between px-2">
           <span className="text-[12px] font-medium text-ink-3">Projects</span>
-          <button onClick={() => openDialog({ kind: "new-project" })} className="rounded p-0.5 text-ink-3 hover:bg-bg-3 hover:text-ink" title="New project">
+          <button onClick={() => openDialog({ kind: "new-project" })} className="rounded p-0.5 text-ink-3 hover:bg-bg-3 hover:text-ink" data-guide="new-project" title="New project">
             <Plus size={14} />
           </button>
         </div>
@@ -229,10 +230,10 @@ export function Sidebar({ mobile = false }: { mobile?: boolean }) {
           <Avatar name={name} src={avatar} size={28} />
           <span className="min-w-0 flex-1 truncate text-left text-[13.5px]">
             {name}{" "}
-            <span className="inline-flex items-center gap-1 text-ink-3">
-              · {tier !== "Analog" && <TierBadge tier={tier as Exclude<ReturnType<typeof tierFor>, "Analog">} size={12} />}
+            {mode === "arena" && <span className="inline-flex items-center gap-1 text-ink-3">
+              · {mode === "arena" && tier !== "Analog" && <TierBadge tier={tier as Exclude<ReturnType<typeof tierFor>, "Analog">} size={12} />}
               {tier}
-            </span>
+            </span>}
           </span>
           <ChevronDown size={14} className="text-ink-3" />
         </button>

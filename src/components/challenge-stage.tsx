@@ -12,7 +12,7 @@ import { BriefBody } from "./dialogs/challenges";
 import { ChallengeCriteria } from "./challenge-criteria";
 import { SkillPill } from "./skill-pill";
 
-function Card({ m, compact }: { m: Material; compact?: boolean }) {
+export function MaterialCard({ m, compact }: { m: Material; compact?: boolean }) {
   const icon = m.kind === "table" ? <Table2 size={15} /> : m.kind === "text" ? <Quote size={15} /> : m.mediaType.startsWith("image/") ? <ImageIcon size={15} /> : <FileText size={15} />;
   const hint = m.kind === "file" ? "Drag into the message box" : "Drag or click to drop in";
   return (
@@ -63,7 +63,7 @@ export function ChallengeStage({ c }: { c: ChallengeDef; attempt: Attempt }) {
       {materials.length > 0 && (
         <div className="mt-4">
           <div className="mb-2 text-[11.5px] font-medium uppercase tracking-wide text-ink-3">What you have</div>
-          <div className="flex flex-wrap gap-2.5">{materials.map((m) => <Card key={m.id} m={m} />)}</div>
+          <div className="flex flex-wrap gap-2.5">{materials.map((m) => <MaterialCard key={m.id} m={m} />)}</div>
         </div>
       )}
       <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[12px] text-ink-3">
@@ -99,7 +99,7 @@ export function ChallengeStrip({ c }: { c: ChallengeDef; attempt: Attempt }) {
             ))}
           </ol>
         </div>
-        {materials.length > 0 && <div className="flex max-w-full flex-wrap gap-1.5 pt-1 md:max-w-[45%] md:justify-end">{materials.map((m) => <Card key={m.id} m={m} compact />)}</div>}
+        {materials.length > 0 && <div className="flex max-w-full flex-wrap gap-1.5 pt-1 md:max-w-[45%] md:justify-end">{materials.map((m) => <MaterialCard key={m.id} m={m} compact />)}</div>}
       </div>
     </div>
   );

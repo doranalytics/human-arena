@@ -1,8 +1,9 @@
 import { ChatGPTMark } from "../chatgpt-mark";
-import { BookOpen, BriefcaseBusiness, Cable, CalendarCheck, Compass, Feather, Flame, GraduationCap, House, Layers, Lightbulb, MessageCircle, Palette, Rocket, Search, SlidersHorizontal, Sparkles, Sprout, Target, Timer, WandSparkles, Workflow, Wrench, type LucideIcon } from "lucide-react";
+import { BookOpen, BriefcaseBusiness, Cable, CalendarCheck, Compass, Feather, Flame, GraduationCap, House, Layers, Lightbulb, MessageCircle, Palette, Rocket, Search, SlidersHorizontal, Sparkles, Swords, Sprout, Target, Timer, WandSparkles, Workflow, Wrench, type LucideIcon } from "lucide-react";
 
 type Tone = "blue" | "violet" | "peach" | "gold" | "teal" | "rose";
 const icons: Record<string, [LucideIcon, Tone]> = {
+  Playground: [Compass, "blue"], Arena: [Swords, "peach"],
   ChatGPT: [MessageCircle, "teal"], Claude: [Sparkles, "peach"],
   "Better answers": [SlidersHorizontal, "violet"],
   Writing: [Feather, "violet"], Research: [Search, "blue"],

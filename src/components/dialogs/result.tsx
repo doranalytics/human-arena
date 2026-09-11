@@ -1,13 +1,12 @@
 "use client";
-import { Check, X, Swords, Flame } from "lucide-react";
+import { Check, X, Swords } from "lucide-react";
 import { Dialog, Button } from "../dialog";
-import { getChallenge } from "@/lib/arena/challenges";
+import { CHALLENGES, getChallenge } from "@/lib/arena/challenges";
 import { SkillPill } from "../skill-pill";
 import { useStore } from "@/lib/store";
 import { closeDialog, openDialog } from "@/lib/ui";
 import { fmtClock } from "@/lib/utils";
-import { recommendPractice } from "@/lib/practice";
-import { useSession } from "@/lib/session";
+import { isArenaChallenge } from "@/lib/game-mode";
 
 // Public action labels describe completed work. Use the same requirement as
 // an instruction on failure; preserve the original label in grading details.
@@ -20,15 +19,13 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
   const c = getChallenge(slug);
   const r = useStore((s) => s.latestResult?.slug === slug ? s.latestResult : s.results[slug]);
   const results = useStore((s) => s.results);
-  const { practice } = useSession();
   if (!c) return null;
-  const next = recommendPractice(results);
+  const next = CHALLENGES.find((c) => isArenaChallenge(c.slug) && !results[c.slug]?.passed);
   const steps = r ? [
     ...r.behaviors.map((b) => ({ label: b.label, pass: b.pass, evidence: "" })),
     ...r.checks.map((k) => ({ label: r.checkLabels?.[k.id] ?? c.checks.find((x) => x.id === k.id)?.label ?? k.id, pass: k.verdict === "pass", evidence: k.evidence })),
   ] : [];
   const missing = steps.find((s) => !s.pass);
-  const milestone = practice?.todayDone && [3, 7, 30].includes(practice.current);
   return (
     <Dialog
       open={open}
@@ -66,11 +63,6 @@ export function ResultDialog({ open, slug }: { open: boolean; slug: string }) {
               ))}
             </div>
           )}
-          {r.passed && practice?.todayDone && <div className="mt-4 flex items-center gap-2 rounded-lg bg-bg-2 px-3 py-2.5 text-[13px]">
-            <Flame size={16} className="shrink-0 text-clay" />
-            <span className="min-w-0 flex-1">{milestone ? `${practice.current} days of practice. Keep building.` : "Today’s practice complete"}</span>
-            <span className="shrink-0 text-[12px] tabular-nums text-ink-3">{practice.current} day streak</span>
-          </div>}
           <div className="mt-4 text-[12px] tabular-nums text-ink-3">
             {r.passed && <>{r.points} points · </>}{fmtClock(r.seconds)} elapsed · {r.hintsUsed} hint{r.hintsUsed === 1 ? "" : "s"}
           </div>

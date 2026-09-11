@@ -164,12 +164,12 @@ test("account workspaces restore their own active attempt without crossing accou
   Object.defineProperty(globalThis, "localStorage", { value: { getItem: (key: string) => entries.get(key) ?? null, setItem: (key: string, value: string) => entries.set(key, value) }, configurable: true });
   try {
     setState({ ownerId: null, chats: [], results: {}, attempt: null });
-    switchWorkspace("member-a"); startAttempt("ten-words"); const a = newChat();
+    switchWorkspace("member-a"); startAttempt("hand-it-off"); const a = newChat();
     switchWorkspace("member-b");
     assert.equal(getState().attempt, null); assert.equal(getState().chats.length, 0);
-    startAttempt("refine-it"); newChat();
+    startAttempt("chain-it"); newChat();
     switchWorkspace("member-a");
-    assert.equal(getState().attempt?.slug, "ten-words"); assert.equal(getState().activeChatId, a.id);
+    assert.equal(getState().attempt?.slug, "hand-it-off"); assert.equal(getState().activeChatId, a.id);
   } finally {
     if (oldWindow) Object.defineProperty(globalThis, "window", oldWindow); else Reflect.deleteProperty(globalThis, "window");
     if (oldStorage) Object.defineProperty(globalThis, "localStorage", oldStorage); else Reflect.deleteProperty(globalThis, "localStorage");

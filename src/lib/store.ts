@@ -11,9 +11,13 @@ import type { ChatGroup, Schedule, ArenaEvent, ArenaEventType, ArenaResult, Atte
 import { uid } from "./utils";
 import { getChallenge } from "./arena/challenges";
 import type { ConnectorId } from "./connectors";
-import { recoverWorkspace, clearedWorkspace } from "./workspace-recovery";
+import { recoverWorkspace, recoverGameMode, clearedWorkspace } from "./workspace-recovery";
+import { getPractice, practiceChecks } from "./playground";
+import type { GameMode } from "./game-mode";
 
 export interface State {
+  gameMode: GameMode;
+  practiceCompleted: Record<string, string>;
   chats: Chat[];
   projects: Project[];
   skills: CustomSkill[];
@@ -37,6 +41,8 @@ const KEY = "human-arena:v1";
 const storageKey = () => state.ownerId ? `${KEY}:member:${state.ownerId}` : KEY;
 
 const initial: State = {
+  gameMode: "playground",
+  practiceCompleted: {},
   chats: [],
   groups: [],
   schedules: [],
@@ -96,7 +102,7 @@ export function hydrate() {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) {
-      const saved = recoverWorkspace(JSON.parse(raw) as Partial<State>);
+      const saved = recoverGameMode(recoverWorkspace(JSON.parse(raw) as Partial<State>));
       const chats = (saved.chats ?? []).filter((c) => !c.draft);
       const activeChatId = saved.activeChatId && chats.some((c) => c.id === saved.activeChatId) ? saved.activeChatId : null;
       state = { ...initial, ...saved, chats, activeChatId, groups: saved.groups ?? [], schedules: saved.schedules ?? [], settings: { ...initial.settings, ...(saved.settings ?? {}) }, busyChatIds: [], grading: false, ownerId: null, hydrated: true };
@@ -122,7 +128,7 @@ export function useStore<T>(sel: (s: State) => T): T {
 /* ------------------------------------------------------------------ chats */
 export function newChat(projectId: string | null = null, title = "New chat"): Chat {
   const now = new Date().toISOString();
-  if (state.attempt && title === "New chat") title = getChallenge(state.attempt.slug)?.title ?? title;
+  if (state.attempt && title === "New chat") title = state.attempt.definition?.title ?? getChallenge(state.attempt.slug)?.title ?? title;
   const c: Chat = { id: uid("c"), title, projectId, messages: [], createdAt: now, updatedAt: now, attemptId: state.attempt?.id, draft: true };
   setState((s) => ({ chats: [c, ...s.chats], activeChatId: c.id, activeProjectId: projectId }));
   if (projectId) track("chat_in_project", projectId);
@@ -186,7 +192,7 @@ export function deleteSchedule(id: string) {
 export function runSchedule(id: string): Chat | null {
   const sc = state.schedules.find((x) => x.id === id);
   if (!sc) return null;
-  const c = newChat(sc.projectId, state.attempt ? getChallenge(state.attempt.slug)?.title : sc.name);
+  const c = newChat(sc.projectId, state.attempt ? state.attempt.definition?.title : sc.name);
   setState((s) => ({
     chats: s.chats.map((x) => (x.id === c.id ? { ...x, cowork: true, pendingPrompt: sc.prompt, draft: false } : x)),
     schedules: s.schedules.map((x) => (x.id === id ? { ...x, runs: [{ at: new Date().toISOString(), chatId: c.id }, ...x.runs] } : x)),
@@ -305,10 +311,33 @@ export function track(type: ArenaEventType, detail?: string, chatId = state.acti
   const ev: ArenaEvent = { type, at: new Date().toISOString(), detail, chatId };
   setState((s) => (s.attempt ? { attempt: { ...s.attempt, events: [...s.attempt.events, ev] } } : {}));
 }
-export function startAttempt(slug: string, serverId?: string, startedAt = new Date().toISOString(), version?: string, definition = getChallenge(slug) ?? undefined): Attempt {
-  const a: Attempt = { id: uid("a"), slug, startedAt, serverId, version, definition, events: [], hintsUsed: 0, chatIds: [] };
-  setState({ attempt: a });
+export function startAttempt(slug: string, serverId?: string, startedAt = new Date().toISOString(), version?: string, definition = getChallenge(slug) ?? undefined, mode: GameMode = "arena"): Attempt {
+  const a: Attempt = { id: uid("a"), slug, startedAt, serverId, version, definition, mode, events: [], hintsUsed: 0, chatIds: [] };
+  setState({ attempt: a, gameMode: mode });
   return a;
+}
+export function startPractice(slug: string) {
+  const exercise = getPractice(slug);
+  if (!exercise || state.grading || state.busyChatIds.length) return false;
+  endAttempt();
+  startAttempt(slug, undefined, new Date().toISOString(), undefined, exercise, "playground");
+  newChat(null, exercise.title);
+  return true;
+}
+export function finishPractice() {
+  const attempt = state.attempt;
+  const exercise = attempt?.mode === "playground" ? getPractice(attempt.slug) : null;
+  if (!attempt || !exercise || state.grading || state.busyChatIds.length) return false;
+  if (!practiceChecks(exercise, attempt.events, state).every((c) => c.pass)) return false;
+  setState({ practiceCompleted: { ...state.practiceCompleted, [exercise.slug]: new Date().toISOString() } });
+  endAttempt();
+  return true;
+}
+/** Mode changes close the current session; chats and earned progress are kept. */
+export function switchGameMode(mode: GameMode) {
+  if (state.grading || state.busyChatIds.length) return false;
+  if (state.gameMode !== mode) { endAttempt(); setState({ gameMode: mode, activeChatId: null, activeProjectId: null }); }
+  return true;
 }
 export function useHint() {
   setState((s) => (s.attempt ? { attempt: { ...s.attempt, hintsUsed: s.attempt.hintsUsed + 1 } } : {}));
@@ -316,10 +345,11 @@ export function useHint() {
 }
 export function endAttempt(result?: ArenaResult, expectedId = state.attempt?.id) {
   if (!state.attempt || state.attempt.id !== expectedId) return false;
+  if (result && state.attempt.mode === "playground") return false;
   setState((s) => {
     const a = s.attempt;
     // Any graded challenge closes the threads it ran in; they stay in the sidebar.
-    const chats = result && a ? s.chats.map((c) => (c.attemptId === a.id && !c.draft ? { ...c, closed: true } : c)) : s.chats;
+    const chats = a ? s.chats.filter((c) => !(c.attemptId === a.id && c.draft)).map((c) => c.attemptId === a.id ? { ...c, closed: true, pendingPrompt: undefined } : c) : s.chats;
     return { attempt: null, grading: false, latestResult: result ?? s.latestResult, activeChatId: null, activeProjectId: null, chats, results: result ? { ...s.results, [result.slug]: bestOf(s.results[result.slug], result) } : s.results };
   });
   return true;
@@ -367,7 +397,7 @@ export function switchWorkspace(ownerId: string | null) {
   try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch { /* in-memory only */ }
   const guest = state.ownerId === null ? state : null;
   let saved: Partial<State> = {};
-  try { saved = recoverWorkspace(JSON.parse(localStorage.getItem(ownerId ? `${KEY}:member:${ownerId}` : KEY) ?? "{}")); } catch { /* fresh workspace */ }
+  try { saved = recoverGameMode(recoverWorkspace(JSON.parse(localStorage.getItem(ownerId ? `${KEY}:member:${ownerId}` : KEY) ?? "{}"))); } catch { /* fresh workspace */ }
   // First sign-in keeps the guest's practice workspace, but only server results enter the account score.
   if (!Object.keys(saved).length && ownerId && guest) saved = { chats: guest.chats, projects: guest.projects, skills: guest.skills, gpts: guest.gpts, connectors: guest.connectors, settings: guest.settings, groups: guest.groups, schedules: guest.schedules };
   const ownWorkspace = !!ownerId && saved.ownerId === ownerId;

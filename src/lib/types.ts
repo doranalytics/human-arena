@@ -158,6 +158,7 @@ export interface ArenaEvent {
 }
 
 export interface Attempt {
+  mode?: import("./game-mode").GameMode;
   id: string;
   slug: string;
   startedAt: string;

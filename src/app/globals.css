@@ -346,3 +346,34 @@ html, body { height: 100%; width: 100%; }
   [data-surface="chatgpt"] .workspace-sidebar {width:260px;}
   [data-surface="chatgpt"] .workspace-sidebar .md\:h-8 {height:38px;}
 }
+
+/* One workspace, two modes. Competition is identified with text as well as color. */
+.app-shell[data-mode="arena"] { --clay:#cd572f; --clay-dark:#a63b19; }
+[data-mode="arena"] .games-topbar {background:color-mix(in srgb,var(--clay) 6%,var(--bg));border-bottom-color:color-mix(in srgb,var(--clay) 28%,var(--line));}
+[data-competing="true"] .games-topbar {box-shadow:inset 0 3px var(--clay);animation:arena-enter .5s ease-out;}
+@keyframes arena-enter {from{background:color-mix(in srgb,var(--clay) 24%,var(--bg));}to{background:color-mix(in srgb,var(--clay) 6%,var(--bg));}}
+.practice-target {outline:2px solid var(--clay)!important;outline-offset:3px;box-shadow:0 0 0 6px color-mix(in srgb,var(--clay) 10%,transparent);}
+.practice-guide-arrow {animation:practice-nudge 1.8s ease-in-out infinite;}
+@keyframes practice-nudge {50%{transform:translateY(-3px);}}
+.learning-welcome .games-option-grid .learn-option {gap:8px;min-height:68px;padding:9px 10px;font-size:13px;line-height:1.25;}
+.games-option-grid .learn-option-icon {width:32px;height:32px;border-radius:10px;}
+.games-option-grid .learn-option-icon svg {width:20px;height:20px;}
+.games-option-grid .learn-option-check {width:17px;height:17px;}
+.learning-welcome .games-mode-option {min-height:112px;}
+@media(max-width:767px) {
+  .games-setup-compact {padding-top:8px;padding-bottom:12px;}
+  .games-setup-compact h1 {font-size:25px;}
+  .games-setup-compact > div {margin-top:16px;}
+  .learning-welcome .games-option-grid .learn-option {min-height:68px;}
+  .learning-welcome .games-setup-step:not(.games-setup-compact) .learn-option {min-height:62px;padding:9px 12px;font-size:14px;}
+  .learning-welcome .games-mode-option {min-height:116px!important;}
+}
+@media(prefers-reduced-motion:reduce) {
+  [data-competing="true"] .games-topbar, .practice-guide-arrow {animation:none;}
+}
+@media(max-width:360px) {
+  .learning-welcome .games-option-grid .learn-option {gap:6px;padding:8px;font-size:12px;}
+  .games-option-grid .learn-option-icon {width:24px;height:28px;}
+  .games-option-grid .learn-option-icon svg {width:18px;height:18px;}
+  .games-option-grid .learn-option-check {width:14px;height:14px;}
+}

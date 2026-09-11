@@ -6,6 +6,7 @@ import { getChallenge } from "@/lib/arena/challenges";
 import { challengeVersion } from "@/lib/arena/contract";
 import { getKey } from "@/lib/arena/keys";
 import { practiceTimezone } from "@/lib/practice";
+import { isArenaChallenge } from "@/lib/game-mode";
 
 export async function POST(req: Request) {
   const member = await getMember();
@@ -13,6 +14,7 @@ export async function POST(req: Request) {
   const { slug, timezone } = (await req.json().catch(() => ({}))) as { slug?: string; timezone?: unknown };
   const c = slug && getChallenge(slug);
   if (!c) return NextResponse.json({ error: "Unknown challenge" }, { status: 400 });
+  if (!isArenaChallenge(c.slug)) return NextResponse.json({ error: "This exercise is no longer an Arena challenge. Open Playground to practice." }, { status: 400 });
   if (!member.practice_timezone) {
     // Set once per account, not per request or device. Changing browser zones
     // cannot create additional practice days or erase an existing local day.

@@ -8,7 +8,9 @@ import { SKILLS, SKILL_GROUPS } from "@/lib/arena/skills";
 import { CHALLENGES } from "@/lib/arena/challenges";
 import { TIERS, tierFor } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
-import { PracticeStatus } from "./practice-status";
+import { isArenaChallenge } from "@/lib/game-mode";
+const currentChallenges = CHALLENGES.filter((c) => isArenaChallenge(c.slug));
+const currentSkills = new Set(currentChallenges.flatMap((c) => c.badges));
 
 function Label({ children }: { children: React.ReactNode }) {
   return <div className="mb-1.5 text-[12px] font-medium text-ink-3">{children}</div>;
@@ -24,13 +26,9 @@ export function ProgressPanel() {
   const next = tier === "AI-Native" ? null : TIERS.find((t) => t.min > pts) ?? null;
   const floor = current?.min ?? 0;
   const progress = next ? Math.min(1, Math.max(0, (pts - floor) / (next.min - floor))) : 1;
-  const gradable = Object.values(SKILLS).filter((s) => s.status === "ready").length;
+  const gradable = currentSkills.size;
   return (
     <div className="space-y-7">
-      <section>
-        <Label>Daily practice</Label>
-        <div className="rounded-xl border border-line p-4"><PracticeStatus /></div>
-      </section>
       <section>
         <Label>Lifetime progress</Label>
         <div className="rounded-xl border border-line bg-bg-2/60 p-4">
@@ -58,13 +56,13 @@ export function ProgressPanel() {
         </div>
       </section>
       <section>
-        <Label>Skills earned <span className="font-normal">· {[...earned].filter((id) => id in SKILLS).length} of {gradable} · {Object.keys(SKILLS).length - gradable} coming</span></Label>
+        <Label>Skills earned <span className="font-normal">· {[...earned].filter((id) => currentSkills.has(id)).length} of {gradable}</span></Label>
         <div className="space-y-3">
-          {SKILL_GROUPS.map((g) => (
+          {SKILL_GROUPS.filter((g) => Object.entries(SKILLS).some(([id, s]) => s.group === g && currentSkills.has(id))).map((g) => (
             <div key={g}>
               <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-ink-3">{g}</div>
               <div className="grid grid-cols-1 gap-1.5 min-[380px]:grid-cols-2 sm:grid-cols-3">
-                {Object.entries(SKILLS).filter(([, s]) => s.group === g).map(([id, s]) => {
+                {Object.entries(SKILLS).filter(([id, s]) => s.group === g && currentSkills.has(id)).map(([id, s]) => {
                   const has = earned.has(id);
                   const later = s.status === "later";
                   return later ? (
@@ -74,7 +72,7 @@ export function ProgressPanel() {
                         <span className="shrink-0 text-[10px] uppercase tracking-wide text-ink-3">soon</span>
                       </div>
                     ) : (
-                      <button key={id} onClick={() => { const c = CHALLENGES.find((x) => x.badges.includes(id)); if (c) { closeDialog(); openDialog({ kind: "brief", slug: c.slug }); } }} title={has ? "Earned. Open the challenge again" : "Open the challenge that teaches it"} className={cn("flex min-h-10 items-center gap-2 rounded-lg border px-2.5 md:min-h-0 py-1.5 text-left text-[12.5px] transition hover:border-line-2", has ? "border-ok/50 bg-ok/10 font-medium text-ink shadow-sm shadow-ok/10" : "border-line bg-bg text-ink-2 hover:bg-bg-2")}>
+                      <button key={id} onClick={() => { const c = currentChallenges.find((x) => x.badges.includes(id)); if (c) { closeDialog(); openDialog({ kind: "brief", slug: c.slug }); } }} title={has ? "Earned. Open the challenge again" : "Open the challenge that teaches it"} className={cn("flex min-h-10 items-center gap-2 rounded-lg border px-2.5 md:min-h-0 py-1.5 text-left text-[12.5px] transition hover:border-line-2", has ? "border-ok/50 bg-ok/10 font-medium text-ink shadow-sm shadow-ok/10" : "border-line bg-bg text-ink-2 hover:bg-bg-2")}>
                         <SkillIcon id={id} size={15} className={has ? "text-ok" : "text-ink-3"} />
                         <span className="min-w-0 flex-1 truncate">{s.name}</span>
                         {has && <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-ok text-bg"><Check size={10} strokeWidth={3} /></span>}

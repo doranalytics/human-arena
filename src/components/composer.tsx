@@ -112,6 +112,11 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
     return () => window.removeEventListener("arena:material", on);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useEffect(() => {
+    const receive = (event: Event) => { const value = (event as CustomEvent<unknown>).detail; if (typeof value === "string") { setText(value); ta.current?.focus(); } };
+    window.addEventListener("playground:prompt", receive);
+    return () => window.removeEventListener("playground:prompt", receive);
+  }, []);
   const canSend = !busy && !grading && (text.trim().length > 0 || files.length > 0);
 
   async function submit() {
@@ -209,6 +214,8 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
             if (fs.length) addFiles(fs);
           }}
           rows={1}
+          data-guide="composer"
+          aria-label="Message"
           placeholder={chatgpt ? "Ask ChatGPT" : cowork ? "What should I get done?" : "How can I help you today?"}
           className="max-h-[min(15rem,30dvh)] w-full resize-none bg-transparent px-4 pb-1 pt-3.5 text-[16px] leading-6 outline-none placeholder:text-ink-3"
         />
@@ -219,7 +226,7 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
         </div>}
         <div className="flex flex-wrap items-center gap-1 px-2 pb-2 pt-1 md:px-2.5 md:pb-2.5">
           <div className="relative" onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => { setPlusOpen((v) => !v); }} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-8 md:w-8" title="Add files and tools">
+            <button type="button" onClick={() => { setPlusOpen((v) => !v); }} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-8 md:w-8" data-guide="attachments" title="Add files and tools">
               <Plus size={18} />
             </button>
             {plusOpen && (
@@ -255,7 +262,7 @@ export function Composer({ onSubmit, busy, grading, onStop, webSearch, setWebSea
             {cowork && <Chip icon={<Bot size={13} />} label="Agent mode" onRemove={() => setCowork(false)} />}
           </> : <div className="flex shrink-0 items-center rounded-lg border border-line p-0.5 text-[13px]">
             <button type="button" onClick={() => setCowork(false)} className={cn("min-h-9 rounded-md px-2 py-1 md:min-h-0 md:px-2.5", !cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Chat</button>
-            <button type="button" onClick={() => setCowork(true)} title="Hand it a task. It plans the steps and works through them with your connectors." className={cn("min-h-9 rounded-md px-2 py-1 md:min-h-0 md:px-2.5", cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Cowork</button>
+            <button data-guide="mode" type="button" onClick={() => setCowork(true)} title="Hand it a task. It plans the steps and works through them with your connectors." className={cn("min-h-9 rounded-md px-2 py-1 md:min-h-0 md:px-2.5", cowork ? "bg-bg-3 font-medium" : "text-ink-3 hover:text-ink")}>Cowork</button>
           </div>}
           <div className="hidden md:contents">
             {activeSkill && <span className="ml-1 rounded-md bg-[#e8f0fe] px-2 py-1 text-[12.5px] font-medium text-[#1a56db]">/{activeSkill}</span>}

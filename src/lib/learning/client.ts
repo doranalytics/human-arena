@@ -47,7 +47,7 @@ export async function loadLearning() {
     setLearning({
       loaded: true,
       runs: j.runs,
-      surface: j.onboarding?.product ?? "claude",
+      surface: "claude",
       preferredStart: j.onboarding?.start === "better-context" ? "better-context" : "shape-answers",
       onboarding: j.onboarding ?? null,
       error: "",

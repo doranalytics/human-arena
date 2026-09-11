@@ -27,16 +27,19 @@ import { SettingsDialog } from "./dialogs/settings";
 import { NewProjectDialog } from "./dialogs/new-project";
 import { QuitDialog } from "./dialogs/quit";
 import { LearningOnboarding } from "./learning/onboarding";
-import { LearningHome } from "./learning/home";
-import { loadLearning, useLearning } from "@/lib/learning/client";
+import { GamesHome } from "./games-home";
+import { PracticeGuide } from "./playground/practice-guide";
+import { loadLearning } from "@/lib/learning/client";
 import { setPage } from "@/lib/ui";
 
 export function Arena() {
   useMobileViewport();
   const session = useSession();
-  const learning = useLearning();
+
   const memberId = session.me?.id;
   useEffect(() => { if(memberId) { void loadLearning(); setPage("learning"); } }, [memberId]);
+  const gameMode = useStore((s) => s.gameMode);
+  const attempt = useStore((s) => s.attempt);
   const hydrated = useStore((s) => s.hydrated);
   const activeChatId = useStore((s) => s.activeChatId);
   const activeProjectId = useStore((s) => s.activeProjectId);
@@ -82,7 +85,7 @@ export function Arena() {
   const title = page === "projects" ? "Projects" : page === "scheduled" ? "Scheduled" : chat ? (chat.projectId ? `${project?.name ?? "Project"} / ${chat.title}` : chat.title) : project ? project.name : "";
 
   return (
-    <div data-surface={learning.surface} className="app-shell flex h-full w-full flex-col overflow-hidden bg-bg">
+    <div data-surface="claude" data-mode={gameMode} data-competing={gameMode === "arena" && !!attempt ? "true" : undefined} className="app-shell flex h-full w-full flex-col overflow-hidden bg-bg">
       <div className="relative flex h-8 shrink-0 items-center justify-center gap-2 overflow-hidden bg-[#2c2b28] px-3 text-[12px] text-bg">
         <Logo size={17} />
         <span className="shrink-0 font-serif text-[13px] font-semibold tracking-tight">How to AI Games</span>
@@ -97,13 +100,14 @@ export function Arena() {
         {sidebarOpen && <div className="hidden h-full md:block"><Sidebar /></div>}
         <MobileNavigation />
         <main inert={mobileSidebarOpen} className="flex min-w-0 flex-1 flex-col">
-          <TopBar title={page === "learning" ? `${learning.surface === "chatgpt" ? "ChatGPT" : "Claude"} · Learning workspace` : title} />
+          <TopBar title={page === "learning" ? "How to AI Games" : title} />
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {!hydrated ? null : page === "learning" ? <LearningHome /> : page === "library" ? <LibraryPage /> : page === "gpts" ? <GPTsPage /> : page === "projects" ? <ProjectsPage /> : page === "scheduled" ? <ScheduledPage /> : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}
+            {!hydrated ? null : page === "learning" ? <GamesHome /> : page === "library" ? <LibraryPage /> : page === "gpts" ? <GPTsPage /> : page === "projects" ? <ProjectsPage /> : page === "scheduled" ? <ScheduledPage /> : chat ? <ChatView key={chat.id} chat={chat} /> : project ? <ProjectView key={project.id} project={project} /> : null}
           </div>
         </main>
       </div>
       <Toasts />
+      {!needsOnboarding && <PracticeGuide />}
       {!needsOnboarding && <>
       <ChallengesDialog open={dialog?.kind === "challenges"} />
       {dialog?.kind === "brief" && <BriefDialog open slug={dialog.slug} />}

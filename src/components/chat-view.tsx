@@ -14,6 +14,7 @@ import { Spark } from "./icons";
 import { TOOL_CONNECTOR } from "@/lib/tool-connector";
 import { BUILTIN_SKILLS } from "@/lib/skills";
 import { getChallenge } from "@/lib/arena/challenges";
+import { PracticeStage, PromptChips } from "./playground/practice-stage";
 import { ChallengeStage, ChallengeStrip } from "./challenge-stage";
 import { CoworkPanel } from "./cowork-panel";
 import { toast } from "@/lib/ui";
@@ -50,6 +51,8 @@ export function ChatView({ chat }: { chat: Chat }) {
   const customSkills = useStore((s) => s.skills);
   const session = useSession();
   const attempt = useStore((s) => s.attempt);
+  const gameMode = useStore((s) => s.gameMode);
+  const practicing = attempt?.mode === "playground";
   const challenge = attempt ? attempt.definition ?? getChallenge(attempt.slug) : null;
   const freeLeft = useStore((s) => freeTurnsLeft(s));
   const name = session.me?.name || settings.name;
@@ -128,7 +131,7 @@ export function ChatView({ chat }: { chat: Chat }) {
       if (skill) track("skill_invoked", skill);
       if (dictated) track("dictation_used");
       track("message_sent");
-      if (!st.attempt) consumeFreeTurn();
+      if (!st.attempt && st.gameMode === "arena") consumeFreeTurn();
       const sk = skill ? (BUILTIN_SKILLS.find((s) => s.name === skill) ?? customSkills.find((s) => s.name === skill)) : null;
       const context = {
         messageId: "", at: new Date().toISOString(), model: st.settings.model, webSearch, research, cowork,
@@ -141,7 +144,7 @@ export function ChatView({ chat }: { chat: Chat }) {
         connectors: st.connectors, skill: sk ? { name: sk.name, prompt: sk.prompt } : null,
         project: project ? { id: project.id, name: project.name, instructions: project.instructions, files: project.files.map((f) => ({ name: f.name, text: f.text })) } : null,
         userName: name, instructions: context.customInstructions, memories: context.memories, memoryOff: !memoryOn,
-        context, attemptId: st.attempt?.serverId, challengeSlug: st.attempt?.slug,
+        context, attemptId: st.attempt?.serverId, challengeSlug: st.attempt?.mode === "playground" ? undefined : st.attempt?.slug,
       };
       setState((s) => ({ chats: s.chats.map((c) => c.id === chat.id ? { ...c, request: requestBody } : c) }));
       try { await sendMessage({ text, files: fileParts }); }
@@ -167,18 +170,18 @@ export function ChatView({ chat }: { chat: Chat }) {
   const historical = !!attempt && chat.attemptId !== attempt.id;
   const composer = chat.closed || historical ? (
     <div className="flex items-center justify-between gap-3 rounded-2xl border border-ok/40 bg-ok/[0.06] px-4 py-3 text-[13.5px]">
-      <span>{historical ? "This saved thread belongs to a different session." : "Challenge graded. This thread is saved."}</span>
+      <span>{historical ? "This saved thread belongs to a different session." : "This session is complete. Your thread is saved."}</span>
       <button onClick={() => newChat(null)} className="rounded-lg bg-ink px-3 py-1.5 text-[13px] font-medium text-bg hover:bg-black">New chat</button>
     </div>
   ) : (
-    <Composer onSubmit={onSubmit} busy={busy} grading={grading} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} memoryOn={memoryOn} setMemoryOn={(v) => { setMemoryOn(v); if (!v) track("memory_off"); }} projectName={project?.name ?? null} locked={!attempt && freeLeft <= 0} freeLeft={attempt ? null : freeLeft} clearOn={attempt?.id ?? "none"} menusDown={messages.length === 0 && !chatgpt} />
+    <Composer onSubmit={onSubmit} busy={busy} grading={grading} onStop={stop} webSearch={webSearch} setWebSearch={setWebSearch} research={research} setResearch={setResearch} cowork={cowork} setCowork={setCowork} memoryOn={memoryOn} setMemoryOn={(v) => { setMemoryOn(v); if (!v) track("memory_off"); }} projectName={project?.name ?? null} locked={gameMode === "arena" && !attempt && freeLeft <= 0} freeLeft={gameMode === "playground" || attempt ? null : freeLeft} clearOn={attempt?.id ?? "none"} menusDown={messages.length === 0 && !chatgpt} />
   );
 
   if (empty && attempt && challenge)
     return (
       <div className="flex min-h-full flex-col items-center justify-center px-4 py-6 md:px-6 md:py-8">
-        <ChallengeStage c={challenge} attempt={attempt} />
-        <div className="mt-5 w-full max-w-[760px]">{composer}{cowork && <CoworkPanel chat={chat} />}</div>
+        {practicing ? <PracticeStage /> : <ChallengeStage c={challenge} attempt={attempt} />}
+        <div className="mt-5 w-full max-w-[760px]">{attempt?.slug === "practice-prompting" && <PromptChips disabled={busy} />}{composer}{cowork && <CoworkPanel chat={chat} />}</div>
       </div>
     );
 
@@ -197,7 +200,7 @@ export function ChatView({ chat }: { chat: Chat }) {
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
-      {attempt && challenge && <ChallengeStrip c={challenge} attempt={attempt} />}
+      {attempt && challenge && (practicing ? <PracticeStage compact /> : <ChallengeStrip c={challenge} attempt={attempt} />)}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-[760px] space-y-6 px-4 py-5 md:space-y-7 md:px-6 md:py-8">
           {messages.map((m, i) => (
@@ -209,6 +212,7 @@ export function ChatView({ chat }: { chat: Chat }) {
         </div>
       </div>
       <div className="mx-auto w-full max-w-[760px] shrink-0 px-3 pb-3 md:px-6 md:pb-4">
+        {attempt?.slug === "practice-prompting" && <PromptChips disabled={busy} />}
         {composer}
         {cowork && !chat.closed && <CoworkPanel chat={chat} compact />}
       </div>

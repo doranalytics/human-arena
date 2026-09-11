@@ -106,12 +106,12 @@ function General() {
     <div className="space-y-7">
       <section>
         <Label>Onboarding</Label>
-        <p className="mb-3 text-sm leading-relaxed text-ink-2">Review your choices or walk through the introduction again. Your lesson progress stays saved.</p>
+        <p className="mb-3 text-sm leading-relaxed text-ink-2">Review your choices or walk through the introduction again. Your practice progress stays saved.</p>
         <Button variant="outline" onClick={() => openDialog({ kind: "onboarding" })}>Review onboarding</Button>
       </section>
       <section>
         <Label>Chats and tasks in this browser</Label>
-        <p className="mb-3 text-sm leading-relaxed text-ink-2">Clear old conversations and stop the running challenge. Your account, lesson progress, scores, and streaks stay saved.</p>
+        <p className="mb-3 text-sm leading-relaxed text-ink-2">Clear old conversations and stop the running challenge. Your account, practice progress, and Arena scores stay saved.</p>
         <Button variant="outline" disabled={busy} onClick={() => setConfirming("chats")}><Trash2 size={15} /> Clear chats and tasks{chatCount > 0 ? ` (${chatCount})` : ""}</Button>
       </section>
       <section>
@@ -268,7 +268,7 @@ function Account() {
       </section>
       <section>
         <Label>{TESTING_MODE ? "Testing session" : "Sign-in"}</Label>
-        {TESTING_MODE ? <p className="rounded-lg border border-line bg-bg-2 px-3 py-3 text-[13px] leading-relaxed text-ink-2">No signup needed while we’re testing. {session.me?.guest ? "Your scores and streaks are saved for this browser. Use the same browser to keep your progress." : "Your existing account and progress are still saved."}</p> : session.me ? (
+        {TESTING_MODE ? <p className="rounded-lg border border-line bg-bg-2 px-3 py-3 text-[13px] leading-relaxed text-ink-2">No signup needed while we’re testing. {session.me?.guest ? "Your progress is saved for this browser. Use the same browser to keep your progress." : "Your existing account and progress are still saved."}</p> : session.me ? (
           <div className="flex flex-col items-start justify-between gap-2 rounded-lg border border-line px-3 py-2 text-[13.5px] md:flex-row md:items-center">
             <span className="min-w-0">Signed in as <span className="break-all font-medium">{session.me.email}</span>. Scores are saved to the board.</span>
             <form action="/auth/signout" method="post"><Button type="submit" variant="ghost">Sign out</Button></form>

@@ -1,5 +1,5 @@
 import { z } from "zod";
-export const ONBOARDING_VERSION = 3;
+export const ONBOARDING_VERSION = 4;
 export const ONBOARDING_DRAFT_KEY = "howto-ai:onboarding:v2";
 /** Accept drafts and clients from before goals supported multiple selections. */
 export function onboardingGoals(value: unknown): string[] {
@@ -7,6 +7,7 @@ export function onboardingGoals(value: unknown): string[] {
   return [...new Set(values.filter((goal): goal is string => typeof goal === "string" && goal.length > 0))];
 }
 export const OnboardingSchema = z.object({
+  mode: z.enum(["playground", "arena"]).default("playground"),
   level: z.enum(["starting", "casual", "daily", "connected", "native"]),
   product: z.enum(["claude", "chatgpt"]).default("claude"),
   interests: z.array(z.string().max(60)).max(8).default([]),

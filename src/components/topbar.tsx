@@ -1,134 +1,70 @@
 "use client";
 import { useState } from "react";
-import { ModelPicker } from "./model-picker";
-import { useLearning } from "@/lib/learning/client";
 import { useElapsed } from "@/lib/use-elapsed";
-import { PanelLeft, Swords, Trophy, Settings, Lightbulb, Flag, X, FolderPlus, Zap, ChevronDown } from "lucide-react";
-import { useStore, useHint, endAttempt, attemptChats, getState, newChat, setChatProject, createSkill, track, setState } from "@/lib/store";
-import { openDialog, toggleSidebar, useUI, toast } from "@/lib/ui";
+import { PanelLeft, Swords, Trophy, Lightbulb, Flag, X, FolderPlus, Zap, ChevronDown, Compass, Check } from "lucide-react";
+import { useStore, useHint, endAttempt, attemptChats, getState, setChatProject, createSkill, track, setState, finishPractice } from "@/lib/store";
+import { openDialog, toggleSidebar, useUI, toast, setPage, setPracticeHints } from "@/lib/ui";
 import { getChallenge } from "@/lib/arena/challenges";
+import { getPractice, practiceChecks } from "@/lib/playground";
 import { HINT_COST } from "@/lib/arena/types";
 import { fmtClock, cn } from "@/lib/utils";
 import type { ArenaResult } from "@/lib/types";
-import { ChallengePointer } from "./challenge-pointer";
 import { setSession } from "@/lib/session";
 import type { PracticeSummary } from "@/lib/practice";
+import { ModeSwitch } from "./mode-switch";
 
 export function TopBar({ title }: { title: string }) {
-  const chatgpt = useLearning().surface === "chatgpt";
-  const savedAttempt = useStore((s) => s.attempt);
+  const state = useStore((s) => s);
   const page = useUI((s) => s.page);
-  const attempt = page === "learning" ? null : savedAttempt;
+  const attempt = state.attempt;
+  const practice = attempt?.mode === "playground" ? getPractice(attempt.slug) : null;
+  const ready = !!practice && !!attempt && practiceChecks(practice, attempt.events, state).every((c) => c.pass);
   const sidebarOpen = useUI((s) => s.sidebarOpen);
   const mobileSidebarOpen = useUI((s) => s.mobileSidebarOpen);
+  const hints = useUI((s) => s.practiceHints);
   const c = attempt ? attempt.definition ?? getChallenge(attempt.slug) : null;
-  const elapsed = useElapsed(attempt?.startedAt);
-  const [hintOpen, setHintOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const busy = useStore((s) => s.busyChatIds.length > 0);
-
+  const elapsed = useElapsed(attempt && !practice ? attempt.startedAt : undefined);
+  const [hintOpen, setHintOpen] = useState(false), [submitting, setSubmitting] = useState(false);
+  const busy = state.busyChatIds.length > 0 || state.grading;
   async function submit() {
-    if (!attempt || !c || submitting || busy) return;
-    setSubmitting(true);
-    setState({ grading: true });
+    if (!attempt || !c || practice || submitting || busy || state.gameMode !== "arena") return;
+    setSubmitting(true); setState({ grading: true });
     const st = getState();
-    const chats = attemptChats();
     try {
-      const r = await fetch("/api/arena/submit", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ slug: attempt.slug, serverId: attempt.serverId ?? null, startedAt: attempt.startedAt, hintsUsed: attempt.hintsUsed, events: attempt.events, chats, version: attempt.version, workspace: { projects: st.projects, skills: st.skills, groups: st.groups, schedules: st.schedules } }),
-      });
-      const j = (await r.json()) as { result?: ArenaResult; practice?: PracticeSummary | null; error?: string; detail?: string };
-      if (!r.ok || !j.result) {
-        toast({ title: "Could not grade that", body: j.detail ?? j.error ?? "Try again in a moment.", tone: "bad" });
-        return;
-      }
+      const r = await fetch("/api/arena/submit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug: attempt.slug, serverId: attempt.serverId ?? null, startedAt: attempt.startedAt, hintsUsed: attempt.hintsUsed, events: attempt.events, chats: attemptChats(), version: attempt.version, workspace: { projects: st.projects, skills: st.skills, groups: st.groups, schedules: st.schedules } }) });
+      const j = await r.json() as { result?: ArenaResult; practice?: PracticeSummary | null; error?: string; detail?: string };
+      if (!r.ok || !j.result) { toast({ title: "Could not grade that", body: j.detail ?? j.error ?? "Try again in a moment.", tone: "bad" }); return; }
       if (!endAttempt(j.result, attempt.id)) return;
-      setSession({ practice: j.practice });
-      newChat(null);
-      openDialog({ kind: "result", slug: attempt.slug });
-    } catch {
-      toast({ title: "Network problem", body: "Your attempt is still running. Try Submit again.", tone: "bad" });
-    } finally {
-      setSubmitting(false);
-      if (getState().attempt?.id === attempt.id) setState({ grading: false });
-    }
+      setSession({ practice: j.practice }); setPage("learning"); openDialog({ kind: "result", slug: attempt.slug });
+    } catch { toast({ title: "Network problem", body: "Your attempt is still running. Try Submit again.", tone: "bad" }); }
+    finally { setSubmitting(false); if (getState().attempt?.id === attempt.id) setState({ grading: false }); }
   }
-
-  return (
-    <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-1.5 border-b border-line/70 px-2 py-1 xl:h-12 xl:flex-nowrap md:gap-2 md:px-3 xl:py-0">
-        <button onClick={toggleSidebar} className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-auto md:w-auto md:p-1.5", sidebarOpen && "md:hidden")} title="Open sidebar" aria-expanded={mobileSidebarOpen} aria-controls="mobile-navigation">
-          <PanelLeft size={17} />
-        </button>
-      <div className="min-w-0 flex-1 basis-0 text-[13.5px] text-ink-2">{chatgpt ? <ModelPicker header menusDown /> : <div className="truncate">{title}</div>}</div>
-      {!page && <ThreadActions />}
-
-      {attempt && c ? (
-        <div className="order-last flex w-full min-w-0 items-center gap-1.5 pb-1 xl:order-none xl:w-auto xl:pb-0">
-          <button onClick={() => openDialog({ kind: "brief", slug: attempt.slug })} title="Show the challenge brief" className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-lg border border-line-2 px-2.5 py-1 text-[13px] hover:bg-bg-2 md:h-auto md:flex-none">
-            <Swords size={14} className="shrink-0 text-clay" />
-            <span className="truncate font-medium md:max-w-[180px]">{c.title}</span>
-            <span className="ml-auto shrink-0 tabular-nums text-ink-2">
-              {fmtClock(elapsed)}
-            </span>
-          </button>
-          <div className="relative">
-            <button onClick={() => setHintOpen((v) => !v)} className="flex h-10 items-center gap-1.5 rounded-lg px-2.5 text-[13px] text-ink-2 hover:bg-bg-3 md:h-8" title="Reveal a hint">
-              <Lightbulb size={15} /> <span className="sr-only sm:not-sr-only">Hint</span> {attempt.hintsUsed > 0 && <span className="text-ink-3">({attempt.hintsUsed})</span>}
-            </button>
-            {hintOpen && (
-              <div className="mobile-popover fade-up absolute right-0 top-9 z-40 w-80 rounded-xl border border-line bg-bg p-3.5 shadow-lg shadow-black/10">
-                <div className="flex items-center justify-between">
-                  <div className="text-[13px] font-medium">Hints</div>
-                  <button onClick={() => setHintOpen(false)} aria-label="Close hints" className="rounded p-2 text-ink-3 hover:bg-bg-3 md:p-1">
-                    <X size={13} />
-                  </button>
-                </div>
-                <div className="mt-2 space-y-2">
-                  {c.hints.slice(0, attempt.hintsUsed).map((h, i) => (
-                    <div key={i} className="rounded-lg bg-bg-2 px-3 py-2 text-[13px] text-ink-2">
-                      <span className="mr-1 font-medium text-ink">{i + 1}.</span> {h.text}
-                    </div>
-                  ))}
-                </div>
-                {attempt.hintsUsed < c.hints.length ? (
-                  <button onClick={useHint} className="mt-2.5 h-8 w-full rounded-lg border border-line-2 text-[13px] hover:bg-bg-2">
-                    Reveal hint {attempt.hintsUsed + 1} of {c.hints.length} <span className="text-ink-3">(costs {Math.round(HINT_COST * 100)}% of the points)</span>
-                  </button>
-                ) : (
-                  <div className="mt-2 text-[12.5px] text-ink-3">No more hints for this one.</div>
-                )}
-              </div>
-            )}
-          </div>
-          <button onClick={submit} disabled={submitting || busy} className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-ink px-3 text-[13px] font-medium text-bg hover:bg-black disabled:opacity-60 md:h-8">
-            <Flag size={14} /> {submitting ? "Grading…" : "Submit"}
-          </button>
-          <button disabled={submitting} onClick={() => openDialog({ kind: "quit" })} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink-3 hover:bg-bg-3 hover:text-ink md:h-auto md:w-auto md:p-1.5" title="Quit challenge">
-            <X size={15} />
-          </button>
+  return <header className="games-topbar flex shrink-0 flex-wrap items-center gap-2 border-b border-line/70 px-2 py-2 md:px-3">
+    <button data-guide="navigation" onClick={toggleSidebar} className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-9 md:w-9", sidebarOpen && "md:hidden")} title="Open sidebar" aria-expanded={mobileSidebarOpen} aria-controls="mobile-navigation"><PanelLeft size={18} /></button>
+    <ModeSwitch />
+    <div className="hidden min-w-0 flex-1 truncate px-2 text-[13px] text-ink-3 lg:block">{title}</div>
+    <div className="ml-auto flex items-center gap-1.5">
+      {state.gameMode === "arena" && <button onClick={() => openDialog({ kind: "leaderboard" })} className="flex h-10 items-center gap-1.5 rounded-lg border border-line px-2.5 text-[13px] hover:bg-bg-2" title="Leaderboard"><Trophy size={15} className="text-clay" /><span className="hidden sm:inline">Leaderboard</span></button>}
+      {!attempt && <button onClick={() => state.gameMode === "arena" ? openDialog({ kind: "challenges" }) : setPage("learning")} className="flex h-10 items-center gap-1.5 rounded-lg bg-clay px-2.5 text-[13px] font-medium text-white">{state.gameMode === "arena" ? <Swords size={15} /> : <Compass size={15} />}<span className="hidden sm:inline">{state.gameMode === "arena" ? "Challenges" : "Exercises"}</span><span className="sr-only sm:hidden">{state.gameMode === "arena" ? "Challenges" : "Exercises"}</span></button>}
+    </div>
+    {attempt && c && <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 border-t border-line/60 pt-2">
+      <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{c.title}</span>
+      {practice ? <>
+        <button onClick={() => setPracticeHints(!hints)} aria-pressed={hints} className="flex min-h-10 items-center gap-1 rounded-lg px-2 text-xs text-ink-2 hover:bg-bg-3" title="Show pointers"><Lightbulb size={15} /><span className="hidden sm:inline">Pointers</span></button>
+        <button disabled={!ready || busy} title={ready ? "Save this practice as completed" : "Complete the actions shown in the practice instructions"} onClick={() => { if (finishPractice()) { setPage("learning"); toast({ title: "Practice complete", body: "Your progress is saved. Explore another feature whenever you like.", tone: "ok" }); } }} className="flex min-h-10 items-center gap-1.5 rounded-lg bg-ink px-3 text-xs font-medium text-bg disabled:opacity-40"><Check size={15} /> Finish practice</button>
+        <button disabled={busy} onClick={() => { endAttempt(); setPage("learning"); }} title="Leave practice" className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-3 hover:bg-bg-3"><X size={16} /></button>
+      </> : <>
+        <span className="px-2 text-sm tabular-nums text-clay-dark" aria-label="Elapsed time">{fmtClock(elapsed)}</span>
+        <div className="relative"><button onClick={() => setHintOpen(!hintOpen)} title="Reveal a hint" className="flex h-10 items-center gap-1 rounded-lg px-2 text-xs text-ink-2 hover:bg-bg-3"><Lightbulb size={15} /><span className="hidden sm:inline">Hint</span></button>
+          {hintOpen && <div className="mobile-popover absolute right-0 top-full z-40 w-72 rounded-xl border border-line bg-bg p-4 shadow-lg"><div className="flex items-center justify-between text-sm font-medium">Hints<button aria-label="Close hints" onClick={() => setHintOpen(false)} className="p-2"><X size={14} /></button></div>{c.hints.slice(0, attempt.hintsUsed).map((h, i) => <p key={i} className="mt-2 text-sm text-ink-2">{h.text}</p>)}{attempt.hintsUsed < c.hints.length ? <button onClick={useHint} className="mt-3 min-h-10 rounded-lg border border-line px-3 text-xs">Reveal hint · costs {Math.round(HINT_COST * 100)}% of points</button> : <p className="mt-2 text-xs text-ink-3">No more hints.</p>}</div>}
         </div>
-      ) : (
-        <div className="flex shrink-0 items-center gap-1.5">
-          <button onClick={() => openDialog({ kind: "leaderboard" })} className="flex h-10 items-center gap-1.5 rounded-lg border border-line-2 px-2.5 text-[13px] font-medium text-ink hover:bg-bg-2 md:h-8" title="Leaderboard">
-            <Trophy size={14} className="text-clay" /> <span className="hidden sm:inline">Leaderboard</span>
-          </button>
-          <div className="relative">
-          <button onClick={() => openDialog({ kind: "challenges" })} className="flex h-10 items-center gap-1.5 rounded-lg bg-clay px-3 text-[13px] font-semibold text-white shadow-sm shadow-clay/30 hover:bg-clay-dark md:h-8">
-            <Swords size={14} /> <span className={chatgpt ? "sr-only sm:not-sr-only" : ""}>Challenges</span>
-          </button>
-          <ChallengePointer />
-          </div>
-          {!chatgpt && <button onClick={() => openDialog({ kind: "settings", section: "account" })} className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 hover:bg-bg-3 md:h-auto md:w-auto md:p-1.5" title="Your profile and settings">
-            <Settings size={17} />
-          </button>}
-        </div>
-      )}
-    </header>
-  );
+        <button onClick={() => void submit()} disabled={submitting || busy} className="flex h-10 items-center gap-1.5 rounded-lg bg-clay px-3 text-xs font-medium text-white disabled:opacity-50"><Flag size={14} />{submitting ? "Grading…" : "Submit"}</button>
+        <button disabled={submitting || busy} onClick={() => openDialog({ kind: "quit" })} title="Quit challenge" className="flex h-10 w-10 items-center justify-center rounded-lg text-ink-3 hover:bg-bg-3"><X size={16} /></button>
+      </>}
+    </div>}
+    {!page && <ThreadActions />}
+  </header>;
 }
-
 
 /** Add to project (any thread) and Save as skill (a Cowork thread that has run). */
 function ThreadActions() {
@@ -172,7 +108,7 @@ function ThreadActions() {
             toast({ title: `/${name} saved`, body: "Type it in any chat to run this task again.", tone: "ok" }, 4000);
           }}
           className="flex h-10 items-center gap-1.5 rounded-lg px-2 text-[12.5px] text-ink-2 hover:bg-bg-3 md:h-8"
-          title="Turn this Cowork task into a slash command"
+          data-guide="save-skill" title="Turn this Cowork task into a slash command"
         >
           <Zap size={16} /> <span className="hidden md:inline">Save as skill</span>
         </button>
